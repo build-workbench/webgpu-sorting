@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+.vite/
+vite.config.ts.timestamp-*
+
+# Testing
+.nyc_output/
+junit.xml
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+
+# Package manager
+yarn-error.log
+pnpm-debug.log*
+.pnpm-store/
+
+# WebGPU specific
+*.spv
+*.spirv

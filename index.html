@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGPU Sorting Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: #00d4ff;
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card h2 {
+      color: #00d4ff;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+
+    select, button {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:hover, button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #00d4ff;
+    }
+
+    select:focus, button:focus {
+      outline: none;
+      border-color: #00d4ff;
+      box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+    }
+
+    button {
+      background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+      border: none;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #00e5ff 0%, #00aadd 100%);
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .button-group button {
+      flex: 1;
+    }
+
+    #status {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    #status.visible {
+      display: block;
+    }
+
+    #status.error {
+      background: rgba(255, 100, 100, 0.1);
+      border-color: rgba(255, 100, 100, 0.3);
+      color: #ff6b6b;
+    }
+
+    #status.success {
+      background: rgba(100, 255, 100, 0.1);
+      border-color: rgba(100, 255, 100, 0.3);
+      color: #6bff6b;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .results-table th {
+      color: #00d4ff;
+      font-weight: 600;
+    }
+
+    .results-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .speedup {
+      font-weight: 600;
+    }
+
+    .speedup.fast {
+      color: #6bff6b;
+    }
+
+    .speedup.slow {
+      color: #ff6b6b;
+    }
+
+    .unsupported {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .unsupported h2 {
+      color: #ff6b6b;
+      margin-bottom: 1rem;
+    }
+
+    .unsupported p {
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #00ff88);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .tech-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      background: rgba(0, 212, 255, 0.2);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #00d4ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ WebGPU Sorting</h1>
+    <p class="subtitle">High-performance GPU sorting with Bitonic Sort & Radix Sort</p>
+
+    <div id="unsupported" class="card unsupported" style="display: none;">
+      <h2>⚠️ WebGPU Not Supported</h2>
+      <p>Your browser does not support WebGPU.</p>
+      <p>Please use Chrome 113+, Edge 113+, or Firefox Nightly with WebGPU enabled.</p>
+    </div>
+
+    <div id="app">
+      <div class="card">
+        <h2>🎛️ Configuration</h2>
+        <div class="controls">
+          <div class="control-group">
+            <label for="algorithm">Algorithm</label>
+            <select id="algorithm">
+              <option value="bitonic">Bitonic Sort</option>
+              <option value="radix">Radix Sort</option>
+              <option value="both">Both (Compare)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="arraySize">Array Size</label>
+            <select id="arraySize">
+              <option value="1024">1K (1,024)</option>
+              <option value="10240">10K (10,240)</option>
+              <option value="102400" selected>100K (102,400)</option>
+              <option value="1048576">1M (1,048,576)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="iterations">Iterations</label>
+            <select id="iterations">
+              <option value="1">1</option>
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="runBtn">▶️ Run Benchmark</button>
+          <button id="runAllBtn">📊 Run Full Suite</button>
+        </div>
+      </div>
+
+      <div id="status" class="card">
+        <span id="statusText">Ready</span>
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="card" id="resultsCard" style="display: none;">
+        <h2>📈 Results</h2>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Array Size</th>
+              <th>Total Time</th>
+              <th>GPU Time</th>
+              <th>Speedup vs JS</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>ℹ️ About</h2>
+        <p style="color: #888; line-height: 1.6;">
+          This demo showcases GPU-accelerated sorting using WebGPU compute shaders.
+          <strong>Bitonic Sort</strong> uses a comparison-based parallel sorting network with O(n log²n) complexity.
+          <strong>Radix Sort</strong> uses a non-comparison approach with parallel histogram and prefix sum operations, achieving O(n×k) complexity.
+        </p>
+        <div class="tech-badges">
+          <span class="badge">WebGPU</span>
+          <span class="badge">WGSL</span>
+          <span class="badge">Compute Shaders</span>
+          <span class="badge">workgroupBarrier()</span>
+          <span class="badge">Shared Memory</span>
+          <span class="badge">Parallel Reduction</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🔗 Resources</h2>
+        <p style="color: #888; line-height: 1.6;">
+          <a href="https://www.w3.org/TR/webgpu/" target="_blank" style="color: #00d4ff;">WebGPU Spec</a> •
+          <a href="https://www.w3.org/TR/WGSL/" target="_blank" style="color: #00d4ff;">WGSL Spec</a> •
+          <a href="https://en.wikipedia.org/wiki/Bitonic_sorter" target="_blank" style="color: #00d4ff;">Bitonic Sort</a> •
+          <a href="https://en.wikipedia.org/wiki/Radix_sort" target="_blank" style="color: #00d4ff;">Radix Sort</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

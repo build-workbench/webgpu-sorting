@@ -1,0 +1,33 @@
+{
+  "name": "webgpu-sorting",
+  "version": "1.0.0",
+  "description": "High-performance GPU sorting algorithms using WebGPU compute shaders",
+  "type": "module",
+  "keywords": [
+    "webgpu",
+    "gpu",
+    "sorting",
+    "bitonic-sort",
+    "radix-sort",
+    "compute-shader",
+    "wgsl",
+    "parallel-computing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.40",
+    "fast-check": "^3.15.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vitest": "^1.2.2"
+  }
+}
