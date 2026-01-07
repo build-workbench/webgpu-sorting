@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Coverage
+coverage/
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# WGSL shaders (not standard JS/TS)
+*.wgsl
+
+# Generated files
+*.min.js
+*.min.css
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
