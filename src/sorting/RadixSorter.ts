@@ -65,7 +65,7 @@ export class RadixSorter {
       layout: pipelineLayout,
       compute: {
         module: shaderModule,
-        entryPoint: 'compute_histogram_simple',
+        entryPoint: 'compute_histogram',
       },
     });
 
@@ -83,7 +83,7 @@ export class RadixSorter {
 
   /**
    * Compute exclusive prefix sum on CPU (for simplicity)
-   * In production, this would be done on GPU
+   * Histogram is flattened as [digit0_wg0..digit0_wgN, digit1_wg0..]
    */
   private computePrefixSum(histogram: Uint32Array): Uint32Array {
     const prefixSum = new Uint32Array(histogram.length);
@@ -180,13 +180,19 @@ export class RadixSorter {
       await this.device.queue.onSubmittedWorkDone();
       
       const stagingBuffer = this.device.createBuffer({
-        size: BufferManager.alignSize(RADIX * 4, 4),
+        size: BufferManager.alignSize(histogramSize * 4, 4),
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
 
       {
         const commandEncoder = this.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(histogramBuffer, 0, stagingBuffer, 0, RADIX * 4);
+        commandEncoder.copyBufferToBuffer(
+          histogramBuffer,
+          0,
+          stagingBuffer,
+          0,
+          histogramSize * 4
+        );
         this.device.queue.submit([commandEncoder.finish()]);
       }
 
@@ -196,8 +202,14 @@ export class RadixSorter {
       stagingBuffer.destroy();
 
       // Compute prefix sum
-      const prefixSum = this.computePrefixSum(histogram);
-      this.device.queue.writeBuffer(prefixSumBuffer, 0, prefixSum.buffer, prefixSum.byteOffset, prefixSum.byteLength);
+      const prefixSums = this.computePrefixSum(histogram);
+      this.device.queue.writeBuffer(
+        prefixSumBuffer,
+        0,
+        prefixSums.buffer,
+        prefixSums.byteOffset,
+        prefixSums.byteLength
+      );
 
       // Step 3: Scatter elements
       {

@@ -183,7 +183,7 @@ export class BitonicSorter {
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.globalPipeline!);
         passEncoder.setBindGroup(0, bindGroup);
-        passEncoder.dispatchWorkgroups(Math.ceil(paddedSize / 2));
+        passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
         this.device.queue.submit([commandEncoder.finish()]);
       }
