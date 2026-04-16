@@ -13,13 +13,13 @@ describe('BufferManager', () => {
           fc.integer({ min: 1, max: 256 }),
           (size, alignment) => {
             const aligned = BufferManager.alignSize(size, alignment);
-            
+
             // Aligned size must be >= original size
             expect(aligned).toBeGreaterThanOrEqual(size);
-            
+
             // Aligned size must be divisible by alignment
             expect(aligned % alignment).toBe(0);
-            
+
             // Aligned size should be the smallest such value
             if (size > 0) {
               expect(aligned - alignment).toBeLessThan(size);
@@ -38,13 +38,13 @@ describe('BufferManager', () => {
     it('should handle edge cases', () => {
       // Size 0
       expect(BufferManager.alignSize(0, 4)).toBe(0);
-      
+
       // Size equals alignment
       expect(BufferManager.alignSize(4, 4)).toBe(4);
-      
+
       // Size is multiple of alignment
       expect(BufferManager.alignSize(16, 4)).toBe(16);
-      
+
       // Size needs padding
       expect(BufferManager.alignSize(5, 4)).toBe(8);
       expect(BufferManager.alignSize(1, 4)).toBe(4);

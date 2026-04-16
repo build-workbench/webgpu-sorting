@@ -33,7 +33,7 @@ async function init() {
     gpuContext = new GPUContext();
     await gpuContext.initialize({ powerPreference: 'high-performance' });
     benchmark = new Benchmark(gpuContext);
-    
+
     setupEventListeners();
     showStatus('Ready to run benchmarks', 'success');
   } catch (error) {
@@ -78,14 +78,15 @@ function formatSize(size: number): string {
 
 function addResult(result: BenchmarkResult, jsTime?: number) {
   const row = document.createElement('tr');
-  
-  const speedup = jsTime && result.algorithm !== 'js-native' 
-    ? jsTime / result.totalTimeMs 
-    : result.speedupVsNative;
-  
+
+  const speedup =
+    jsTime && result.algorithm !== 'js-native'
+      ? jsTime / result.totalTimeMs
+      : result.speedupVsNative;
+
   const speedupClass = speedup && speedup > 1 ? 'fast' : 'slow';
   const speedupText = speedup ? `${speedup.toFixed(2)}x` : '-';
-  
+
   row.innerHTML = `
     <td>${result.algorithm}</td>
     <td>${formatSize(result.arraySize)}</td>
@@ -93,7 +94,7 @@ function addResult(result: BenchmarkResult, jsTime?: number) {
     <td>${result.gpuTimeMs !== undefined ? formatTime(result.gpuTimeMs) : '-'}</td>
     <td class="speedup ${speedupClass}">${speedupText}</td>
   `;
-  
+
   resultsBody.appendChild(row);
   resultsCard.style.display = 'block';
 }
@@ -134,7 +135,7 @@ async function runSingleBenchmark() {
       const sortResult = await sorter.sort(testData);
       const validation = Validator.validate(testData, sortResult.sortedData);
       sorter.destroy();
-      
+
       if (!validation.isValid) {
         console.warn('Bitonic sort validation failed:', validation.errors);
       }
@@ -152,7 +153,7 @@ async function runSingleBenchmark() {
       const sortResult = await sorter.sort(testData);
       const validation = Validator.validate(testData, sortResult.sortedData);
       sorter.destroy();
-      
+
       if (!validation.isValid) {
         console.warn('Radix sort validation failed:', validation.errors);
       }

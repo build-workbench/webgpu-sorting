@@ -13,33 +13,33 @@ describe('RadixSorter', () => {
       const BITS_PER_PASS = 4;
       const TOTAL_BITS = 32;
       const NUM_PASSES = TOTAL_BITS / BITS_PER_PASS;
-      
+
       expect(NUM_PASSES).toBe(8);
     });
 
     it('should have correct radix size for 4-bit passes', () => {
       const BITS_PER_PASS = 4;
       const RADIX = Math.pow(2, BITS_PER_PASS);
-      
+
       expect(RADIX).toBe(16);
     });
 
     it('digit extraction should work correctly', () => {
       const getDigit = (value: number, bitOffset: number): number => {
-        return (value >>> bitOffset) & 0xF;
+        return (value >>> bitOffset) & 0xf;
       };
 
       // Test value: 0xABCD1234
-      const testValue = 0xABCD1234;
-      
-      expect(getDigit(testValue, 0)).toBe(0x4);   // bits 0-3
-      expect(getDigit(testValue, 4)).toBe(0x3);   // bits 4-7
-      expect(getDigit(testValue, 8)).toBe(0x2);   // bits 8-11
-      expect(getDigit(testValue, 12)).toBe(0x1);  // bits 12-15
-      expect(getDigit(testValue, 16)).toBe(0xD);  // bits 16-19
-      expect(getDigit(testValue, 20)).toBe(0xC);  // bits 20-23
-      expect(getDigit(testValue, 24)).toBe(0xB);  // bits 24-27
-      expect(getDigit(testValue, 28)).toBe(0xA);  // bits 28-31
+      const testValue = 0xabcd1234;
+
+      expect(getDigit(testValue, 0)).toBe(0x4); // bits 0-3
+      expect(getDigit(testValue, 4)).toBe(0x3); // bits 4-7
+      expect(getDigit(testValue, 8)).toBe(0x2); // bits 8-11
+      expect(getDigit(testValue, 12)).toBe(0x1); // bits 12-15
+      expect(getDigit(testValue, 16)).toBe(0xd); // bits 16-19
+      expect(getDigit(testValue, 20)).toBe(0xc); // bits 20-23
+      expect(getDigit(testValue, 24)).toBe(0xb); // bits 24-27
+      expect(getDigit(testValue, 28)).toBe(0xa); // bits 28-31
     });
 
     it('prefix sum computation should be correct', () => {

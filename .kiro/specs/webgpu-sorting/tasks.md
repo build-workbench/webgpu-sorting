@@ -24,7 +24,7 @@
     - 测试 WebGPU 不支持场景
     - _Requirements: 1.2_
 
-- [ ] 2. 缓冲区管理
+- [x] 2. 缓冲区管理
   - [x] 2.1 实现 BufferManager 类
     - 实现 createStorageBuffer() 方法
     - 实现 createStagingBuffer() 方法
@@ -76,23 +76,19 @@
   - 确保双调排序测试通过，如有问题请询问用户
 
 - [x] 7. 基数排序实现
-  - [x] 7.1 编写并行前缀和 WGSL 着色器
-    - 实现 Blelloch scan 算法
-    - 使用 workgroupBarrier() 进行同步
-    - _Requirements: 4.2, 4.3_
-
-  - [x] 7.2 编写基数排序 WGSL 着色器
+  - [x] 7.1 编写基数排序 WGSL 着色器
     - 实现直方图计算着色器（并行归约）
     - 实现数据重排着色器
-    - _Requirements: 4.1, 4.4_
+    - 前缀和在 TypeScript 端计算（简化实现）
+    - _Requirements: 4.1, 4.2, 4.4_
 
-  - [x] 7.3 实现 RadixSorter 类
+  - [x] 7.2 实现 RadixSorter 类
     - 实现着色器加载和管道创建
     - 实现 8 个 pass 的排序调度（4 位基数）
     - 实现 sort() 方法返回 SortResult
     - _Requirements: 4.5, 4.6_
 
-  - [x] 7.4 编写基数排序属性测试
+  - [x] 7.3 编写基数排序属性测试
     - **Property 5: Radix Sort Correctness**
     - **Validates: Requirements 4.5**
 

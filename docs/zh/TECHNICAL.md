@@ -1,5 +1,17 @@
 # 技术文档
 
+> WebGPU 排序实现细节深度解析
+
+<p align="center">
+  <img src="https://img.shields.io/badge/algorithm-Bitonic%20Sort-blue" alt="Bitonic Sort">
+  <img src="https://img.shields.io/badge/algorithm-Radix%20Sort-green" alt="Radix Sort">
+  <img src="https://img.shields.io/badge/language-WGSL-orange" alt="WGSL">
+</p>
+
+<p align="center">
+  <a href="../en/TECHNICAL.md">English Version</a> | <strong>中文版本</strong>
+</p>
+
 本文档详细介绍 WebGPU 排序项目的技术实现细节。
 
 ## 目录
@@ -44,9 +56,9 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    WGSL Compute Shaders                     │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ bitonic.wgsl    │  │ radix.wgsl      │  │ scan.wgsl   │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐                  │
+│  │ bitonic.wgsl    │  │ radix.wgsl      │                  │
+│  └─────────────────┘  └─────────────────┘                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,22 +101,22 @@ Sorted Array (CPU)
 class GPUContext {
   private adapter: GPUAdapter | null;
   private device: GPUDevice | null;
-  
+
   // 检查 WebGPU 支持
   static isSupported(): boolean {
     return typeof navigator !== 'undefined' && 'gpu' in navigator;
   }
-  
+
   // 初始化
   async initialize(config?: GPUContextConfig): Promise<void> {
     // 1. 请求适配器
     this.adapter = await navigator.gpu.requestAdapter({
       powerPreference: config?.powerPreference ?? 'high-performance',
     });
-    
+
     // 2. 请求设备
     this.device = await this.adapter.requestDevice();
-    
+
     // 3. 监听设备丢失
     this.device.lost.then((info) => {
       console.error('GPU device lost:', info.message);
@@ -126,13 +138,13 @@ class BufferManager {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       mappedAtCreation: true,
     });
-    
+
     new Uint32Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
-    
+
     return buffer;
   }
-  
+
   // 从 GPU 读取数据
   async readBuffer(buffer: GPUBuffer, size: number): Promise<Uint32Array> {
     // 创建暂存缓冲区
@@ -140,20 +152,20 @@ class BufferManager {
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-    
+
     // 复制数据
     const encoder = this.device.createCommandEncoder();
     encoder.copyBufferToBuffer(buffer, 0, stagingBuffer, 0, size);
     this.device.queue.submit([encoder.finish()]);
-    
+
     // 映射并读取
     await stagingBuffer.mapAsync(GPUMapMode.READ);
     const result = new Uint32Array(stagingBuffer.getMappedRange().slice(0));
     stagingBuffer.unmap();
-    
+
     return result;
   }
-  
+
   // 缓冲区大小对齐
   static alignSize(size: number, alignment: number): number {
     return Math.ceil(size / alignment) * alignment;
@@ -180,10 +192,10 @@ class BufferManager {
 
 Stage 1 (形成长度 2 的双调序列):
   [2, 5] [8, 1] [3, 9] [7, 4]  <- 交替升序/降序
-  
+
 Stage 2 (形成长度 4 的双调序列):
   [1, 2, 8, 5] [3, 4, 9, 7]
-  
+
 Stage 3 (形成长度 8 的双调序列):
   [1, 2, 3, 4, 5, 7, 8, 9]  <- 最终有序
 ```
@@ -213,38 +225,38 @@ fn bitonic_sort_local(
 ) {
   let idx = global_id.x;
   let local_idx = local_id.x;
-  
+
   // 加载到共享内存
   if (idx < uniforms.total_size) {
     shared_data[local_idx] = data[idx];
   } else {
     shared_data[local_idx] = 0xFFFFFFFFu;
   }
-  
+
   workgroupBarrier();  // 同步点 1
-  
+
   // 工作组内双调排序
   for (var stage: u32 = 0u; stage < 8u; stage++) {
     for (var pass: u32 = stage + 1u; pass > 0u; pass--) {
       let pair_distance = 1u << (pass - 1u);
       let block_size = 1u << (stage + 1u);
       let partner = local_idx ^ pair_distance;
-      
+
       if (partner > local_idx && partner < WORKGROUP_SIZE) {
         let ascending = ((local_idx / block_size) % 2u) == 0u;
         let a = shared_data[local_idx];
         let b = shared_data[partner];
-        
+
         if ((a > b) == ascending) {
           shared_data[local_idx] = b;
           shared_data[partner] = a;
         }
       }
-      
+
       workgroupBarrier();  // 同步点 2
     }
   }
-  
+
   // 写回全局内存
   if (idx < uniforms.total_size) {
     data[idx] = shared_data[local_idx];
@@ -255,18 +267,18 @@ fn bitonic_sort_local(
 @compute @workgroup_size(WORKGROUP_SIZE)
 fn bitonic_sort_global(@builtin(global_invocation_id) global_id: vec3<u32>) {
   let idx = global_id.x;
-  
+
   if (idx >= uniforms.total_size) { return; }
-  
+
   let pair_distance = 1u << uniforms.pass_num;
   let block_size = 1u << (uniforms.stage + 1u);
   let partner = idx ^ pair_distance;
-  
+
   if (partner > idx && partner < uniforms.total_size) {
     let ascending = ((idx / block_size) % 2u) == 0u;
     let a = data[idx];
     let b = data[partner];
-    
+
     if ((a > b) == ascending) {
       data[idx] = b;
       data[partner] = a;
@@ -282,10 +294,10 @@ async sort(data: Uint32Array): Promise<SortResult> {
   const paddedSize = nextPowerOf2(data.length);
   const numStages = Math.log2(paddedSize);
   const localStages = Math.log2(WORKGROUP_SIZE);
-  
+
   // 1. 工作组内排序
   dispatchWorkgroups(localPipeline, numWorkgroups);
-  
+
   // 2. 跨工作组合并
   for (let stage = localStages; stage < numStages; stage++) {
     for (let pass = stage; pass >= 0; pass--) {
@@ -364,7 +376,7 @@ fn get_digit(value: u32, bit_offset: u32) -> u32 {
 @compute @workgroup_size(256)
 fn compute_histogram(@builtin(global_invocation_id) global_id: vec3<u32>) {
   let gid = global_id.x;
-  
+
   if (gid < uniforms.total_size) {
     let digit = get_digit(input_data[gid], uniforms.bit_offset);
     atomicAdd(&histogram[digit], 1u);
@@ -379,25 +391,25 @@ fn scatter(
 ) {
   let gid = global_id.x;
   let tid = local_id.x;
-  
+
   // 加载前缀和到共享内存
   if (tid < RADIX) {
     local_prefix[tid] = prefix_sums[tid];
     atomicStore(&local_histogram[tid], 0u);
   }
-  
+
   workgroupBarrier();
-  
+
   if (gid < uniforms.total_size) {
     let value = input_data[gid];
     let digit = get_digit(value, uniforms.bit_offset);
-    
+
     // 获取局部偏移
     let local_offset = atomicAdd(&local_histogram[digit], 1u);
-    
+
     // 计算全局位置
     let global_offset = local_prefix[digit] + local_offset;
-    
+
     output_data[global_offset] = value;
   }
 }
@@ -514,18 +526,19 @@ try {
 
 ### WebGPU 资源限制
 
-| 限制 | 典型值 |
-|------|--------|
-| maxComputeWorkgroupSizeX | 256 |
-| maxComputeWorkgroupSizeY | 256 |
-| maxComputeWorkgroupSizeZ | 64 |
-| maxComputeInvocationsPerWorkgroup | 256 |
-| maxComputeWorkgroupStorageSize | 16384 bytes |
-| maxStorageBufferBindingSize | 128 MB |
+| 限制                              | 典型值      |
+| --------------------------------- | ----------- |
+| maxComputeWorkgroupSizeX          | 256         |
+| maxComputeWorkgroupSizeY          | 256         |
+| maxComputeWorkgroupSizeZ          | 64          |
+| maxComputeInvocationsPerWorkgroup | 256         |
+| maxComputeWorkgroupStorageSize    | 16384 bytes |
+| maxStorageBufferBindingSize       | 128 MB      |
 
 ### 调试技巧
 
 1. **启用 WebGPU 错误报告**:
+
 ```typescript
 device.pushErrorScope('validation');
 // ... GPU 操作 ...
@@ -538,9 +551,10 @@ if (error) console.error(error.message);
    - 使用 Performance 面板分析 GPU 时间
 
 3. **添加标签**:
+
 ```typescript
 const buffer = device.createBuffer({
-  label: 'my-buffer',  // 便于调试
+  label: 'my-buffer', // 便于调试
   size: 1024,
   usage: GPUBufferUsage.STORAGE,
 });

@@ -1,6 +1,6 @@
 /**
  * 基本使用示例
- * 
+ *
  * 演示如何使用 WebGPU 排序库进行基本的排序操作
  */
 
@@ -29,10 +29,7 @@ async function basicUsage() {
   console.log('✅ 排序器创建成功');
 
   // 4. 准备测试数据
-  const data = new Uint32Array([
-    42, 17, 93, 8, 56, 31, 74, 19,
-    88, 3, 65, 27, 51, 99, 12, 45
-  ]);
+  const data = new Uint32Array([42, 17, 93, 8, 56, 31, 74, 19, 88, 3, 65, 27, 51, 99, 12, 45]);
   console.log('\n原始数据:', Array.from(data));
 
   // 5. 执行排序
@@ -64,6 +61,6 @@ async function basicUsage() {
 }
 
 // 运行示例
-basicUsage().catch(error => {
+basicUsage().catch((error) => {
   console.error('错误:', error);
 });

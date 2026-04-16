@@ -42,9 +42,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   test:
@@ -78,11 +78,7 @@ module.exports = {
     es2022: true,
     node: true,
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
@@ -170,29 +166,29 @@ module.exports = {
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: ESLint 配置有效性
 
-*For any* TypeScript 源文件，运行 ESLint 检查应该能够正确解析并报告问题，不应产生配置错误。
+_For any_ TypeScript 源文件，运行 ESLint 检查应该能够正确解析并报告问题，不应产生配置错误。
 
 **Validates: Requirements 2.1, 2.3**
 
 ### Property 2: Prettier 格式化幂等性
 
-*For any* 已格式化的文件，再次运行 Prettier 格式化应该产生相同的输出（幂等性）。
+_For any_ 已格式化的文件，再次运行 Prettier 格式化应该产生相同的输出（幂等性）。
 
 **Validates: Requirements 2.2, 2.4**
 
 ### Property 3: CI 工作流完整性
 
-*For any* 有效的代码提交，CI 工作流应该能够成功执行所有步骤（安装、lint、测试、构建）。
+_For any_ 有效的代码提交，CI 工作流应该能够成功执行所有步骤（安装、lint、测试、构建）。
 
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
 
 ### Property 4: Package.json 有效性
 
-*For any* package.json 配置，所有必需字段应该存在且格式正确，npm publish 应该能够成功执行。
+_For any_ package.json 配置，所有必需字段应该存在且格式正确，npm publish 应该能够成功执行。
 
 **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7**
 
@@ -224,4 +220,3 @@ module.exports = {
 - 使用 Vitest 的 coverage 功能
 - 配置 @vitest/coverage-v8 提供覆盖率报告
 - 生成 text、lcov、html 格式的报告
-

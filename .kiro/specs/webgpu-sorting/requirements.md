@@ -62,7 +62,7 @@
 #### Acceptance Criteria
 
 1. THE Radix_Sorter SHALL implement per-digit sorting using WGSL compute shaders
-2. THE Radix_Sorter SHALL use parallel prefix sum (scan) for computing digit offsets
+2. THE Radix_Sorter SHALL compute prefix sum on CPU for digit offsets (simplified approach)
 3. WHEN processing each radix pass, THE Radix_Sorter SHALL use workgroupBarrier() for synchronization
 4. THE Radix_Sorter SHALL implement parallel reduction for histogram computation
 5. FOR ALL valid input arrays, THE Radix_Sorter SHALL produce a correctly sorted output in ascending order
@@ -103,4 +103,3 @@
 3. THE Demo_UI SHALL show performance metrics including execution time and speedup ratio
 4. THE Demo_UI SHALL handle and display errors gracefully
 5. WHEN WebGPU is not available, THE Demo_UI SHALL display a clear unsupported message
-

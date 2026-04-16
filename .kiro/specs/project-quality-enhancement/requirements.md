@@ -26,7 +26,7 @@
 1. WHEN a pull request is created or updated, THE GitHub_Actions SHALL run all tests automatically
 2. WHEN a pull request is created or updated, THE GitHub_Actions SHALL run TypeScript type checking
 3. WHEN a pull request is created or updated, THE GitHub_Actions SHALL run ESLint code linting
-4. WHEN code is pushed to the main branch, THE GitHub_Actions SHALL build the project
+4. WHEN code is pushed to the master branch, THE GitHub_Actions SHALL build the project
 5. WHEN all CI checks pass on main branch, THE GitHub_Actions SHALL be ready for release workflow
 6. THE GitHub_Actions SHALL support multiple Node.js versions (18.x, 20.x)
 
@@ -92,4 +92,3 @@
 3. THE coverage reports SHALL be in multiple formats (text, lcov, html)
 4. THE GitHub_Actions SHALL upload coverage reports as artifacts
 5. THE System SHALL have a minimum coverage threshold configuration
-

@@ -47,17 +47,21 @@
 ## Bug: 双调排序在大数组上失败
 
 ### 复现步骤
+
 1. 创建 1M 元素的数组
 2. 调用 bitonicSorter.sort(data)
 3. 观察错误
 
 ### 预期行为
+
 排序成功完成
 
 ### 实际行为
+
 抛出 "Out of memory" 错误
 
 ### 环境
+
 - Chrome 113.0.5672.126
 - Windows 11
 - NVIDIA RTX 3060
@@ -155,8 +159,7 @@ async function initialize(): Promise<void> {
 
 // ❌ 差: 使用 Promise 链
 function initialize(): Promise<void> {
-  return this.requestAdapter()
-    .then(() => this.requestDevice());
+  return this.requestAdapter().then(() => this.requestDevice());
 }
 ```
 
@@ -211,14 +214,14 @@ interface ValidationResult { }
 
 ### 注释规范
 
-```typescript
+````typescript
 /**
  * 对 Uint32Array 进行双调排序
- * 
+ *
  * @param data - 要排序的数组
  * @returns 排序结果，包含排序后的数组和性能指标
  * @throws {Error} 如果数组为空或设备未初始化
- * 
+ *
  * @example
  * ```typescript
  * const sorter = new BitonicSorter(context);
@@ -229,7 +232,7 @@ interface ValidationResult { }
 async sort(data: Uint32Array): Promise<SortResult> {
   // 实现...
 }
-```
+````
 
 ---
 
@@ -323,13 +326,10 @@ import { Validator } from '../src/core/Validator';
 describe('Validator Properties', () => {
   it('sorted array should pass isSorted check', () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.nat(1000000), { minLength: 0, maxLength: 1000 }),
-        (arr) => {
-          const sorted = new Uint32Array(arr.sort((a, b) => a - b));
-          expect(Validator.isSorted(sorted)).toBe(true);
-        }
-      ),
+      fc.property(fc.array(fc.nat(1000000), { minLength: 0, maxLength: 1000 }), (arr) => {
+        const sorted = new Uint32Array(arr.sort((a, b) => a - b));
+        expect(Validator.isSorted(sorted)).toBe(true);
+      }),
       { numRuns: 100 }
     );
   });
@@ -366,13 +366,16 @@ npm run build
 3. 填写 PR 模板
 
 **PR 标题格式:**
+
 ```
 <type>: <description>
 ```
 
 **PR 描述模板:**
+
 ```markdown
 ## 变更类型
+
 - [ ] Bug 修复
 - [ ] 新功能
 - [ ] 性能优化
@@ -380,17 +383,21 @@ npm run build
 - [ ] 代码重构
 
 ## 变更说明
+
 简要描述你的变更...
 
 ## 相关 Issue
+
 Closes #123
 
 ## 测试
+
 - [ ] 添加了新测试
 - [ ] 所有测试通过
 - [ ] 手动测试通过
 
 ## 检查清单
+
 - [ ] 代码遵循项目规范
 - [ ] 添加了必要的注释
 - [ ] 更新了相关文档
@@ -484,4 +491,3 @@ for (const message of compilationInfo.messages) {
 ## 致谢
 
 感谢所有贡献者的付出！你的贡献让这个项目变得更好。
-

@@ -41,9 +41,9 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    WGSL Compute Shaders                     │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │ bitonic.wgsl    │  │ radix.wgsl      │  │ scan.wgsl   │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐                  │
+│  │ bitonic.wgsl    │  │ radix.wgsl      │                  │
+│  └─────────────────┘  └─────────────────┘                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,16 +88,16 @@ interface GPUContextConfig {
 class GPUContext {
   private adapter: GPUAdapter | null;
   private device: GPUDevice | null;
-  
+
   // 初始化 WebGPU 环境
   async initialize(config?: GPUContextConfig): Promise<void>;
-  
+
   // 获取 GPU 设备
   getDevice(): GPUDevice;
-  
+
   // 检查是否支持 WebGPU
   static isSupported(): boolean;
-  
+
   // 释放资源
   destroy(): void;
 }
@@ -110,19 +110,19 @@ class GPUContext {
 ```typescript
 class BufferManager {
   constructor(device: GPUDevice);
-  
+
   // 创建存储缓冲区并上传数据
   createStorageBuffer(data: Uint32Array, label?: string): GPUBuffer;
-  
+
   // 创建用于读取的暂存缓冲区
   createStagingBuffer(size: number): GPUBuffer;
-  
+
   // 从 GPU 读取数据
   async readBuffer(buffer: GPUBuffer, size: number): Promise<Uint32Array>;
-  
+
   // 释放缓冲区
   releaseBuffer(buffer: GPUBuffer): void;
-  
+
   // 计算对齐后的缓冲区大小
   static alignSize(size: number, alignment: number): number;
 }
@@ -135,16 +135,16 @@ class BufferManager {
 ```typescript
 interface SortResult {
   sortedData: Uint32Array;
-  gpuTimeMs: number;      // 纯 GPU 计算时间
-  totalTimeMs: number;    // 包含数据传输的总时间
+  gpuTimeMs: number; // 纯 GPU 计算时间
+  totalTimeMs: number; // 包含数据传输的总时间
 }
 
 class BitonicSorter {
   constructor(context: GPUContext);
-  
+
   // 执行排序
   async sort(data: Uint32Array): Promise<SortResult>;
-  
+
   // 释放资源
   destroy(): void;
 }
@@ -157,10 +157,10 @@ class BitonicSorter {
 ```typescript
 class RadixSorter {
   constructor(context: GPUContext);
-  
+
   // 执行排序
   async sort(data: Uint32Array): Promise<SortResult>;
-  
+
   // 释放资源
   destroy(): void;
 }
@@ -182,10 +182,10 @@ interface BenchmarkResult {
 
 class Benchmark {
   constructor(context: GPUContext);
-  
+
   // 运行完整基准测试
   async runAll(sizes: number[]): Promise<BenchmarkResult[]>;
-  
+
   // 运行单个测试
   async runSingle(
     algorithm: 'bitonic' | 'radix' | 'js-native',
@@ -210,10 +210,10 @@ interface ValidationResult {
 class Validator {
   // 验证数组是否已排序
   static isSorted(arr: Uint32Array): boolean;
-  
+
   // 验证两个数组包含相同元素
   static hasSameElements(a: Uint32Array, b: Uint32Array): boolean;
-  
+
   // 完整验证
   static validate(input: Uint32Array, output: Uint32Array): ValidationResult;
 }
@@ -226,17 +226,17 @@ class Validator {
 ```typescript
 // 双调排序使用的缓冲区
 interface BitonicBuffers {
-  data: GPUBuffer;        // 主数据缓冲区 (read-write storage)
-  staging: GPUBuffer;     // 读取用暂存缓冲区 (map-read)
+  data: GPUBuffer; // 主数据缓冲区 (read-write storage)
+  staging: GPUBuffer; // 读取用暂存缓冲区 (map-read)
 }
 
 // 基数排序使用的缓冲区
 interface RadixBuffers {
-  input: GPUBuffer;       // 输入数据
-  output: GPUBuffer;      // 输出数据
-  histogram: GPUBuffer;   // 直方图缓冲区
-  prefixSum: GPUBuffer;   // 前缀和缓冲区
-  staging: GPUBuffer;     // 读取用暂存缓冲区
+  input: GPUBuffer; // 输入数据
+  output: GPUBuffer; // 输出数据
+  histogram: GPUBuffer; // 直方图缓冲区
+  prefixSum: GPUBuffer; // 前缀和缓冲区
+  staging: GPUBuffer; // 读取用暂存缓冲区
 }
 ```
 
@@ -245,15 +245,15 @@ interface RadixBuffers {
 ```typescript
 // 双调排序 uniform
 interface BitonicUniforms {
-  stageSize: number;      // 当前阶段大小
-  passSize: number;       // 当前 pass 大小
-  totalSize: number;      // 数组总大小
+  stageSize: number; // 当前阶段大小
+  passSize: number; // 当前 pass 大小
+  totalSize: number; // 数组总大小
 }
 
 // 基数排序 uniform
 interface RadixUniforms {
-  bitOffset: number;      // 当前处理的位偏移
-  totalSize: number;      // 数组总大小
+  bitOffset: number; // 当前处理的位偏移
+  totalSize: number; // 数组总大小
 }
 ```
 
@@ -269,7 +269,7 @@ interface RadixUniforms {
 
 示例 (n=8):
 Stage 1: 形成长度为 2 的双调序列
-Stage 2: 形成长度为 4 的双调序列  
+Stage 2: 形成长度为 4 的双调序列
 Stage 3: 形成长度为 8 的双调序列（最终排序）
 
 每个 Pass 中，线程并行执行比较交换操作
@@ -301,32 +301,32 @@ fn bitonic_sort_local(
   @builtin(workgroup_id) workgroup_id: vec3<u32>
 ) {
   let idx = global_id.x;
-  
+
   // 加载数据到共享内存
   if (idx < uniforms.total_size) {
     shared_data[local_id.x] = data[idx];
   }
-  
+
   workgroupBarrier();
-  
+
   // 工作组内双调排序
   for (var stage: u32 = 1u; stage <= log2(WORKGROUP_SIZE); stage++) {
     for (var pass: u32 = stage; pass >= 1u; pass--) {
       let pair_distance = 1u << (pass - 1u);
       let block_size = 1u << stage;
-      
+
       let pos = local_id.x;
       let partner = pos ^ pair_distance;
-      
+
       if (partner > pos) {
         let dir = ((pos / block_size) % 2u) == 0u;
         compare_and_swap(pos, partner, dir);
       }
-      
+
       workgroupBarrier();
     }
   }
-  
+
   // 写回全局内存
   if (idx < uniforms.total_size) {
     data[idx] = shared_data[local_id.x];
@@ -336,7 +336,7 @@ fn bitonic_sort_local(
 fn compare_and_swap(i: u32, j: u32, ascending: bool) {
   let a = shared_data[i];
   let b = shared_data[j];
-  
+
   if ((a > b) == ascending) {
     shared_data[i] = b;
     shared_data[j] = a;
@@ -346,7 +346,7 @@ fn compare_and_swap(i: u32, j: u32, ascending: bool) {
 
 ### 基数排序 (Radix Sort)
 
-基数排序是非比较排序，时间复杂度 O(n * k)，其中 k 是位数。
+基数排序是非比较排序，时间复杂度 O(n \* k)，其中 k 是位数。
 
 ```
 对于 32 位整数，使用 4 位基数 (radix-16):
@@ -355,95 +355,38 @@ fn compare_and_swap(i: u32, j: u32, ascending: bool) {
 
 并行策略:
 1. 直方图计算: 并行归约
-2. 前缀和: 并行扫描 (Blelloch scan)
+2. 前缀和: 在 CPU 端计算（简化实现）
 3. 数据重排: 并行散射
 ```
 
-#### 并行前缀和 (Parallel Scan)
-
-```wgsl
-// scan.wgsl - Blelloch Scan 实现
-const WORKGROUP_SIZE: u32 = 256;
-
-var<workgroup> temp: array<u32, 512>;
-
-@compute @workgroup_size(WORKGROUP_SIZE)
-fn prefix_sum(
-  @builtin(global_invocation_id) global_id: vec3<u32>,
-  @builtin(local_invocation_id) local_id: vec3<u32>
-) {
-  let n = WORKGROUP_SIZE * 2u;
-  let tid = local_id.x;
-  
-  // 加载数据
-  temp[2u * tid] = data[2u * global_id.x];
-  temp[2u * tid + 1u] = data[2u * global_id.x + 1u];
-  
-  // Up-sweep (reduce) 阶段
-  var offset: u32 = 1u;
-  for (var d: u32 = n >> 1u; d > 0u; d >>= 1u) {
-    workgroupBarrier();
-    if (tid < d) {
-      let ai = offset * (2u * tid + 1u) - 1u;
-      let bi = offset * (2u * tid + 2u) - 1u;
-      temp[bi] += temp[ai];
-    }
-    offset *= 2u;
-  }
-  
-  // 清零最后一个元素
-  if (tid == 0u) {
-    temp[n - 1u] = 0u;
-  }
-  
-  // Down-sweep 阶段
-  for (var d: u32 = 1u; d < n; d *= 2u) {
-    offset >>= 1u;
-    workgroupBarrier();
-    if (tid < d) {
-      let ai = offset * (2u * tid + 1u) - 1u;
-      let bi = offset * (2u * tid + 2u) - 1u;
-      let t = temp[ai];
-      temp[ai] = temp[bi];
-      temp[bi] += t;
-    }
-  }
-  
-  workgroupBarrier();
-  
-  // 写回结果
-  data[2u * global_id.x] = temp[2u * tid];
-  data[2u * global_id.x + 1u] = temp[2u * tid + 1u];
-}
-```
+注：前缀和计算在 TypeScript 端实现，而非使用独立的 scan.wgsl 着色器。
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
-
-
+_A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: Buffer Round-Trip Consistency
 
-*For any* valid Uint32Array, uploading it to a GPU buffer and then downloading it back SHALL produce an identical array.
+_For any_ valid Uint32Array, uploading it to a GPU buffer and then downloading it back SHALL produce an identical array.
 
 **Validates: Requirements 2.2, 2.3**
 
 ### Property 2: Buffer Size Alignment
 
-*For any* input size and alignment value, the aligned buffer size SHALL be greater than or equal to the input size AND divisible by the alignment value.
+_For any_ input size and alignment value, the aligned buffer size SHALL be greater than or equal to the input size AND divisible by the alignment value.
 
 **Validates: Requirements 2.5**
 
 ### Property 3: Bitonic Padding to Power of 2
 
-*For any* input array size that is not a power of 2, the padded size SHALL be the smallest power of 2 greater than or equal to the input size.
+_For any_ input array size that is not a power of 2, the padded size SHALL be the smallest power of 2 greater than or equal to the input size.
 
 **Validates: Requirements 3.4**
 
 ### Property 4: Bitonic Sort Correctness
 
-*For any* valid Uint32Array input, the Bitonic_Sorter output SHALL satisfy:
+_For any_ valid Uint32Array input, the Bitonic_Sorter output SHALL satisfy:
+
 1. The output array is in ascending order (each element ≤ next element)
 2. The output array contains exactly the same elements as the input array (same multiset)
 
@@ -451,7 +394,8 @@ fn prefix_sum(
 
 ### Property 5: Radix Sort Correctness
 
-*For any* valid Uint32Array input, the Radix_Sorter output SHALL satisfy:
+_For any_ valid Uint32Array input, the Radix_Sorter output SHALL satisfy:
+
 1. The output array is in ascending order (each element ≤ next element)
 2. The output array contains exactly the same elements as the input array (same multiset)
 
@@ -459,25 +403,25 @@ fn prefix_sum(
 
 ### Property 6: Speedup Calculation Correctness
 
-*For any* benchmark result with CPU time and GPU time, the speedup ratio SHALL equal CPU time divided by GPU time.
+_For any_ benchmark result with CPU time and GPU time, the speedup ratio SHALL equal CPU time divided by GPU time.
 
 **Validates: Requirements 5.3**
 
 ### Property 7: Average Time Calculation
 
-*For any* set of timing measurements, the reported average time SHALL equal the sum of all measurements divided by the count of measurements.
+_For any_ set of timing measurements, the reported average time SHALL equal the sum of all measurements divided by the count of measurements.
 
 **Validates: Requirements 5.6**
 
 ### Property 8: isSorted Validator Correctness
 
-*For any* array, the isSorted function SHALL return true if and only if every element is less than or equal to its successor.
+_For any_ array, the isSorted function SHALL return true if and only if every element is less than or equal to its successor.
 
 **Validates: Requirements 6.1**
 
 ### Property 9: hasSameElements Validator Correctness
 
-*For any* two arrays, the hasSameElements function SHALL return true if and only if both arrays contain the same elements with the same frequencies (identical multisets).
+_For any_ two arrays, the hasSameElements function SHALL return true if and only if both arrays contain the same elements with the same frequencies (identical multisets).
 
 **Validates: Requirements 6.2**
 
@@ -485,25 +429,25 @@ fn prefix_sum(
 
 ### WebGPU 初始化错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
+| 错误场景            | 处理方式                                          |
+| ------------------- | ------------------------------------------------- |
 | 浏览器不支持 WebGPU | 抛出 `WebGPUNotSupportedError`，UI 显示兼容性提示 |
-| 无法获取 GPU 适配器 | 抛出 `GPUAdapterError`，提示检查 GPU 驱动 |
-| 设备请求失败 | 抛出 `GPUDeviceError`，提示可能的资源限制 |
+| 无法获取 GPU 适配器 | 抛出 `GPUAdapterError`，提示检查 GPU 驱动         |
+| 设备请求失败        | 抛出 `GPUDeviceError`，提示可能的资源限制         |
 
 ### 缓冲区错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
+| 错误场景              | 处理方式                                       |
+| --------------------- | ---------------------------------------------- |
 | 数组过大超出 GPU 内存 | 抛出 `BufferAllocationError`，提示减小数组大小 |
-| 缓冲区映射失败 | 重试一次，失败则抛出 `BufferMapError` |
+| 缓冲区映射失败        | 重试一次，失败则抛出 `BufferMapError`          |
 
 ### 排序错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
+| 错误场景       | 处理方式                                        |
+| -------------- | ----------------------------------------------- |
 | 着色器编译失败 | 抛出 `ShaderCompilationError`，包含详细错误信息 |
-| GPU 执行超时 | 抛出 `GPUTimeoutError`，提示减小数组大小 |
+| GPU 执行超时   | 抛出 `GPUTimeoutError`，提示减小数组大小        |
 
 ## Testing Strategy
 
@@ -559,7 +503,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
     testTimeout: 30000, // GPU 操作可能较慢
-  }
+  },
 });
 ```
 

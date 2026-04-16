@@ -1,5 +1,17 @@
 # API 参考文档
 
+> WebGPU Sorting 库的完整 API 文档
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/WebGPU-WGSL-green" alt="WebGPU">
+  <img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript">
+</p>
+
+<p align="center">
+  <a href="../en/API.md">English Version</a> | <strong>中文版本</strong>
+</p>
+
 本文档详细描述 WebGPU 排序库的所有公开 API。
 
 ## 目录
@@ -21,12 +33,13 @@ WebGPU 环境管理类，负责初始化和维护 GPU 设备连接。
 ### 构造函数
 
 ```typescript
-constructor()
+constructor();
 ```
 
 创建一个新的 GPUContext 实例。
 
 **示例:**
+
 ```typescript
 const context = new GPUContext();
 ```
@@ -42,9 +55,11 @@ static isSupported(): boolean
 ```
 
 **返回值:**
+
 - `boolean`: 如果支持 WebGPU 返回 `true`，否则返回 `false`
 
 **示例:**
+
 ```typescript
 if (GPUContext.isSupported()) {
   console.log('WebGPU 可用');
@@ -64,15 +79,18 @@ async initialize(config?: GPUContextConfig): Promise<void>
 ```
 
 **参数:**
+
 - `config` (可选): 配置对象
   - `powerPreference?: 'low-power' | 'high-performance'`: 电源偏好，默认 `'high-performance'`
 
 **抛出:**
+
 - `WebGPUNotSupportedError`: WebGPU 不支持
 - `GPUAdapterError`: 无法获取 GPU 适配器
 - `GPUDeviceError`: 无法获取 GPU 设备
 
 **示例:**
+
 ```typescript
 const context = new GPUContext();
 await context.initialize({ powerPreference: 'high-performance' });
@@ -87,12 +105,15 @@ getDevice(): GPUDevice
 ```
 
 **返回值:**
+
 - `GPUDevice`: WebGPU 设备对象
 
 **抛出:**
+
 - `Error`: 如果设备未初始化
 
 **示例:**
+
 ```typescript
 const device = context.getDevice();
 ```
@@ -106,6 +127,7 @@ destroy(): void
 ```
 
 **示例:**
+
 ```typescript
 context.destroy();
 ```
@@ -123,9 +145,11 @@ constructor(context: GPUContext)
 ```
 
 **参数:**
+
 - `context`: 已初始化的 GPUContext 实例
 
 **示例:**
+
 ```typescript
 const sorter = new BitonicSorter(context);
 ```
@@ -141,15 +165,18 @@ async sort(data: Uint32Array): Promise<SortResult>
 ```
 
 **参数:**
+
 - `data`: 要排序的 32 位无符号整数数组
 
 **返回值:**
+
 - `Promise<SortResult>`: 排序结果对象
   - `sortedData: Uint32Array`: 排序后的数组
   - `gpuTimeMs: number`: GPU 计算时间（毫秒）
   - `totalTimeMs: number`: 总时间，包含数据传输（毫秒）
 
 **示例:**
+
 ```typescript
 const data = new Uint32Array([5, 2, 8, 1, 9]);
 const result = await sorter.sort(data);
@@ -168,6 +195,7 @@ destroy(): void
 ```
 
 **示例:**
+
 ```typescript
 sorter.destroy();
 ```
@@ -185,9 +213,11 @@ constructor(context: GPUContext)
 ```
 
 **参数:**
+
 - `context`: 已初始化的 GPUContext 实例
 
 **示例:**
+
 ```typescript
 const sorter = new RadixSorter(context);
 ```
@@ -203,15 +233,18 @@ async sort(data: Uint32Array): Promise<SortResult>
 ```
 
 **参数:**
+
 - `data`: 要排序的 32 位无符号整数数组
 
 **返回值:**
+
 - `Promise<SortResult>`: 排序结果对象
   - `sortedData: Uint32Array`: 排序后的数组
   - `gpuTimeMs: number`: GPU 计算时间（毫秒）
   - `totalTimeMs: number`: 总时间，包含数据传输（毫秒）
 
 **示例:**
+
 ```typescript
 const data = new Uint32Array([5, 2, 8, 1, 9]);
 const result = await sorter.sort(data);
@@ -230,6 +263,7 @@ destroy(): void
 ```
 
 **示例:**
+
 ```typescript
 sorter.destroy();
 ```
@@ -247,9 +281,11 @@ constructor(device: GPUDevice)
 ```
 
 **参数:**
+
 - `device`: WebGPU 设备对象
 
 **示例:**
+
 ```typescript
 const bufferManager = new BufferManager(context.getDevice());
 ```
@@ -265,13 +301,16 @@ static alignSize(size: number, alignment: number): number
 ```
 
 **参数:**
+
 - `size`: 原始大小（字节）
 - `alignment`: 对齐边界（字节）
 
 **返回值:**
+
 - `number`: 对齐后的大小
 
 **示例:**
+
 ```typescript
 const alignedSize = BufferManager.alignSize(100, 256);
 // 返回 256
@@ -288,12 +327,15 @@ createStorageBuffer(data: Uint32Array): GPUBuffer
 ```
 
 **参数:**
+
 - `data`: 要上传的数据
 
 **返回值:**
+
 - `GPUBuffer`: GPU 缓冲区对象
 
 **示例:**
+
 ```typescript
 const data = new Uint32Array([1, 2, 3, 4, 5]);
 const buffer = bufferManager.createStorageBuffer(data);
@@ -308,12 +350,15 @@ createStagingBuffer(size: number): GPUBuffer
 ```
 
 **参数:**
+
 - `size`: 缓冲区大小（字节）
 
 **返回值:**
+
 - `GPUBuffer`: GPU 缓冲区对象
 
 **示例:**
+
 ```typescript
 const stagingBuffer = bufferManager.createStagingBuffer(1024);
 ```
@@ -327,13 +372,16 @@ async readBuffer(buffer: GPUBuffer, size: number): Promise<Uint32Array>
 ```
 
 **参数:**
+
 - `buffer`: 要读取的 GPU 缓冲区
 - `size`: 读取大小（字节）
 
 **返回值:**
+
 - `Promise<Uint32Array>`: 读取的数据
 
 **示例:**
+
 ```typescript
 const data = await bufferManager.readBuffer(buffer, 1024);
 ```
@@ -355,12 +403,15 @@ static isSorted(data: Uint32Array): boolean
 ```
 
 **参数:**
+
 - `data`: 要检查的数组
 
 **返回值:**
+
 - `boolean`: 如果数组已排序返回 `true`
 
 **示例:**
+
 ```typescript
 const sorted = Validator.isSorted(new Uint32Array([1, 2, 3, 4, 5]));
 // 返回 true
@@ -378,13 +429,16 @@ static hasSameElements(a: Uint32Array, b: Uint32Array): boolean
 ```
 
 **参数:**
+
 - `a`: 第一个数组
 - `b`: 第二个数组
 
 **返回值:**
+
 - `boolean`: 如果包含相同元素返回 `true`
 
 **示例:**
+
 ```typescript
 const a = new Uint32Array([1, 2, 3]);
 const b = new Uint32Array([3, 1, 2]);
@@ -401,15 +455,18 @@ static validate(input: Uint32Array, output: Uint32Array): ValidationResult
 ```
 
 **参数:**
+
 - `input`: 原始输入数组
 - `output`: 排序后的输出数组
 
 **返回值:**
+
 - `ValidationResult`: 验证结果对象
   - `isValid: boolean`: 是否有效
   - `errors: string[]`: 错误信息列表
 
 **示例:**
+
 ```typescript
 const input = new Uint32Array([5, 2, 8, 1]);
 const output = new Uint32Array([1, 2, 5, 8]);
@@ -435,9 +492,11 @@ constructor(context: GPUContext)
 ```
 
 **参数:**
+
 - `context`: 已初始化的 GPUContext 实例
 
 **示例:**
+
 ```typescript
 const benchmark = new Benchmark(context);
 ```
@@ -453,12 +512,15 @@ static formatResults(results: BenchmarkResult[]): string
 ```
 
 **参数:**
+
 - `results`: 基准测试结果数组
 
 **返回值:**
+
 - `string`: 格式化的表格字符串
 
 **示例:**
+
 ```typescript
 const formatted = Benchmark.formatResults(results);
 console.log(formatted);
@@ -479,24 +541,26 @@ async runSingle(
 ```
 
 **参数:**
+
 - `algorithm`: 排序算法类型
 - `size`: 数组大小
 - `iterations`: 迭代次数
 
 **返回值:**
+
 - `Promise<BenchmarkResult>`: 基准测试结果
-  - `algorithm: string`: 算法名称
-  - `size: number`: 数组大小
+  - `algorithm: 'bitonic' | 'radix' | 'js-native'`: 算法名称
+  - `arraySize: number`: 数组大小
   - `iterations: number`: 迭代次数
-  - `gpuTimeMs: number`: 平均 GPU 时间
+  - `gpuTimeMs?: number`: 平均 GPU 时间（仅 GPU 算法）
   - `totalTimeMs: number`: 平均总时间
-  - `jsTimeMs: number`: JS 排序时间
-  - `speedup: number`: 加速比
+  - `speedupVsNative?: number`: 相对 JS 的加速比
 
 **示例:**
+
 ```typescript
 const result = await benchmark.runSingle('bitonic', 100000, 5);
-console.log(`加速比: ${result.speedup.toFixed(2)}x`);
+console.log(`加速比: ${result.speedupVsNative?.toFixed(2)}x`);
 ```
 
 #### `runAll()`
@@ -508,12 +572,15 @@ async runAll(sizes: number[]): Promise<BenchmarkResult[]>
 ```
 
 **参数:**
+
 - `sizes`: 要测试的数组大小列表
 
 **返回值:**
+
 - `Promise<BenchmarkResult[]>`: 所有测试结果
 
 **示例:**
+
 ```typescript
 const results = await benchmark.runAll([1024, 10240, 102400]);
 console.log(Benchmark.formatResults(results));
@@ -528,6 +595,7 @@ destroy(): void
 ```
 
 **示例:**
+
 ```typescript
 benchmark.destroy();
 ```
@@ -567,13 +635,12 @@ interface ValidationResult {
 
 ```typescript
 interface BenchmarkResult {
-  algorithm: string;
-  size: number;
-  iterations: number;
-  gpuTimeMs: number;
+  algorithm: 'bitonic' | 'radix' | 'js-native';
+  arraySize: number;
+  gpuTimeMs?: number;
   totalTimeMs: number;
-  jsTimeMs: number;
-  speedup: number;
+  speedupVsNative?: number;
+  iterations: number;
 }
 ```
 
@@ -584,13 +651,7 @@ interface BenchmarkResult {
 ### 基本工作流
 
 ```typescript
-import {
-  GPUContext,
-  BitonicSorter,
-  RadixSorter,
-  Validator,
-  Benchmark
-} from './src';
+import { GPUContext, BitonicSorter, RadixSorter, Validator, Benchmark } from './src';
 
 async function main() {
   // 1. 检查支持
@@ -611,7 +672,7 @@ async function main() {
   const size = 100000;
   const data = new Uint32Array(size);
   for (let i = 0; i < size; i++) {
-    data[i] = Math.floor(Math.random() * 0xFFFFFFFF);
+    data[i] = Math.floor(Math.random() * 0xffffffff);
   }
 
   // 5. 执行排序
@@ -644,11 +705,7 @@ main().catch(console.error);
 
 ```typescript
 import { GPUContext, BitonicSorter } from './src';
-import {
-  WebGPUNotSupportedError,
-  GPUAdapterError,
-  GPUDeviceError
-} from './src/core/errors';
+import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from './src/core/errors';
 
 async function sortWithErrorHandling() {
   try {
@@ -714,12 +771,12 @@ for (const data of datasets) {
 
 ## 浏览器兼容性
 
-| API | Chrome | Edge | Firefox | Safari |
-|-----|--------|------|---------|--------|
-| GPUContext | 113+ | 113+ | Nightly | 18+ |
-| BitonicSorter | 113+ | 113+ | Nightly | 18+ |
-| RadixSorter | 113+ | 113+ | Nightly | 18+ |
-| Benchmark | 113+ | 113+ | Nightly | 18+ |
+| API           | Chrome | Edge | Firefox | Safari |
+| ------------- | ------ | ---- | ------- | ------ |
+| GPUContext    | 113+   | 113+ | Nightly | 18+    |
+| BitonicSorter | 113+   | 113+ | Nightly | 18+    |
+| RadixSorter   | 113+   | 113+ | Nightly | 18+    |
+| Benchmark     | 113+   | 113+ | Nightly | 18+    |
 
 ---
 

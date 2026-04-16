@@ -14,7 +14,7 @@ describe('Benchmark', () => {
           (cpuTime, gpuTime) => {
             const speedup = Benchmark.calculateSpeedup(cpuTime, gpuTime);
             const expected = cpuTime / gpuTime;
-            
+
             // Allow small floating point tolerance
             expect(Math.abs(speedup - expected)).toBeLessThan(0.0001);
           }
@@ -31,10 +31,10 @@ describe('Benchmark', () => {
     it('should handle edge cases', () => {
       // Equal times = 1x speedup
       expect(Benchmark.calculateSpeedup(100, 100)).toBe(1);
-      
+
       // GPU faster = speedup > 1
       expect(Benchmark.calculateSpeedup(100, 10)).toBe(10);
-      
+
       // GPU slower = speedup < 1
       expect(Benchmark.calculateSpeedup(10, 100)).toBe(0.1);
     });
@@ -46,12 +46,15 @@ describe('Benchmark', () => {
     it('average should equal sum divided by count', () => {
       fc.assert(
         fc.property(
-          fc.array(fc.float({ min: Math.fround(0), max: Math.fround(10000), noNaN: true }), { minLength: 1, maxLength: 100 }),
+          fc.array(fc.float({ min: Math.fround(0), max: Math.fround(10000), noNaN: true }), {
+            minLength: 1,
+            maxLength: 100,
+          }),
           (values) => {
             const average = Benchmark.calculateAverage(values);
             const expectedSum = values.reduce((a, b) => a + b, 0);
             const expectedAverage = expectedSum / values.length;
-            
+
             // Allow small floating point tolerance
             expect(Math.abs(average - expectedAverage)).toBeLessThan(0.0001);
           }
@@ -76,14 +79,11 @@ describe('Benchmark', () => {
   describe('generateRandomData', () => {
     it('should generate array of correct size', () => {
       fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 10000 }),
-          (size) => {
-            const data = Benchmark.generateRandomData(size);
-            expect(data.length).toBe(size);
-            expect(data).toBeInstanceOf(Uint32Array);
-          }
-        ),
+        fc.property(fc.integer({ min: 0, max: 10000 }), (size) => {
+          const data = Benchmark.generateRandomData(size);
+          expect(data.length).toBe(size);
+          expect(data).toBeInstanceOf(Uint32Array);
+        }),
         { numRuns: 50 }
       );
     });
@@ -92,7 +92,7 @@ describe('Benchmark', () => {
       const data = Benchmark.generateRandomData(1000);
       for (const value of data) {
         expect(value).toBeGreaterThanOrEqual(0);
-        expect(value).toBeLessThanOrEqual(0xFFFFFFFF);
+        expect(value).toBeLessThanOrEqual(0xffffffff);
       }
     });
   });
@@ -101,11 +101,18 @@ describe('Benchmark', () => {
     it('should format results as markdown table', () => {
       const results = [
         { algorithm: 'js-native' as const, arraySize: 1000, totalTimeMs: 1.5, iterations: 5 },
-        { algorithm: 'bitonic' as const, arraySize: 1000, totalTimeMs: 0.5, gpuTimeMs: 0.3, speedupVsNative: 3, iterations: 5 },
+        {
+          algorithm: 'bitonic' as const,
+          arraySize: 1000,
+          totalTimeMs: 0.5,
+          gpuTimeMs: 0.3,
+          speedupVsNative: 3,
+          iterations: 5,
+        },
       ];
 
       const formatted = Benchmark.formatResults(results);
-      
+
       expect(formatted).toContain('Algorithm');
       expect(formatted).toContain('Size');
       expect(formatted).toContain('js-native');

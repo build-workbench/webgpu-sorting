@@ -1,9 +1,29 @@
-# 2026-03-22 GitHub Pages 优化
+# 2026-04-16 项目全面优化
 
-## 修改内容
-- 新增 `.github/workflows/pages.yml`，在 `main` 分支推送后自动构建并发布到 GitHub Pages。
-- 在 `vite.config.ts` 中增加 `VITE_BASE_PATH` 支持，适配 `/<repo-name>/` 子路径部署。
+## 代码修复
 
-## 验证说明
-- 已检查 `index.html` 与源码中不存在明显的根路径资源引用。
-- 本地未完成构建验证，当前环境缺少 `tsc`/`vite` 命令；GitHub Actions 会在 `npm ci` 后执行构建。
+- 移除 `BitonicSorter.ts` 和 `RadixSorter.ts` 中的非空断言 (`!`)，使用显式空值检查
+- 删除未使用的 `src/shaders/scan.wgsl` 着色器文件
+- 修复 `.eslintrc.cjs` 配置，允许 examples 目录使用 console 语句
+
+## GitHub Workflows 优化
+
+- 修复 CI 工作流分支名称 (`main` → `master`)
+- 优化 Pages 工作流分支名称 (`main` → `master`)
+- 添加路径过滤，仅在相关文件变更时触发 Pages 构建
+- 添加 `.nojekyll` 文件以正确处理下划线开头的目录
+- 优化 CI 工作流结构，分离 lint、test、build 作业
+- 添加构建产物上传功能
+
+## 文档更新
+
+- 更新 `README.md` 项目结构，移除 scan.wgsl 引用
+- 更新 `PROJECT_OVERVIEW.md`，移除 scan.wgsl 引用，更新日期
+- 更新 `docs/TECHNICAL.md` 架构图
+- 修复 `docs/API.md` 中 BenchmarkResult 类型定义
+- 更新 `.kiro/specs/` 下所有文档的架构图和说明
+- 完善 `CHANGELOG.md` v1.0.1 版本记录
+
+## 版本
+
+- v1.0.1 (2026-04-16)

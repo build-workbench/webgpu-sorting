@@ -1,6 +1,6 @@
 /**
  * 批量处理示例
- * 
+ *
  * 演示如何高效地处理多个数组，重用 GPU 资源
  */
 
@@ -23,7 +23,7 @@ async function batchProcessing() {
   for (let i = 0; i < numDatasets; i++) {
     const data = new Uint32Array(datasetSize);
     for (let j = 0; j < datasetSize; j++) {
-      data[j] = Math.floor(Math.random() * 0xFFFFFFFF);
+      data[j] = Math.floor(Math.random() * 0xffffffff);
     }
     datasets.push(data);
   }
@@ -55,7 +55,7 @@ async function batchProcessing() {
   console.log(`平均每个: ${(method2Time / numDatasets).toFixed(2)}ms\n`);
 
   // 对比
-  const improvement = ((method2Time - method1Time) / method2Time * 100);
+  const improvement = ((method2Time - method1Time) / method2Time) * 100;
   console.log('性能对比:');
   console.log(`方法 1 比方法 2 快 ${improvement.toFixed(1)}%`);
   console.log(`节省时间: ${(method2Time - method1Time).toFixed(2)}ms\n`);
@@ -74,6 +74,6 @@ async function batchProcessing() {
 }
 
 // 运行示例
-batchProcessing().catch(error => {
+batchProcessing().catch((error) => {
   console.error('错误:', error);
 });

@@ -1,5 +1,16 @@
 # 快速入门指南
 
+> 帮助你快速上手 WebGPU 排序项目
+
+<p align="center">
+  <img src="https://img.shields.io/badge/WebGPU-Compute-blue" alt="WebGPU">
+  <img src="https://img.shields.io/badge/minimum-Chrome%20113-blue" alt="Chrome 113+">
+</p>
+
+<p align="center">
+  <a href="../en/GETTING_STARTED.md">English Version</a> | <strong>中文版本</strong>
+</p>
+
 本指南将帮助你快速上手 WebGPU 排序项目。
 
 ## 目录
@@ -35,6 +46,7 @@ node --version
 3. 搜索 "WebGPU"，确认状态为 "Enabled"
 
 如果未启用，尝试：
+
 - 更新浏览器到最新版本
 - 检查 GPU 驱动是否最新
 
@@ -56,6 +68,7 @@ npm install
 ```
 
 这将安装以下依赖：
+
 - `vite`: 开发服务器和构建工具
 - `typescript`: TypeScript 编译器
 - `vitest`: 测试框架
@@ -82,6 +95,7 @@ npm run dev
 访问 http://localhost:5173/
 
 如果一切正常，你会看到：
+
 - ⚡ WebGPU Sorting 标题
 - 配置选项（算法、数组大小、迭代次数）
 - 运行按钮
@@ -161,7 +175,7 @@ async function comparePerformance() {
   const size = 100000;
   const data = new Uint32Array(size);
   for (let i = 0; i < size; i++) {
-    data[i] = Math.floor(Math.random() * 0xFFFFFFFF);
+    data[i] = Math.floor(Math.random() * 0xffffffff);
   }
 
   // 测试 Bitonic Sort
@@ -229,6 +243,7 @@ sortAndValidate();
 **原因**: 浏览器不支持 WebGPU 或未启用。
 
 **解决方案**:
+
 1. 更新浏览器到最新版本
 2. 检查 `chrome://gpu` 确认 WebGPU 状态
 3. 更新 GPU 驱动程序
@@ -239,6 +254,7 @@ sortAndValidate();
 **原因**: 小数组时 GPU 开销超过收益。
 
 **解决方案**:
+
 - 使用更大的数组（>10K 元素）
 - GPU 排序在大数据集上才有优势
 - 考虑数据传输开销
@@ -248,6 +264,7 @@ sortAndValidate();
 **原因**: Node.js 环境没有 WebGPU。
 
 **说明**:
+
 - 单元测试在 Node.js 中运行
 - 只测试纯函数（如 `alignSize`、`isSorted`）
 - GPU 相关功能需要在浏览器中测试
@@ -257,6 +274,7 @@ sortAndValidate();
 **原因**: TypeScript 配置或依赖问题。
 
 **解决方案**:
+
 ```bash
 # 删除 node_modules 和 lock 文件
 rm -rf node_modules package-lock.json
@@ -273,6 +291,7 @@ npm run build
 **原因**: 端口被占用。
 
 **解决方案**:
+
 ```bash
 # 使用不同端口
 npm run dev -- --port 3000
@@ -281,14 +300,18 @@ npm run dev -- --port 3000
 ### Q6: 如何调试 WGSL 着色器？
 
 **方法**:
+
 1. 使用 `console.log` 输出中间结果
 2. 检查着色器编译错误：
+
 ```typescript
 const compilationInfo = await shaderModule.getCompilationInfo();
 console.log(compilationInfo.messages);
 ```
+
 3. 使用 Chrome DevTools Performance 面板
 4. 添加标签便于识别：
+
 ```typescript
 const buffer = device.createBuffer({
   label: 'debug-buffer',
@@ -299,6 +322,7 @@ const buffer = device.createBuffer({
 ### Q7: 性能不如预期
 
 **优化建议**:
+
 1. 增加数组大小（GPU 在大数据集上更有优势）
 2. 减少 CPU-GPU 数据传输
 3. 使用 `powerPreference: 'high-performance'`
@@ -307,6 +331,7 @@ const buffer = device.createBuffer({
 ### Q8: 如何在生产环境使用？
 
 **步骤**:
+
 ```bash
 # 构建生产版本
 npm run build
@@ -316,6 +341,7 @@ npm run build
 ```
 
 **注意事项**:
+
 - 确保服务器支持 HTTPS（WebGPU 需要安全上下文）
 - 添加浏览器兼容性检测
 - 提供降级方案（使用 JS 排序）

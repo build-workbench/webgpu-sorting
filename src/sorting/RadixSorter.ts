@@ -37,10 +37,10 @@ export class RadixSorter {
     });
 
     const compilationInfo = await shaderModule.getCompilationInfo();
-    const errors = compilationInfo.messages.filter(m => m.type === 'error');
+    const errors = compilationInfo.messages.filter((m) => m.type === 'error');
     if (errors.length > 0) {
       throw new ShaderCompilationError(
-        `Radix shader compilation failed: ${errors.map(e => e.message).join(', ')}`
+        `Radix shader compilation failed: ${errors.map((e) => e.message).join(', ')}`
       );
     }
 
@@ -100,11 +100,11 @@ export class RadixSorter {
    */
   async sort(data: Uint32Array): Promise<SortResult> {
     const totalStartTime = performance.now();
-    
+
     await this.initializePipelines();
 
     const size = data.length;
-    
+
     if (size <= 1) {
       return {
         sortedData: new Uint32Array(data),
@@ -123,19 +123,19 @@ export class RadixSorter {
       size: BufferManager.alignSize(size * 4, 4),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    
+
     const histogramBuffer = this.device.createBuffer({
       label: 'radix-histogram',
       size: BufferManager.alignSize(histogramSize * 4, 4),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    
+
     const prefixSumBuffer = this.device.createBuffer({
       label: 'radix-prefix-sum',
       size: BufferManager.alignSize(histogramSize * 4, 4),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    
+
     const uniformBuffer = this.bufferManager.createUniformBuffer(16, 'radix-uniforms');
 
     const gpuStartTime = performance.now();
@@ -153,9 +153,14 @@ export class RadixSorter {
       this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
       // Create bind group for this pass
+      const bindGroupLayout = this.bindGroupLayout;
+      if (!bindGroupLayout) {
+        throw new ShaderCompilationError('Shader pipelines not initialized');
+      }
+
       const bindGroup = this.device.createBindGroup({
         label: `radix-bind-group-pass-${pass}`,
-        layout: this.bindGroupLayout!,
+        layout: bindGroupLayout,
         entries: [
           { binding: 0, resource: { buffer: inputBuffer } },
           { binding: 1, resource: { buffer: outputBuffer } },
@@ -167,9 +172,14 @@ export class RadixSorter {
 
       // Step 1: Compute histogram
       {
+        const histogramPipeline = this.histogramPipeline;
+        if (!histogramPipeline) {
+          throw new ShaderCompilationError('Histogram pipeline not initialized');
+        }
+
         const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(this.histogramPipeline!);
+        passEncoder.setPipeline(histogramPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
@@ -178,7 +188,7 @@ export class RadixSorter {
 
       // Step 2: Read histogram and compute prefix sum on CPU
       await this.device.queue.onSubmittedWorkDone();
-      
+
       const stagingBuffer = this.device.createBuffer({
         size: BufferManager.alignSize(histogramSize * 4, 4),
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
@@ -186,13 +196,7 @@ export class RadixSorter {
 
       {
         const commandEncoder = this.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-          histogramBuffer,
-          0,
-          stagingBuffer,
-          0,
-          histogramSize * 4
-        );
+        commandEncoder.copyBufferToBuffer(histogramBuffer, 0, stagingBuffer, 0, histogramSize * 4);
         this.device.queue.submit([commandEncoder.finish()]);
       }
 
@@ -213,9 +217,14 @@ export class RadixSorter {
 
       // Step 3: Scatter elements
       {
+        const scatterPipeline = this.scatterPipeline;
+        if (!scatterPipeline) {
+          throw new ShaderCompilationError('Scatter pipeline not initialized');
+        }
+
         const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(this.scatterPipeline!);
+        passEncoder.setPipeline(scatterPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
@@ -229,7 +238,7 @@ export class RadixSorter {
     }
 
     await this.device.queue.onSubmittedWorkDone();
-    
+
     const gpuEndTime = performance.now();
 
     // Read results (inputBuffer has final sorted data after even number of swaps)

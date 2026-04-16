@@ -41,5 +41,11 @@ module.exports = {
                 '@typescript-eslint/no-explicit-any': 'off',
             },
         },
+        {
+            files: ['examples/**/*.ts'],
+            rules: {
+                'no-console': 'off',
+            },
+        },
     ],
 };

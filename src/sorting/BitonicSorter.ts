@@ -28,7 +28,7 @@ export class BitonicSorter {
   static nextPowerOf2(n: number): number {
     if (n <= 0) return 1;
     if ((n & (n - 1)) === 0) return n; // Already power of 2
-    
+
     let power = 1;
     while (power < n) {
       power *= 2;
@@ -57,10 +57,10 @@ export class BitonicSorter {
 
     // Check for compilation errors
     const compilationInfo = await shaderModule.getCompilationInfo();
-    const errors = compilationInfo.messages.filter(m => m.type === 'error');
+    const errors = compilationInfo.messages.filter((m) => m.type === 'error');
     if (errors.length > 0) {
       throw new ShaderCompilationError(
-        `Bitonic shader compilation failed: ${errors.map(e => e.message).join(', ')}`
+        `Bitonic shader compilation failed: ${errors.map((e) => e.message).join(', ')}`
       );
     }
 
@@ -114,11 +114,11 @@ export class BitonicSorter {
    */
   async sort(data: Uint32Array): Promise<SortResult> {
     const totalStartTime = performance.now();
-    
+
     await this.initializePipelines();
 
     const originalSize = data.length;
-    
+
     // Handle empty or single element arrays
     if (originalSize <= 1) {
       return {
@@ -134,7 +134,7 @@ export class BitonicSorter {
     paddedData.set(data);
     // Fill padding with max value
     for (let i = originalSize; i < paddedSize; i++) {
-      paddedData[i] = 0xFFFFFFFF;
+      paddedData[i] = 0xffffffff;
     }
 
     // Create GPU buffers
@@ -142,9 +142,14 @@ export class BitonicSorter {
     const uniformBuffer = this.bufferManager.createUniformBuffer(16, 'sort-uniforms');
 
     // Create bind group
+    const bindGroupLayout = this.bindGroupLayout;
+    if (!bindGroupLayout) {
+      throw new ShaderCompilationError('Shader pipelines not initialized');
+    }
+
     const bindGroup = this.device.createBindGroup({
       label: 'bitonic-bind-group',
-      layout: this.bindGroupLayout!,
+      layout: bindGroupLayout,
       entries: [
         { binding: 0, resource: { buffer: dataBuffer } },
         { binding: 1, resource: { buffer: uniformBuffer } },
@@ -159,12 +164,17 @@ export class BitonicSorter {
 
     // First, do local sort within each workgroup
     {
+      const localPipeline = this.localPipeline;
+      if (!localPipeline) {
+        throw new ShaderCompilationError('Local pipeline not initialized');
+      }
+
       const uniformData = new Uint32Array([0, 0, paddedSize, 0]);
       this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
       const commandEncoder = this.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginComputePass();
-      passEncoder.setPipeline(this.localPipeline!);
+      passEncoder.setPipeline(localPipeline);
       passEncoder.setBindGroup(0, bindGroup);
       passEncoder.dispatchWorkgroups(numWorkgroups);
       passEncoder.end();
@@ -173,7 +183,11 @@ export class BitonicSorter {
 
     // Then do global merge stages
     const localStages = Math.log2(WORKGROUP_SIZE);
-    
+    const globalPipeline = this.globalPipeline;
+    if (!globalPipeline) {
+      throw new ShaderCompilationError('Global pipeline not initialized');
+    }
+
     for (let stage = localStages; stage < numStages; stage++) {
       for (let passNum = stage; passNum >= 0; passNum--) {
         const uniformData = new Uint32Array([stage, passNum, paddedSize, 0]);
@@ -181,7 +195,7 @@ export class BitonicSorter {
 
         const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(this.globalPipeline!);
+        passEncoder.setPipeline(globalPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
@@ -191,12 +205,12 @@ export class BitonicSorter {
 
     // Wait for GPU to finish
     await this.device.queue.onSubmittedWorkDone();
-    
+
     const gpuEndTime = performance.now();
 
     // Read back results
     const result = await this.bufferManager.readBuffer(dataBuffer, paddedSize * 4);
-    
+
     // Remove padding
     const sortedData = result.slice(0, originalSize);
 

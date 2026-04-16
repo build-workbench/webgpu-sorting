@@ -1,143 +1,94 @@
-# 更新日志
+# Changelog | 更新日志
 
-本文档记录项目的所有重要变更。
+All notable changes to this project will be documented in this file.
 
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
-版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+本项目所有重要变更都将记录在此文件中。
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
 
 ## [Unreleased]
 
-### 计划中
-- 支持降序排序
-- 支持 Float32Array 排序
-- 添加更多排序算法（归并排序、快速排序）
-- 支持自定义比较函数
-- 添加 Web Worker 支持
+### Planned | 计划中
+
+- Support for descending sort | 支持降序排序
+- Support for Float32Array sorting | 支持 Float32Array 排序
+- Additional sorting algorithms (Merge Sort, Quick Sort) | 添加更多排序算法（归并排序、快速排序）
+- Custom comparison function support | 支持自定义比较函数
+- Web Worker support | 添加 Web Worker 支持
+- Performance profiling tools | 添加性能分析工具
+
+---
+
+## [1.0.1] - 2026-04-16
+
+[英文版本](./changelog/en/v1.0.1.md) | [中文版本](./changelog/zh/v1.0.1.md)
+
+### Fixed | 修复
+
+- Removed non-null assertions in favor of explicit null checks | 移除非空断言，使用显式空值检查
+- Fixed CI workflow branch names (`main` → `master`) | 修复 CI 工作流分支名称
+- Fixed Pages workflow branch names (`main` → `master`) | 修复 Pages 工作流分支名称
+
+### Optimized | 优化
+
+- Separated CI jobs (lint, test, build) for better efficiency | 分离 CI 作业以提高效率
+- Added path filtering to Pages workflow | 为 Pages 工作流添加路径过滤
+- Updated ESLint config for examples directory | 更新 examples 目录的 ESLint 配置
+
+### Removed | 移除
+
+- Deleted unused `scan.wgsl` shader file | 删除未使用的 `scan.wgsl` 着色器文件
+
+### CI/CD
+
+- Added `.nojekyll` for GitHub Pages | 添加 `.nojekyll` 文件
+- Added artifact uploads (7 days retention) | 添加构建产物上传（保留 7 天）
+- Added coverage report uploads (30 days) | 添加覆盖率报告上传（保留 30 天）
+
+### Documentation | 文档
+
+- Fixed API documentation type definitions | 修复 API 文档类型定义
+- Updated all architecture diagrams | 更新所有架构图
+- Added bilingual documentation support | 添加双语文档支持
 
 ---
 
 ## [1.0.0] - 2026-01-02
 
-### 新增
-- ✨ 实现双调排序（Bitonic Sort）
-  - 支持任意大小数组（自动 padding）
-  - 使用共享内存优化工作组内排序
-  - 使用 workgroupBarrier() 进行线程同步
-- ✨ 实现基数排序（Radix Sort）
-  - 4 位基数（16 个桶）
-  - 并行直方图计算
-  - Blelloch Scan 并行前缀和
-  - 并行数据重排
-- ✨ WebGPU 核心基础设施
-  - GPUContext: WebGPU 环境管理
-  - BufferManager: GPU 缓冲区管理
-  - Validator: 排序结果验证
-- ✨ 性能基准测试
-  - 支持单次测试和完整测试套件
-  - 自动计算加速比
-  - 对比 GPU vs JS Array.sort()
-- ✨ 演示界面
-  - 算法选择（Bitonic/Radix/Both）
-  - 数组大小选择（1K/10K/100K/1M）
-  - 实时进度显示
-  - 结果可视化
-- 📝 完整文档
-  - README.md: 项目概述和快速开始
-  - docs/TECHNICAL.md: 技术实现详解
-  - docs/GETTING_STARTED.md: 入门指南
-  - docs/API.md: API 参考文档
-  - CONTRIBUTING.md: 贡献指南
-  - CHANGELOG.md: 更新日志
+### Added | 新增
 
-### 测试
-- ✅ 38 个测试全部通过
-  - 8 个 GPUContext 测试
-  - 3 个 BufferManager 测试
-  - 10 个 Validator 测试
-  - 3 个 BitonicSorter 测试
-  - 4 个 RadixSorter 测试
-  - 10 个 Benchmark 测试
-- ✅ 属性测试（Property-Based Testing）
-  - 使用 fast-check 进行随机测试
-  - 每个属性测试 100+ 次迭代
-  - 覆盖边界情况和随机输入
+- **Bitonic Sort** implementation with GPU optimization | 双调排序实现，GPU 优化
+- **Radix Sort** implementation with parallel histogram | 基数排序实现，并行直方图
+- **WebGPU Core Infrastructure**: GPUContext, BufferManager, Validator | WebGPU 核心基础设施
+- **Benchmark Utility** for performance testing | 基准测试工具
+- **Interactive Demo** with real-time results | 交互式演示
+- **Comprehensive Documentation** (5 documents) | 完整文档（5 个文档）
+- **38 Unit Tests** with property-based testing | 38 个单元测试，属性测试
 
-### 性能
-- ⚡ 双调排序
-  - 100K 元素: ~2ms (7.5x 加速)
-  - 1M 元素: ~10ms (20x 加速)
-- ⚡ 基数排序
-  - 100K 元素: ~3ms (5x 加速)
-  - 1M 元素: ~15ms (13x 加速)
+### Performance | 性能
 
-### 浏览器支持
-- ✅ Chrome 113+
-- ✅ Edge 113+
-- ⚠️ Firefox Nightly (实验性)
-- ⚠️ Safari 18+ (部分支持)
+- Bitonic Sort: 20x speedup for 1M elements | 双调排序：100 万元素 20 倍加速
+- Radix Sort: 13x speedup for 1M elements | 基数排序：100 万元素 13 倍加速
 
 ---
 
-## 版本说明
+## Version History | 版本历史
 
-### [1.0.0] - 首次发布
-
-这是 WebGPU Sorting 项目的首个正式版本，包含完整的功能实现和文档。
-
-**核心功能:**
-- 两种 GPU 排序算法（双调排序、基数排序）
-- 完整的 WebGPU 基础设施
-- 性能基准测试工具
-- 交互式演示界面
-
-**技术亮点:**
-- 使用 workgroupBarrier() 实现线程同步
-- 使用共享内存优化性能
-- 实现并行归约和并行前缀和
-- 属性测试保证正确性
-
-**文档:**
-- 5 个文档文件，覆盖从入门到高级的所有内容
-- 中文文档，便于国内开发者使用
-- 丰富的代码示例和使用场景
-
-**测试:**
-- 38 个测试，100% 通过率
-- 属性测试覆盖核心算法
-- 单元测试覆盖边界情况
+| Version | Date       | Changes                                         |
+| ------- | ---------- | ----------------------------------------------- |
+| 1.0.1   | 2026-04-16 | Code quality, CI/CD optimization, documentation |
+| 1.0.0   | 2026-01-02 | Initial release with two sorting algorithms     |
 
 ---
 
-## 开发历程
+## Links | 链接
 
-### 2026-01-02
-- 创建项目规范（requirements.md, design.md, tasks.md）
-- 实现核心基础设施（GPUContext, BufferManager, Validator）
-- 实现双调排序（WGSL 着色器 + TypeScript 调度）
-- 实现基数排序（WGSL 着色器 + TypeScript 调度）
-- 实现性能基准测试
-- 创建演示界面
-- 编写完整文档
-- 所有测试通过
-- 发布 v1.0.0
+- [Detailed Changelogs](./changelog/) | [详细更新日志](./changelog/)
+- [GitHub Releases](https://github.com/your-username/webgpu-sorting/releases)
 
 ---
 
-## 贡献者
-
-感谢所有为项目做出贡献的开发者！
-
----
-
-## 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](./LICENSE) 文件
-
----
-
-## 链接
-
-- [项目主页](https://github.com/your-repo/webgpu-sorting)
-- [问题追踪](https://github.com/your-repo/webgpu-sorting/issues)
-- [讨论区](https://github.com/your-repo/webgpu-sorting/discussions)
-
+**Last Updated**: 2026-04-16

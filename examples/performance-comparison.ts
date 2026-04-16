@@ -1,6 +1,6 @@
 /**
  * 性能对比示例
- * 
+ *
  * 对比 GPU 排序（Bitonic Sort 和 Radix Sort）与 JavaScript 原生排序的性能
  */
 
@@ -26,7 +26,7 @@ async function performanceComparison() {
     // 生成随机数据
     const data = new Uint32Array(size);
     for (let i = 0; i < size; i++) {
-      data[i] = Math.floor(Math.random() * 0xFFFFFFFF);
+      data[i] = Math.floor(Math.random() * 0xffffffff);
     }
 
     // 测试 Bitonic Sort
@@ -48,17 +48,20 @@ async function performanceComparison() {
     const radixSpeedup = jsTime / radixTime;
 
     // 格式化输出
-    const sizeStr = size >= 1048576 ? `${(size / 1048576).toFixed(1)}M` :
-                    size >= 1024 ? `${(size / 1024).toFixed(0)}K` :
-                    `${size}`;
+    const sizeStr =
+      size >= 1048576
+        ? `${(size / 1048576).toFixed(1)}M`
+        : size >= 1024
+          ? `${(size / 1024).toFixed(0)}K`
+          : `${size}`;
 
     console.log(
       `${sizeStr.padEnd(8)} | ` +
-      `${bitonicTime.toFixed(2).padStart(10)}ms | ` +
-      `${radixTime.toFixed(2).padStart(8)}ms | ` +
-      `${jsTime.toFixed(2).padStart(5)}ms | ` +
-      `${bitonicSpeedup.toFixed(2).padStart(13)}x | ` +
-      `${radixSpeedup.toFixed(2).padStart(13)}x`
+        `${bitonicTime.toFixed(2).padStart(10)}ms | ` +
+        `${radixTime.toFixed(2).padStart(8)}ms | ` +
+        `${jsTime.toFixed(2).padStart(5)}ms | ` +
+        `${bitonicSpeedup.toFixed(2).padStart(13)}x | ` +
+        `${radixSpeedup.toFixed(2).padStart(13)}x`
     );
   }
 
@@ -77,6 +80,6 @@ async function performanceComparison() {
 }
 
 // 运行示例
-performanceComparison().catch(error => {
+performanceComparison().catch((error) => {
   console.error('错误:', error);
 });

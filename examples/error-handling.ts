@@ -1,15 +1,11 @@
 /**
  * 错误处理示例
- * 
+ *
  * 演示如何正确处理各种错误情况
  */
 
 import { GPUContext, BitonicSorter } from '../src';
-import {
-  WebGPUNotSupportedError,
-  GPUAdapterError,
-  GPUDeviceError
-} from '../src/core/errors';
+import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from '../src/core/errors';
 
 async function errorHandlingExample() {
   console.log('=== 错误处理示例 ===\n');
@@ -63,7 +59,6 @@ async function errorHandlingExample() {
     sorter.destroy();
     context.destroy();
     console.log('✅ 资源清理完成');
-
   } catch (error) {
     if (error instanceof WebGPUNotSupportedError) {
       console.error('❌ WebGPU 不支持');
@@ -94,7 +89,8 @@ async function errorHandlingExample() {
   // 示例 5: 完整的错误处理模式
   console.log('\n5. 完整的错误处理模式');
   console.log('```typescript');
-  console.log(`
+  console.log(
+    `
 async function robustSort(data: Uint32Array): Promise<Uint32Array | null> {
   // 检查支持
   if (!GPUContext.isSupported()) {
@@ -125,13 +121,14 @@ async function robustSort(data: Uint32Array): Promise<Uint32Array | null> {
     if (context) context.destroy();
   }
 }
-  `.trim());
+  `.trim()
+  );
   console.log('```');
 
   console.log('\n=== 示例完成 ===');
 }
 
 // 运行示例
-errorHandlingExample().catch(error => {
+errorHandlingExample().catch((error) => {
   console.error('顶层错误:', error);
 });

@@ -4,10 +4,11 @@
 
 ✅ **完成** - 所有功能已实现，测试通过，文档完整
 
-- **版本**: 1.0.0
+- **版本**: 1.0.1
 - **测试**: 38/38 通过 ✅
 - **构建**: 成功 ✅
 - **文档**: 完整 ✅
+- **CI/CD**: 配置完成 ✅
 
 ---
 
@@ -20,6 +21,8 @@ webgpu-sorting/
 │   ├── CHANGELOG.md                 # 版本历史和更新日志
 │   ├── CONTRIBUTING.md              # 贡献指南
 │   ├── LICENSE                      # MIT 许可证
+│   ├── CODE_OF_CONDUCT.md           # 行为准则
+│   ├── SECURITY.md                  # 安全策略
 │   └── PROJECT_OVERVIEW.md          # 本文件
 │
 ├── 📚 详细文档 (docs/)
@@ -47,8 +50,7 @@ webgpu-sorting/
 │   │
 │   ├── shaders/                     # WGSL 计算着色器
 │   │   ├── bitonic.wgsl             # 双调排序着色器
-│   │   ├── radix.wgsl               # 基数排序着色器
-│   │   └── scan.wgsl                # 前缀和着色器
+│   │   └── radix.wgsl               # 基数排序着色器
 │   │
 │   ├── benchmark/                   # 性能测试
 │   │   └── Benchmark.ts             # 基准测试工具
@@ -73,11 +75,34 @@ webgpu-sorting/
 ├── 🎨 演示界面
 │   └── index.html                   # 交互式演示页面
 │
+├── ⚙️ GitHub 配置 (.github/)
+│   ├── workflows/
+│   │   ├── ci.yml                   # CI 工作流
+│   │   └── pages.yml                # GitHub Pages 部署
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md            # Bug 报告模板
+│   │   └── feature_request.md       # 功能请求模板
+│   └── PULL_REQUEST_TEMPLATE.md     # PR 模板
+│
+├── 📋 规格文档 (.kiro/specs/)
+│   ├── webgpu-sorting/              # 核心功能规格
+│   │   ├── requirements.md
+│   │   ├── design.md
+│   │   └── tasks.md
+│   └── project-quality-enhancement/ # 质量增强规格
+│       ├── requirements.md
+│       ├── design.md
+│       └── tasks.md
+│
 └── ⚙️ 配置文件
     ├── package.json                 # 项目配置
     ├── tsconfig.json                # TypeScript 配置
     ├── vite.config.ts               # Vite 配置
     ├── vitest.config.ts             # Vitest 配置
+    ├── .eslintrc.cjs                # ESLint 配置
+    ├── .prettierrc                  # Prettier 配置
+    ├── .editorconfig                # 编辑器配置
+    ├── .nvmrc                       # Node.js 版本
     └── .gitignore                   # Git 忽略规则
 ```
 
@@ -88,16 +113,19 @@ webgpu-sorting/
 ### 1. 双调排序 (Bitonic Sort)
 
 **特点:**
+
 - 时间复杂度: O(n log²n)
 - 空间复杂度: O(1) 原地排序
 - 适合 GPU 并行实现
 
 **技术亮点:**
+
 - 使用 `workgroupBarrier()` 进行线程同步
 - 使用共享内存优化工作组内排序
 - 支持任意大小数组（自动 padding）
 
 **文件:**
+
 - `src/sorting/BitonicSorter.ts`
 - `src/shaders/bitonic.wgsl`
 - `test/sorting/BitonicSorter.test.ts`
@@ -105,40 +133,46 @@ webgpu-sorting/
 ### 2. 基数排序 (Radix Sort)
 
 **特点:**
+
 - 时间复杂度: O(n × k)，k = 位数
 - 空间复杂度: O(n) 需要辅助数组
 - 非比较排序，理论上更快
 
 **技术亮点:**
+
 - 4 位基数（16 个桶），8 个 pass
 - 并行直方图计算（Parallel Reduction）
-- Blelloch Scan 并行前缀和
+- CPU 端前缀和计算（简化实现）
 - 并行数据重排（Scatter）
 
 **文件:**
+
 - `src/sorting/RadixSorter.ts`
 - `src/shaders/radix.wgsl`
-- `src/shaders/scan.wgsl`
 - `test/sorting/RadixSorter.test.ts`
 
 ### 3. WebGPU 基础设施
 
 **GPUContext:**
+
 - WebGPU 环境初始化
 - 适配器和设备管理
 - 资源生命周期管理
 
 **BufferManager:**
+
 - GPU 缓冲区创建
 - CPU-GPU 数据传输
 - 缓冲区大小对齐
 
 **Validator:**
+
 - 排序结果验证
 - 检查数组是否有序
 - 检查元素是否保持一致
 
 **文件:**
+
 - `src/core/GPUContext.ts`
 - `src/core/BufferManager.ts`
 - `src/core/Validator.ts`
@@ -147,18 +181,21 @@ webgpu-sorting/
 ### 4. 性能基准测试
 
 **功能:**
+
 - 单次测试和完整测试套件
 - 自动计算加速比
 - 对比 GPU vs JS Array.sort()
 - 支持多次迭代取平均值
 
 **文件:**
+
 - `src/benchmark/Benchmark.ts`
 - `test/benchmark/Benchmark.test.ts`
 
 ### 5. 演示界面
 
 **功能:**
+
 - 算法选择（Bitonic/Radix/Both）
 - 数组大小选择（1K/10K/100K/1M）
 - 迭代次数设置
@@ -166,6 +203,7 @@ webgpu-sorting/
 - 结果可视化
 
 **文件:**
+
 - `index.html`
 - `src/main.ts`
 
@@ -175,15 +213,15 @@ webgpu-sorting/
 
 ### 测试统计
 
-| 模块 | 测试数 | 状态 |
-|------|--------|------|
-| GPUContext | 8 | ✅ 通过 |
-| BufferManager | 3 | ✅ 通过 |
-| Validator | 10 | ✅ 通过 |
-| BitonicSorter | 3 | ✅ 通过 |
-| RadixSorter | 4 | ✅ 通过 |
-| Benchmark | 10 | ✅ 通过 |
-| **总计** | **38** | **✅ 全部通过** |
+| 模块          | 测试数 | 状态            |
+| ------------- | ------ | --------------- |
+| GPUContext    | 8      | ✅ 通过         |
+| BufferManager | 3      | ✅ 通过         |
+| Validator     | 10     | ✅ 通过         |
+| BitonicSorter | 3      | ✅ 通过         |
+| RadixSorter   | 4      | ✅ 通过         |
+| Benchmark     | 10     | ✅ 通过         |
+| **总计**      | **38** | **✅ 全部通过** |
 
 ### 测试类型
 
@@ -205,80 +243,24 @@ webgpu-sorting/
 
 ---
 
-## 文档完整性
+## CI/CD 配置
 
-### 用户文档
+### GitHub Actions 工作流
 
-✅ **README.md** (主文档)
-- 项目简介和核心亮点
-- 快速开始指南
-- 项目结构说明
-- API 使用示例
-- 技术实现概述
-- 性能对比数据
-- 浏览器兼容性
-- 参考资料
+#### CI 工作流 (`.github/workflows/ci.yml`)
 
-✅ **docs/GETTING_STARTED.md** (入门指南)
-- 环境准备
-- 安装运行
-- 基础使用示例
-- 常见问题解答
+- **触发条件**: push 到 master 分支，或 Pull Request
+- **作业结构**:
+  1. **lint**: ESLint + Prettier + TypeScript 检查
+  2. **test**: 在 Node.js 18.x 和 20.x 上运行测试
+  3. **build**: 构建生产版本
+- **产物**: 覆盖率报告（保留 30 天）、构建产物（保留 7 天）
 
-✅ **docs/TECHNICAL.md** (技术文档)
-- 架构概述
-- WebGPU 基础设施详解
-- 双调排序实现
-- 基数排序实现
-- 性能优化技巧
-- 错误处理策略
+#### Pages 工作流 (`.github/workflows/pages.yml`)
 
-✅ **docs/API.md** (API 参考)
-- 所有类的完整 API
-- 方法参数和返回值
-- 使用示例
-- 错误处理
-- 性能建议
-
-### 开发者文档
-
-✅ **CONTRIBUTING.md** (贡献指南)
-- 行为准则
-- 如何贡献
-- 开发环境设置
-- 代码规范
-- 提交规范
-- 测试要求
-- Pull Request 流程
-
-✅ **CHANGELOG.md** (更新日志)
-- 版本历史
-- 功能变更
-- 性能改进
-- Bug 修复
-
-✅ **examples/README.md** (示例说明)
-- 示例列表
-- 运行方法
-- 常见问题
-
-### 示例代码
-
-✅ **examples/basic-usage.ts**
-- 基本使用流程
-- 适合初学者
-
-✅ **examples/performance-comparison.ts**
-- 性能对比
-- 算法选择指导
-
-✅ **examples/batch-processing.ts**
-- 批量处理
-- 性能优化
-
-✅ **examples/error-handling.ts**
-- 完整错误处理
-- 降级方案
+- **触发条件**: push 到 master 分支（仅相关文件变更）
+- **部署目标**: GitHub Pages
+- **优化**: 路径过滤、`.nojekyll` 支持
 
 ---
 
@@ -287,11 +269,11 @@ webgpu-sorting/
 ### 预期性能
 
 | 数组大小 | JS Sort | Bitonic Sort | Radix Sort | Bitonic 加速比 | Radix 加速比 |
-|----------|---------|--------------|------------|----------------|--------------|
-| 1K | ~0.1ms | ~0.5ms | ~0.8ms | 0.2x | 0.1x |
-| 10K | ~1ms | ~0.8ms | ~1ms | 1.3x | 1.0x |
-| 100K | ~15ms | ~2ms | ~3ms | 7.5x | 5.0x |
-| 1M | ~200ms | ~10ms | ~15ms | 20x | 13x |
+| -------- | ------- | ------------ | ---------- | -------------- | ------------ |
+| 1K       | ~0.1ms  | ~0.5ms       | ~0.8ms     | 0.2x           | 0.1x         |
+| 10K      | ~1ms    | ~0.8ms       | ~1ms       | 1.3x           | 1.0x         |
+| 100K     | ~15ms   | ~2ms         | ~3ms       | 7.5x           | 5.0x         |
+| 1M       | ~200ms  | ~10ms        | ~15ms      | 20x            | 13x          |
 
 ### 性能影响因素
 
@@ -304,13 +286,13 @@ webgpu-sorting/
 
 ## 浏览器兼容性
 
-| 浏览器 | 版本 | 状态 |
-|--------|------|------|
-| Chrome | 113+ | ✅ 完全支持 |
-| Edge | 113+ | ✅ 完全支持 |
-| Firefox | Nightly | ⚠️ 实验性 |
-| Safari | 18+ | ⚠️ 部分支持 |
-| Opera | 99+ | ✅ 支持 |
+| 浏览器  | 版本    | 状态        |
+| ------- | ------- | ----------- |
+| Chrome  | 113+    | ✅ 完全支持 |
+| Edge    | 113+    | ✅ 完全支持 |
+| Firefox | Nightly | ⚠️ 实验性   |
+| Safari  | 18+     | ⚠️ 部分支持 |
+| Opera   | 99+     | ✅ 支持     |
 
 ---
 
@@ -332,6 +314,9 @@ webgpu-sorting/
 
 - **Node.js**: JavaScript 运行时
 - **npm**: 包管理器
+- **ESLint**: 代码检查
+- **Prettier**: 代码格式化
+- **Husky**: Git hooks
 
 ---
 
@@ -350,8 +335,17 @@ npm test
 # 监听测试
 npm run test:watch
 
-# 类型检查
+# 测试覆盖率
+npm run test:coverage
+
+# 代码检查
 npm run lint
+
+# 代码格式化
+npm run format
+
+# 类型检查
+npm run typecheck
 
 # 生产构建
 npm run build
@@ -369,8 +363,7 @@ npm run preview
 1. **workgroupBarrier()**: 展示对 GPU 线程同步的理解
 2. **Shared Memory**: 工作组内共享内存优化
 3. **Parallel Reduction**: MapReduce 中 Reduce 的 GPU 实现
-4. **Parallel Prefix Sum**: Blelloch Scan 算法
-5. **非图形任务**: 纯数据处理，展示 GPU 通用计算能力
+4. **非图形任务**: 纯数据处理，展示 GPU 通用计算能力
 
 ### 工程实践
 
@@ -380,6 +373,7 @@ npm run preview
 4. **错误处理**: 自定义错误类型和完整错误处理
 5. **文档完整**: 5 个文档文件，覆盖所有方面
 6. **代码示例**: 4 个实用示例，覆盖常见场景
+7. **CI/CD**: 完整的自动化工作流
 
 ---
 
@@ -399,6 +393,7 @@ npm run preview
 - [ ] 减少 CPU-GPU 数据传输
 - [ ] 支持流式处理
 - [ ] 添加缓存机制
+- [ ] 实现 GPU 端前缀和（Blelloch Scan）
 
 ### 文档改进
 
@@ -421,6 +416,6 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 ---
 
-**最后更新**: 2026-01-02
-**版本**: 1.0.0
+**最后更新**: 2026-04-16
+**版本**: 1.0.1
 **状态**: ✅ 完成

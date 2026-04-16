@@ -1,9 +1,5 @@
 import { GPUContextConfig } from '../types';
-import {
-  WebGPUNotSupportedError,
-  GPUAdapterError,
-  GPUDeviceError,
-} from './errors';
+import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from './errors';
 
 /**
  * Manages WebGPU initialization and resource lifecycle

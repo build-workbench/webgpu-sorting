@@ -31,7 +31,7 @@ describe('GPUContext', () => {
 
     it('should throw WebGPUNotSupportedError when WebGPU is not supported', async () => {
       vi.stubGlobal('navigator', {});
-      
+
       const context = new GPUContext();
       await expect(context.initialize()).rejects.toThrow(WebGPUNotSupportedError);
     });

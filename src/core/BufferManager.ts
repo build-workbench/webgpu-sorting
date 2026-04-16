@@ -27,7 +27,7 @@ export class BufferManager {
    */
   createStorageBuffer(data: Uint32Array, label?: string): GPUBuffer {
     const byteSize = BufferManager.alignSize(data.byteLength, 4);
-    
+
     try {
       const buffer = this.device.createBuffer({
         label: label ?? 'storage-buffer',
@@ -53,7 +53,7 @@ export class BufferManager {
    */
   createStagingBuffer(size: number): GPUBuffer {
     const alignedSize = BufferManager.alignSize(size, 4);
-    
+
     try {
       const buffer = this.device.createBuffer({
         label: 'staging-buffer',
@@ -73,7 +73,7 @@ export class BufferManager {
    */
   createUniformBuffer(size: number, label?: string): GPUBuffer {
     const alignedSize = BufferManager.alignSize(size, 16); // Uniforms need 16-byte alignment
-    
+
     try {
       const buffer = this.device.createBuffer({
         label: label ?? 'uniform-buffer',
@@ -106,10 +106,10 @@ export class BufferManager {
       const mappedRange = stagingBuffer.getMappedRange();
       const result = new Uint32Array(mappedRange.slice(0, size));
       stagingBuffer.unmap();
-      
+
       // Clean up staging buffer
       this.releaseBuffer(stagingBuffer);
-      
+
       return result;
     } catch (e) {
       this.releaseBuffer(stagingBuffer);

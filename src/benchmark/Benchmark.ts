@@ -38,7 +38,7 @@ export class Benchmark {
   static generateRandomData(size: number): Uint32Array {
     const data = new Uint32Array(size);
     for (let i = 0; i < size; i++) {
-      data[i] = Math.floor(Math.random() * 0xFFFFFFFF);
+      data[i] = Math.floor(Math.random() * 0xffffffff);
     }
     return data;
   }
