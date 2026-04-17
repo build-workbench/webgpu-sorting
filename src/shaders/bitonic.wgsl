@@ -1,5 +1,8 @@
 // Bitonic Sort WGSL Compute Shader
 // Implements both local (within workgroup) and global (across workgroups) sorting
+//
+// IMPORTANT: WORKGROUP_SIZE must match the value in src/constants.ts
+// @see src/constants.ts - WORKGROUP_SIZE = 256
 
 struct Uniforms {
   stage: u32,      // Current stage (k in bitonic sort)

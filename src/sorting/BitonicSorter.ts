@@ -1,10 +1,14 @@
 import { GPUContext } from '../core/GPUContext';
 import { BufferManager } from '../core/BufferManager';
-import { SortResult } from '../types';
+import { SortResult } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
 import bitonicShaderCode from '../shaders/bitonic.wgsl?raw';
+import { WORKGROUP_SIZE } from '../shared/constants';
 
-const WORKGROUP_SIZE = 256;
+/**
+ * IMPORTANT: WORKGROUP_SIZE must match the value in src/shaders/bitonic.wgsl
+ * @see src/shaders/bitonic.wgsl:13 - const WORKGROUP_SIZE: u32 = 256u;
+ */
 
 /**
  * GPU-accelerated Bitonic Sort implementation

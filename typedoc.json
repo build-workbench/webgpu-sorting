@@ -1,0 +1,12 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "name": "WebGPU Sorting",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "readme": "README.md",
+  "theme": "default",
+  "plugin": [],
+  "tsconfig": "./tsconfig.json"
+}

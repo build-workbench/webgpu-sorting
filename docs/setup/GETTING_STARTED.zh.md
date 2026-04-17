@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="../en/GETTING_STARTED.md">English Version</a> | <strong>中文版本</strong>
+  <a href="./GETTING_STARTED.md">English Version</a> | <strong>中文版本</strong>
 </p>
 
 本指南将帮助你快速上手 WebGPU 排序项目。
@@ -350,11 +350,11 @@ npm run build
 
 ## 下一步
 
-- 📖 阅读 [技术文档](./TECHNICAL.md) 了解实现细节
-- 📘 查看 [API 文档](./API.md) 学习完整 API
-- 💡 探索 [示例代码](../examples/) 获取更多用法
-- 🤝 查看 [贡献指南](../CONTRIBUTING.md) 参与项目开发
-- 📝 阅读 [更新日志](../CHANGELOG.md) 了解版本历史
+- 📖 阅读 [技术文档](../architecture/TECHNICAL.zh.md) 了解实现细节
+- 📘 查看 [API 文档](../tutorials/API.zh.md) 学习完整 API
+- 💡 探索 [示例代码](../../examples/) 获取更多用法
+- 🤝 查看 [贡献指南](../../CONTRIBUTING.md) 参与项目开发
+- 📝 阅读 [更新日志](../../CHANGELOG.md) 了解版本历史
 
 ---
 
@@ -364,3 +364,8 @@ npm run build
 - 📚 阅读 [WebGPU 规范](https://www.w3.org/TR/webgpu/)
 - 🎓 访问 [WebGPU Fundamentals](https://webgpufundamentals.org/)
 - 💬 加入 [讨论区](https://github.com/your-repo/discussions)
+
+---
+
+**最后更新**: 2026-04-17  
+**版本**: 1.0.1

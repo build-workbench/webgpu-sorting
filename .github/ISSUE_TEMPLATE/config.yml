@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/LessUp/webgpu-sorting/tree/master/docs
+    about: Check the documentation before creating an issue
+  - name: 💬 Discussions
+    url: https://github.com/LessUp/webgpu-sorting/discussions
+    about: Ask questions and discuss ideas in Discussions
+  - name: 🚀 Feature Roadmap
+    url: https://github.com/LessUp/webgpu-sorting/blob/master/CHANGELOG.md
+    about: See planned features in the changelog

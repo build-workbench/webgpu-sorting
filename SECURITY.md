@@ -17,7 +17,7 @@ We take the security of WebGPU Sorting seriously. If you believe you have found 
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them via email to [INSERT SECURITY EMAIL].
+Instead, please report them via email to security@lessup.dev (or create a private security advisory on GitHub).
 
 You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
 

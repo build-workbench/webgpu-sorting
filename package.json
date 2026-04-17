@@ -23,18 +23,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/user/webgpu-sorting.git"
+    "url": "git+https://github.com/LessUp/webgpu-sorting.git"
   },
   "bugs": {
-    "url": "https://github.com/user/webgpu-sorting/issues"
+    "url": "https://github.com/LessUp/webgpu-sorting/issues"
   },
-  "homepage": "https://github.com/user/webgpu-sorting#readme",
+  "homepage": "https://github.com/LessUp/webgpu-sorting#readme",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:analyze": "tsc && vite build --mode analyze",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -44,6 +45,10 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "typecheck": "tsc --noEmit",
+    "docs:generate": "typedoc --options typedoc.json",
+    "docs:serve": "npx serve docs/api",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -66,6 +71,8 @@
     "husky": "^9.0.0",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.0",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "typedoc": "^0.25.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"

@@ -51,7 +51,7 @@ node --version
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/webgpu-sorting.git
+git clone https://github.com/LessUp/webgpu-sorting.git
 cd webgpu-sorting
 ```
 
@@ -408,8 +408,8 @@ Now that you're up and running:
 
 ### Learn More
 
-- 📘 **[API Reference](./API.md)** - Complete API documentation
-- 🔧 **[Technical Details](./TECHNICAL.md)** - Architecture and algorithms
+- 📘 **[API Reference](../tutorials/API.md)** - Complete API documentation
+- 🔧 **[Technical Details](../architecture/TECHNICAL.md)** - Architecture and algorithms
 - 💡 **[Examples](../../examples/)** - More code samples
 
 ### Explore Features
@@ -440,5 +440,5 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for details.
 
 ---
 
-**Last Updated**: 2026-04-16  
+**Last Updated**: 2026-04-17  
 **Version**: 1.0.1

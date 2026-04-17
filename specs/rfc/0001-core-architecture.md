@@ -1,16 +1,22 @@
-# Design Document: WebGPU Sorting
+# RFC 0001: WebGPU Sorting Architecture
+
+## Status
+
+- **Status**: Accepted
+- **Created**: 2026-03-22
+- **Authors**: WebGPU Sorting Team
 
 ## Overview
 
-本设计文档描述了基于 WebGPU 的高性能 GPU 排序算法实现。项目包含两种经典的并行排序算法：双调排序（Bitonic Sort）和基数排序（Radix Sort），以及完整的基准测试和验证框架。
+This RFC describes the technical architecture for the WebGPU-based high-performance GPU sorting implementation, including Bitonic Sort and Radix Sort algorithms, along with a complete benchmarking and validation framework.
 
-### 技术选型
+### Technology Stack
 
-- **运行环境**: 现代浏览器（Chrome 113+, Edge 113+, Firefox Nightly）
+- **Runtime**: Modern browsers (Chrome 113+, Edge 113+, Firefox Nightly)
 - **GPU API**: WebGPU
-- **着色器语言**: WGSL (WebGPU Shading Language)
-- **前端框架**: 原生 HTML/CSS/TypeScript
-- **构建工具**: Vite
+- **Shader Language**: WGSL (WebGPU Shading Language)
+- **Frontend Framework**: Vanilla HTML/CSS/TypeScript
+- **Build Tool**: Vite
 
 ## Architecture
 
@@ -47,7 +53,7 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 数据流
+### Data Flow
 
 ```
 Input Array (CPU)
@@ -78,7 +84,7 @@ Sorted Array (CPU)
 
 ### GPUContext
 
-负责 WebGPU 环境初始化和资源管理。
+Responsible for WebGPU environment initialization and resource management.
 
 ```typescript
 interface GPUContextConfig {
@@ -89,86 +95,86 @@ class GPUContext {
   private adapter: GPUAdapter | null;
   private device: GPUDevice | null;
 
-  // 初始化 WebGPU 环境
+  // Initialize WebGPU environment
   async initialize(config?: GPUContextConfig): Promise<void>;
 
-  // 获取 GPU 设备
+  // Get GPU device
   getDevice(): GPUDevice;
 
-  // 检查是否支持 WebGPU
+  // Check if WebGPU is supported
   static isSupported(): boolean;
 
-  // 释放资源
+  // Release resources
   destroy(): void;
 }
 ```
 
 ### BufferManager
 
-管理 GPU 缓冲区的创建、数据传输和销毁。
+Manages GPU buffer creation, data transfer, and destruction.
 
 ```typescript
 class BufferManager {
   constructor(device: GPUDevice);
 
-  // 创建存储缓冲区并上传数据
+  // Create storage buffer and upload data
   createStorageBuffer(data: Uint32Array, label?: string): GPUBuffer;
 
-  // 创建用于读取的暂存缓冲区
+  // Create staging buffer for reading
   createStagingBuffer(size: number): GPUBuffer;
 
-  // 从 GPU 读取数据
+  // Read data from GPU
   async readBuffer(buffer: GPUBuffer, size: number): Promise<Uint32Array>;
 
-  // 释放缓冲区
+  // Release buffer
   releaseBuffer(buffer: GPUBuffer): void;
 
-  // 计算对齐后的缓冲区大小
+  // Calculate aligned buffer size
   static alignSize(size: number, alignment: number): number;
 }
 ```
 
 ### BitonicSorter
 
-实现双调排序算法。
+Implements the bitonic sort algorithm.
 
 ```typescript
 interface SortResult {
   sortedData: Uint32Array;
-  gpuTimeMs: number; // 纯 GPU 计算时间
-  totalTimeMs: number; // 包含数据传输的总时间
+  gpuTimeMs: number; // Pure GPU computation time
+  totalTimeMs: number; // Total time including data transfer
 }
 
 class BitonicSorter {
   constructor(context: GPUContext);
 
-  // 执行排序
+  // Execute sort
   async sort(data: Uint32Array): Promise<SortResult>;
 
-  // 释放资源
+  // Release resources
   destroy(): void;
 }
 ```
 
 ### RadixSorter
 
-实现基数排序算法。
+Implements the radix sort algorithm.
 
 ```typescript
 class RadixSorter {
   constructor(context: GPUContext);
 
-  // 执行排序
+  // Execute sort
   async sort(data: Uint32Array): Promise<SortResult>;
 
-  // 释放资源
+  // Release resources
   destroy(): void;
 }
 ```
 
 ### Benchmark
 
-性能基准测试工具。
+Performance benchmarking utility.
 
 ```typescript
 interface BenchmarkResult {
@@ -183,10 +189,10 @@ interface BenchmarkResult {
 class Benchmark {
   constructor(context: GPUContext);
 
-  // 运行完整基准测试
+  // Run complete benchmark suite
   async runAll(sizes: number[]): Promise<BenchmarkResult[]>;
 
-  // 运行单个测试
+  // Run single test
   async runSingle(
     algorithm: 'bitonic' | 'radix' | 'js-native',
     size: number,
@@ -197,7 +203,7 @@ class Benchmark {
 
 ### Validator
 
-排序结果验证器。
+Sorting result validation utility.
 
 ```typescript
 interface ValidationResult {
@@ -208,74 +214,74 @@ interface ValidationResult {
 }
 
 class Validator {
-  // 验证数组是否已排序
+  // Verify array is sorted
   static isSorted(arr: Uint32Array): boolean;
 
-  // 验证两个数组包含相同元素
+  // Verify two arrays contain same elements
   static hasSameElements(a: Uint32Array, b: Uint32Array): boolean;
 
-  // 完整验证
+  // Complete validation
   static validate(input: Uint32Array, output: Uint32Array): ValidationResult;
 }
 ```
 
 ## Data Models
 
-### GPU 缓冲区布局
+### GPU Buffer Layout
 
 ```typescript
-// 双调排序使用的缓冲区
+// Buffers used by bitonic sort
 interface BitonicBuffers {
-  data: GPUBuffer; // 主数据缓冲区 (read-write storage)
-  staging: GPUBuffer; // 读取用暂存缓冲区 (map-read)
+  data: GPUBuffer; // Main data buffer (read-write storage)
+  staging: GPUBuffer; // Staging buffer for reading (map-read)
 }
 
-// 基数排序使用的缓冲区
+// Buffers used by radix sort
 interface RadixBuffers {
-  input: GPUBuffer; // 输入数据
-  output: GPUBuffer; // 输出数据
-  histogram: GPUBuffer; // 直方图缓冲区
-  prefixSum: GPUBuffer; // 前缀和缓冲区
-  staging: GPUBuffer; // 读取用暂存缓冲区
+  input: GPUBuffer; // Input data
+  output: GPUBuffer; // Output data
+  histogram: GPUBuffer; // Histogram buffer
+  prefixSum: GPUBuffer; // Prefix sum buffer
+  staging: GPUBuffer; // Staging buffer for reading
 }
 ```
 
-### Uniform 数据结构
+### Uniform Data Structures
 
 ```typescript
-// 双调排序 uniform
+// Bitonic sort uniforms
 interface BitonicUniforms {
-  stageSize: number; // 当前阶段大小
-  passSize: number; // 当前 pass 大小
-  totalSize: number; // 数组总大小
+  stageSize: number; // Current stage size
+  passSize: number; // Current pass size
+  totalSize: number; // Total array size
 }
 
-// 基数排序 uniform
+// Radix sort uniforms
 interface RadixUniforms {
-  bitOffset: number; // 当前处理的位偏移
-  totalSize: number; // 数组总大小
+  bitOffset: number; // Current bit offset being processed
+  totalSize: number; // Total array size
 }
 ```
 
 ## Algorithm Details
 
-### 双调排序 (Bitonic Sort)
+### Bitonic Sort
 
-双调排序是一种适合并行实现的比较排序算法，时间复杂度 O(n log²n)。
+Bitonic sort is a comparison sorting algorithm suitable for parallel implementation, with time complexity O(n log²n).
 
 ```
-阶段 (Stage): log₂(n) 个阶段
-每阶段 Pass: stage 个 pass
+Stages: log₂(n) stages
+Passes per Stage: stage number of passes
 
-示例 (n=8):
-Stage 1: 形成长度为 2 的双调序列
-Stage 2: 形成长度为 4 的双调序列
-Stage 3: 形成长度为 8 的双调序列（最终排序）
+Example (n=8):
+Stage 1: Form bitonic sequences of length 2
+Stage 2: Form bitonic sequences of length 4
+Stage 3: Form bitonic sequences of length 8 (final sorted)
 
-每个 Pass 中，线程并行执行比较交换操作
+In each pass, threads execute compare-swap operations in parallel
 ```
 
-#### WGSL 着色器设计
+#### WGSL Shader Design
 
 ```wgsl
 // bitonic.wgsl
@@ -288,10 +294,10 @@ struct Uniforms {
 @group(0) @binding(0) var<storage, read_write> data: array<u32>;
 @group(0) @binding(1) var<uniform> uniforms: Uniforms;
 
-// 工作组大小
+// Workgroup size
 const WORKGROUP_SIZE: u32 = 256;
 
-// 共享内存用于工作组内快速交换
+// Shared memory for fast intra-workgroup exchange
 var<workgroup> shared_data: array<u32, 512>;
 
 @compute @workgroup_size(WORKGROUP_SIZE)
@@ -302,14 +308,14 @@ fn bitonic_sort_local(
 ) {
   let idx = global_id.x;
 
-  // 加载数据到共享内存
+  // Load data to shared memory
   if (idx < uniforms.total_size) {
     shared_data[local_id.x] = data[idx];
   }
 
   workgroupBarrier();
 
-  // 工作组内双调排序
+  // Bitonic sort within workgroup
   for (var stage: u32 = 1u; stage <= log2(WORKGROUP_SIZE); stage++) {
     for (var pass: u32 = stage; pass >= 1u; pass--) {
       let pair_distance = 1u << (pass - 1u);
@@ -327,7 +333,7 @@ fn bitonic_sort_local(
     }
   }
 
-  // 写回全局内存
+  // Write back to global memory
   if (idx < uniforms.total_size) {
     data[idx] = shared_data[local_id.x];
   }
@@ -344,22 +350,22 @@ fn compare_and_swap(i: u32, j: u32, ascending: bool) {
 }
 ```
 
-### 基数排序 (Radix Sort)
+### Radix Sort
 
-基数排序是非比较排序，时间复杂度 O(n \* k)，其中 k 是位数。
+Radix sort is a non-comparison sorting algorithm with time complexity O(n \* k), where k is the number of bits.
 
 ```
-对于 32 位整数，使用 4 位基数 (radix-16):
-- 8 个 pass，每个处理 4 位
-- 每个 pass: 计算直方图 → 前缀和 → 重排数据
+For 32-bit integers, using 4-bit radix (radix-16):
+- 8 passes, each processing 4 bits
+- Each pass: compute histogram → prefix sum → rearrange data
 
-并行策略:
-1. 直方图计算: 并行归约
-2. 前缀和: 在 CPU 端计算（简化实现）
-3. 数据重排: 并行散射
+Parallel Strategy:
+1. Histogram computation: parallel reduction
+2. Prefix sum: computed on CPU (simplified implementation)
+3. Data rearrangement: parallel scatter
 ```
 
-注：前缀和计算在 TypeScript 端实现，而非使用独立的 scan.wgsl 着色器。
+Note: Prefix sum is implemented in TypeScript, not using a separate scan.wgsl shader.
 
 ## Correctness Properties
 
@@ -427,74 +433,74 @@ _For any_ two arrays, the hasSameElements function SHALL return true if and only
 
 ## Error Handling
 
-### WebGPU 初始化错误
+### WebGPU Initialization Errors
 
-| 错误场景            | 处理方式                                          |
-| ------------------- | ------------------------------------------------- |
-| 浏览器不支持 WebGPU | 抛出 `WebGPUNotSupportedError`，UI 显示兼容性提示 |
-| 无法获取 GPU 适配器 | 抛出 `GPUAdapterError`，提示检查 GPU 驱动         |
-| 设备请求失败        | 抛出 `GPUDeviceError`，提示可能的资源限制         |
+| Error Scenario                 | Handling Approach                                              |
+| ------------------------------ | -------------------------------------------------------------- |
+| Browser doesn't support WebGPU | Throw `WebGPUNotSupportedError`, UI shows compatibility notice |
+| Cannot obtain GPU adapter      | Throw `GPUAdapterError`,提示 check GPU drivers                 |
+| Device request fails           | Throw `GPUDeviceError`,提示 possible resource limits           |
 
-### 缓冲区错误
+### Buffer Errors
 
-| 错误场景              | 处理方式                                       |
-| --------------------- | ---------------------------------------------- |
-| 数组过大超出 GPU 内存 | 抛出 `BufferAllocationError`，提示减小数组大小 |
-| 缓冲区映射失败        | 重试一次，失败则抛出 `BufferMapError`          |
+| Error Scenario                 | Handling Approach                                      |
+| ------------------------------ | ------------------------------------------------------ |
+| Array too large for GPU memory | Throw `BufferAllocationError`,提示 reduce array size   |
+| Buffer mapping fails           | Retry once, then throw `BufferMapError` if fails again |
 
-### 排序错误
+### Sorting Errors
 
-| 错误场景       | 处理方式                                        |
-| -------------- | ----------------------------------------------- |
-| 着色器编译失败 | 抛出 `ShaderCompilationError`，包含详细错误信息 |
-| GPU 执行超时   | 抛出 `GPUTimeoutError`，提示减小数组大小        |
+| Error Scenario           | Handling Approach                                       |
+| ------------------------ | ------------------------------------------------------- |
+| Shader compilation fails | Throw `ShaderCompilationError` with detailed error info |
+| GPU execution timeout    | Throw `GPUTimeoutError`,提示 reduce array size          |
 
 ## Testing Strategy
 
-### 单元测试
+### Unit Tests
 
-使用 Vitest 进行单元测试，覆盖以下场景：
+Using Vitest for unit tests, covering:
 
-1. **GPUContext 测试**
-   - 初始化成功场景
-   - WebGPU 不支持场景（模拟）
-   - 资源释放
+1. **GPUContext Tests**
+   - Initialization success scenarios
+   - WebGPU not supported scenarios (mocked)
+   - Resource release
 
-2. **BufferManager 测试**
-   - 小数组上传/下载
-   - 边界大小（空数组、单元素）
-   - 对齐计算
+2. **BufferManager Tests**
+   - Small array upload/download
+   - Edge cases (empty array, single element)
+   - Alignment calculation
 
-3. **Validator 测试**
-   - 已排序数组识别
-   - 未排序数组识别
-   - 元素比较
+3. **Validator Tests**
+   - Sorted array detection
+   - Unsorted array detection
+   - Element comparison
 
-### 属性测试
+### Property-Based Tests
 
-使用 fast-check 进行属性测试，每个属性至少运行 100 次迭代：
+Using fast-check for property testing, minimum 100 iterations per property:
 
-1. **Property 1**: 生成随机 Uint32Array，验证 GPU 往返一致性
-2. **Property 2**: 生成随机大小和对齐值，验证对齐计算
-3. **Property 3**: 生成随机大小，验证 padding 到 2 的幂
-4. **Property 4**: 生成随机数组，验证双调排序正确性
-5. **Property 5**: 生成随机数组，验证基数排序正确性
-6. **Property 6**: 生成随机时间对，验证加速比计算
-7. **Property 7**: 生成随机时间数组，验证平均值计算
-8. **Property 8**: 生成随机数组，验证 isSorted 正确性
-9. **Property 9**: 生成随机数组对，验证 hasSameElements 正确性
+1. **Property 1**: Generate random Uint32Array, verify GPU round-trip consistency
+2. **Property 2**: Generate random sizes and alignment values, verify alignment calculation
+3. **Property 3**: Generate random sizes, verify padding to power of 2
+4. **Property 4**: Generate random arrays, verify bitonic sort correctness
+5. **Property 5**: Generate random arrays, verify radix sort correctness
+6. **Property 6**: Generate random time pairs, verify speedup ratio calculation
+7. **Property 7**: Generate random time arrays, verify average calculation
+8. **Property 8**: Generate random arrays, verify isSorted correctness
+9. **Property 9**: Generate random array pairs, verify hasSameElements correctness
 
-### 集成测试
+### Integration Tests
 
-1. **端到端排序测试**
-   - 小数组 (< 256 元素)
-   - 中等数组 (1K - 10K 元素)
-   - 大数组 (100K - 1M 元素)
+1. **End-to-End Sorting Tests**
+   - Small arrays (< 256 elements)
+   - Medium arrays (1K - 10K elements)
+   - Large arrays (100K - 1M elements)
 
-2. **性能回归测试**
-   - 确保 GPU 排序比 CPU 快（对于大数组）
+2. **Performance Regression Tests**
+   - Ensure GPU sorting is faster than CPU (for large arrays)
 
-### 测试配置
+### Test Configuration
 
 ```typescript
 // vitest.config.ts
@@ -502,14 +508,14 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
-    testTimeout: 30000, // GPU 操作可能较慢
+    testTimeout: 30000, // GPU operations may be slower
   },
 });
 ```
 
-### 属性测试标注格式
+### Property Test Annotation Format
 
-每个属性测试必须包含以下注释：
+Each property test must include the following comment:
 
 ```typescript
 // Feature: webgpu-sorting, Property 4: Bitonic Sort Correctness

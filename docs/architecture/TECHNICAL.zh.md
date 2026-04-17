@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="../en/TECHNICAL.md">English Version</a> | <strong>中文版本</strong>
+  <a href="./TECHNICAL.md">English Version</a> | <strong>中文版本</strong>
 </p>
 
 本文档详细介绍 WebGPU 排序项目的技术实现细节。
@@ -559,3 +559,8 @@ const buffer = device.createBuffer({
   usage: GPUBufferUsage.STORAGE,
 });
 ```
+
+---
+
+**最后更新**: 2026-04-17  
+**版本**: 1.0.1

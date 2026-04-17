@@ -1,7 +1,8 @@
 import { GPUContext } from '../core/GPUContext';
 import { BitonicSorter } from '../sorting/BitonicSorter';
 import { RadixSorter } from '../sorting/RadixSorter';
-import { BenchmarkResult } from '../types';
+import { BenchmarkResult } from '../shared/types';
+import { DEFAULT_BENCHMARK_SIZES } from '../shared/constants';
 
 /**
  * Performance benchmark for sorting algorithms
@@ -102,7 +103,7 @@ export class Benchmark {
   /**
    * Run complete benchmark suite
    */
-  async runAll(sizes: number[] = [1024, 10240, 102400, 1048576]): Promise<BenchmarkResult[]> {
+  async runAll(sizes: number[] = [...DEFAULT_BENCHMARK_SIZES]): Promise<BenchmarkResult[]> {
     const results: BenchmarkResult[] = [];
 
     for (const size of sizes) {

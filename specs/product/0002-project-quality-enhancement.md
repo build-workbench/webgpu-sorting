@@ -1,23 +1,23 @@
-# Requirements Document
+# Product Spec: Project Quality Enhancement
 
 ## Introduction
 
-本需求文档定义了 WebGPU Sorting 项目的质量增强需求，旨在将项目提升到优秀开源项目的标准。这些增强包括 CI/CD 配置、代码质量工具、项目元数据完善、以及标准开源文件的添加。
+This spec defines quality enhancement requirements for the WebGPU Sorting project, elevating it to优秀 open-source project standards. These enhancements include CI/CD configuration, code quality tools, project metadata improvements, and addition of standard open-source files.
 
 ## Glossary
 
-- **CI/CD**: Continuous Integration / Continuous Deployment，持续集成/持续部署
-- **ESLint**: JavaScript/TypeScript 静态代码分析工具
-- **Prettier**: 代码格式化工具
-- **Husky**: Git hooks 管理工具
-- **GitHub_Actions**: GitHub 提供的自动化工作流服务
-- **EditorConfig**: 跨编辑器代码风格配置标准
-- **Code_of_Conduct**: 行为准则文档
-- **Security_Policy**: 安全策略文档
+- **CI/CD**: Continuous Integration / Continuous Deployment
+- **ESLint**: JavaScript/TypeScript static code analysis tool
+- **Prettier**: Code formatting tool
+- **Husky**: Git hooks management tool
+- **GitHub_Actions**: GitHub's automation workflow service
+- **EditorConfig**: Cross-editor code style configuration standard
+- **Code_of_Conduct**: Community behavior guidelines document
+- **Security_Policy**: Security vulnerability reporting document
 
 ## Requirements
 
-### Requirement 1: CI/CD 自动化配置
+### Requirement 1: CI/CD Automation Configuration
 
 **User Story:** As a contributor, I want automated testing and building on every pull request, so that code quality is maintained and regressions are caught early.
 
@@ -30,7 +30,7 @@
 5. WHEN all CI checks pass on main branch, THE GitHub_Actions SHALL be ready for release workflow
 6. THE GitHub_Actions SHALL support multiple Node.js versions (18.x, 20.x)
 
-### Requirement 2: 代码质量工具配置
+### Requirement 2: Code Quality Tools Configuration
 
 **User Story:** As a developer, I want consistent code style and quality checks, so that the codebase remains clean and maintainable.
 
@@ -43,7 +43,7 @@
 5. THE ESLint and Prettier configurations SHALL not conflict with each other
 6. THE System SHALL include lint-staged for pre-commit checks
 
-### Requirement 3: Git Hooks 配置
+### Requirement 3: Git Hooks Configuration
 
 **User Story:** As a developer, I want pre-commit hooks to catch issues before committing, so that bad code doesn't enter the repository.
 
@@ -55,7 +55,7 @@
 4. IF lint-staged checks fail, THEN THE System SHALL prevent the commit
 5. THE Husky configuration SHALL be easy to set up with `npm install`
 
-### Requirement 4: Package.json 完善
+### Requirement 4: Package.json Enhancement
 
 **User Story:** As a package consumer, I want complete package metadata, so that I can understand the package origin and report issues.
 
@@ -69,7 +69,7 @@
 6. THE package.json SHALL include all necessary scripts for development workflow
 7. THE package.json SHALL include files field for npm publishing
 
-### Requirement 5: 标准开源文件
+### Requirement 5: Standard Open Source Files
 
 **User Story:** As a potential contributor, I want standard open source files, so that I understand how to contribute and behave in the community.
 
@@ -81,7 +81,7 @@
 4. THE System SHALL include GitHub issue and PR templates
 5. THE System SHALL include a .nvmrc file specifying Node.js version
 
-### Requirement 6: 测试覆盖率配置
+### Requirement 6: Test Coverage Configuration
 
 **User Story:** As a maintainer, I want test coverage reports, so that I can identify untested code areas.
 

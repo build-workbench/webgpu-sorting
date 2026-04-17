@@ -1,0 +1,42 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.ts       text eol=lf
+*.tsx      text eol=lf
+*.js       text eol=lf
+*.jsx      text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.css      text eol=lf
+*.scss     text eol=lf
+*.html     text eol=lf
+
+# Shader files
+*.wgsl     text eol=lf
+
+# Documentation
+*.mdx      text eol=lf
+
+# Config files
+*.config   text eol=lf
+*.rc       text eol=lf
+.editorconfig   text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+
+# Make sure these files are treated as binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.svg      text
+*.woff     binary
+*.woff2    binary
+*.ttf      binary
+*.eot      binary
+*.mp4      binary
+*.webm     binary

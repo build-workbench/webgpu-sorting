@@ -1,13 +1,14 @@
 import { GPUContext } from '../core/GPUContext';
 import { BufferManager } from '../core/BufferManager';
-import { SortResult } from '../types';
+import { SortResult } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
 import radixShaderCode from '../shaders/radix.wgsl?raw';
+import { WORKGROUP_SIZE, RADIX, BITS_PER_PASS, NUM_PASSES } from '../shared/constants';
 
-const WORKGROUP_SIZE = 256;
-const RADIX = 16; // 4-bit radix
-const BITS_PER_PASS = 4;
-const NUM_PASSES = 8; // 32 bits / 4 bits per pass
+/**
+ * IMPORTANT: These constants must match the values in src/shaders/radix.wgsl
+ * @see src/shaders/radix.wgsl:11-12 - const WORKGROUP_SIZE: u32 = 256u; const RADIX: u32 = 16u;
+ */
 
 /**
  * GPU-accelerated Radix Sort implementation
@@ -117,8 +118,25 @@ export class RadixSorter {
     const histogramSize = RADIX * numWorkgroups;
 
     // Create buffers
-    let inputBuffer = this.bufferManager.createStorageBuffer(data, 'radix-input');
-    let outputBuffer = this.device.createBuffer({
+    let inputBuffer: GPUBuffer;
+    let outputBuffer: GPUBuffer;
+
+    const cleanupBuffers = (
+      input: GPUBuffer | undefined,
+      output: GPUBuffer | undefined,
+      histogram: GPUBuffer | undefined,
+      prefixSum: GPUBuffer | undefined,
+      uniform: GPUBuffer | undefined
+    ) => {
+      if (input) input.destroy();
+      if (output) output.destroy();
+      if (histogram) histogram.destroy();
+      if (prefixSum) prefixSum.destroy();
+      if (uniform) this.bufferManager.releaseBuffer(uniform);
+    };
+
+    inputBuffer = this.bufferManager.createStorageBuffer(data, 'radix-input');
+    outputBuffer = this.device.createBuffer({
       label: 'radix-output',
       size: BufferManager.alignSize(size * 4, 4),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -155,6 +173,7 @@ export class RadixSorter {
       // Create bind group for this pass
       const bindGroupLayout = this.bindGroupLayout;
       if (!bindGroupLayout) {
+        cleanupBuffers(inputBuffer, outputBuffer, histogramBuffer, prefixSumBuffer, uniformBuffer);
         throw new ShaderCompilationError('Shader pipelines not initialized');
       }
 
@@ -174,6 +193,13 @@ export class RadixSorter {
       {
         const histogramPipeline = this.histogramPipeline;
         if (!histogramPipeline) {
+          cleanupBuffers(
+            inputBuffer,
+            outputBuffer,
+            histogramBuffer,
+            prefixSumBuffer,
+            uniformBuffer
+          );
           throw new ShaderCompilationError('Histogram pipeline not initialized');
         }
 
@@ -194,31 +220,47 @@ export class RadixSorter {
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
       });
 
-      {
-        const commandEncoder = this.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(histogramBuffer, 0, stagingBuffer, 0, histogramSize * 4);
-        this.device.queue.submit([commandEncoder.finish()]);
+      try {
+        {
+          const commandEncoder = this.device.createCommandEncoder();
+          commandEncoder.copyBufferToBuffer(
+            histogramBuffer,
+            0,
+            stagingBuffer,
+            0,
+            histogramSize * 4
+          );
+          this.device.queue.submit([commandEncoder.finish()]);
+        }
+
+        await stagingBuffer.mapAsync(GPUMapMode.READ);
+        const histogram = new Uint32Array(stagingBuffer.getMappedRange().slice(0));
+        stagingBuffer.unmap();
+
+        // Compute prefix sum
+        const prefixSums = this.computePrefixSum(histogram);
+        this.device.queue.writeBuffer(
+          prefixSumBuffer,
+          0,
+          prefixSums.buffer,
+          prefixSums.byteOffset,
+          prefixSums.byteLength
+        );
+      } finally {
+        stagingBuffer.destroy();
       }
-
-      await stagingBuffer.mapAsync(GPUMapMode.READ);
-      const histogram = new Uint32Array(stagingBuffer.getMappedRange().slice(0));
-      stagingBuffer.unmap();
-      stagingBuffer.destroy();
-
-      // Compute prefix sum
-      const prefixSums = this.computePrefixSum(histogram);
-      this.device.queue.writeBuffer(
-        prefixSumBuffer,
-        0,
-        prefixSums.buffer,
-        prefixSums.byteOffset,
-        prefixSums.byteLength
-      );
 
       // Step 3: Scatter elements
       {
         const scatterPipeline = this.scatterPipeline;
         if (!scatterPipeline) {
+          cleanupBuffers(
+            inputBuffer,
+            outputBuffer,
+            histogramBuffer,
+            prefixSumBuffer,
+            uniformBuffer
+          );
           throw new ShaderCompilationError('Scatter pipeline not initialized');
         }
 
@@ -245,11 +287,7 @@ export class RadixSorter {
     const result = await this.bufferManager.readBuffer(inputBuffer, size * 4);
 
     // Cleanup
-    inputBuffer.destroy();
-    outputBuffer.destroy();
-    histogramBuffer.destroy();
-    prefixSumBuffer.destroy();
-    this.bufferManager.releaseBuffer(uniformBuffer);
+    cleanupBuffers(inputBuffer, outputBuffer, histogramBuffer, prefixSumBuffer, uniformBuffer);
 
     const totalEndTime = performance.now();
 

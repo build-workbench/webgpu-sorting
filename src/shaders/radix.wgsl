@@ -1,5 +1,8 @@
 // Radix Sort WGSL Compute Shaders
 // Implements 4-bit radix sort with histogram, prefix sum, and scatter
+//
+// IMPORTANT: WORKGROUP_SIZE and RADIX must match the values in src/constants.ts
+// @see src/constants.ts - WORKGROUP_SIZE = 256, RADIX = 16
 
 struct RadixUniforms {
   bit_offset: u32,   // Current bit position (0, 4, 8, ..., 28)
@@ -92,18 +95,5 @@ fn scatter(
     let global_offset = local_prefix[digit] + local_offset;
     
     output_data[global_offset] = value;
-  }
-}
-
-// Simple histogram computation (alternative single-pass version)
-@compute @workgroup_size(WORKGROUP_SIZE)
-fn compute_histogram_simple(
-  @builtin(global_invocation_id) global_id: vec3<u32>
-) {
-  let gid = global_id.x;
-  
-  if (gid < uniforms.total_size) {
-    let digit = get_digit(input_data[gid], uniforms.bit_offset);
-    atomicAdd(&histogram[digit], 1u);
   }
 }

@@ -3,7 +3,8 @@ import { BitonicSorter } from './sorting/BitonicSorter';
 import { RadixSorter } from './sorting/RadixSorter';
 import { Benchmark } from './benchmark/Benchmark';
 import { Validator } from './core/Validator';
-import { BenchmarkResult } from './types';
+import { BenchmarkResult } from './shared/types';
+import { DEFAULT_BENCHMARK_SIZES, MAX_VALIDATION_SIZE } from './shared/constants';
 
 // DOM Elements
 const unsupportedEl = document.getElementById('unsupported') as HTMLDivElement;
@@ -130,7 +131,7 @@ async function runSingleBenchmark() {
       setProgress(algorithm === 'both' ? 60 : 90);
 
       // Validate result
-      const testData = Benchmark.generateRandomData(Math.min(arraySize, 10000));
+      const testData = Benchmark.generateRandomData(Math.min(arraySize, MAX_VALIDATION_SIZE));
       const sorter = new BitonicSorter(gpuContext);
       const sortResult = await sorter.sort(testData);
       const validation = Validator.validate(testData, sortResult.sortedData);
@@ -148,7 +149,7 @@ async function runSingleBenchmark() {
       setProgress(90);
 
       // Validate result
-      const testData = Benchmark.generateRandomData(Math.min(arraySize, 10000));
+      const testData = Benchmark.generateRandomData(Math.min(arraySize, MAX_VALIDATION_SIZE));
       const sorter = new RadixSorter(gpuContext);
       const sortResult = await sorter.sort(testData);
       const validation = Validator.validate(testData, sortResult.sortedData);
@@ -162,7 +163,8 @@ async function runSingleBenchmark() {
     setProgress(100);
     showStatus('Benchmark complete!', 'success');
   } catch (error) {
-    showStatus(`Error: ${error}`, 'error');
+    const message = error instanceof Error ? error.message : String(error);
+    showStatus(`Error: ${message}`, 'error');
     console.error(error);
   } finally {
     setButtonsEnabled(true);
@@ -172,7 +174,7 @@ async function runSingleBenchmark() {
 async function runFullSuite() {
   if (!benchmark) return;
 
-  const sizes = [1024, 10240, 102400, 1048576];
+  const sizes = [...DEFAULT_BENCHMARK_SIZES];
   const iterations = parseInt(iterationsSelect.value);
 
   setButtonsEnabled(false);
@@ -208,7 +210,8 @@ async function runFullSuite() {
 
     showStatus('Full benchmark suite complete!', 'success');
   } catch (error) {
-    showStatus(`Error: ${error}`, 'error');
+    const message = error instanceof Error ? error.message : String(error);
+    showStatus(`Error: ${message}`, 'error');
     console.error(error);
   } finally {
     setButtonsEnabled(true);

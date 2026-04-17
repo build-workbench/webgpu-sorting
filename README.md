@@ -1,12 +1,11 @@
 # WebGPU Sorting
 
 <p align="center">
-  <strong>High-Performance GPU Sorting Algorithms Using WebGPU Compute Shaders</strong><br/>
-  <strong>基于 WebGPU 计算着色器的高性能 GPU 排序算法</strong>
+  <strong>High-Performance GPU Sorting Algorithms Using WebGPU Compute Shaders</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/your-username/webgpu-sorting/actions"><img src="https://img.shields.io/badge/CI-passing-brightgreen" alt="CI Status"></a>
+  <a href="https://github.com/LessUp/webgpu-sorting/actions"><img src="https://img.shields.io/badge/CI-passing-brightgreen" alt="CI Status"></a>
   <img src="https://img.shields.io/badge/WebGPU-Compute-blue" alt="WebGPU">
   <img src="https://img.shields.io/badge/WGSL-Shaders-green" alt="WGSL">
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript">
@@ -15,15 +14,12 @@
 </p>
 
 <p align="center">
-  <a href="./docs/en/">English Documentation</a> |
-  <a href="./docs/zh/">中文文档</a>
+  <a href="./README.zh.md">🇨🇳 中文版</a>
 </p>
 
 ---
 
-## Overview | 项目简介
-
-### English
+## Overview
 
 WebGPU Sorting is a high-performance sorting library that leverages the WebGPU API to execute sorting algorithms on the GPU. It provides significant performance improvements over JavaScript's native `Array.sort()` for large datasets.
 
@@ -35,21 +31,9 @@ WebGPU Sorting is a high-performance sorting library that leverages the WebGPU A
 - Comprehensive test coverage (38 tests)
 - Works in all WebGPU-enabled browsers
 
-### 中文
-
-WebGPU Sorting 是一个高性能排序库，利用 WebGPU API 在 GPU 上执行排序算法。对于大型数据集，它比 JavaScript 原生的 `Array.sort()` 提供显著的性能提升。
-
-**核心特性：**
-
-- 大型数组 **10-100 倍性能**提升
-- 两种优化算法：**双调排序**和**基数排序**
-- 类型安全的 TypeScript API
-- 全面的测试覆盖（38 个测试）
-- 支持所有 WebGPU 浏览器
-
 ---
 
-## Algorithms | 算法
+## Algorithms
 
 | Algorithm        | Time Complexity | Space Complexity | Best For                       |
 | ---------------- | --------------- | ---------------- | ------------------------------ |
@@ -58,13 +42,13 @@ WebGPU Sorting 是一个高性能排序库，利用 WebGPU API 在 GPU 上执行
 
 ---
 
-## Quick Start | 快速开始
+## Quick Start
 
-### Installation | 安装
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/webgpu-sorting.git
+git clone https://github.com/LessUp/webgpu-sorting.git
 cd webgpu-sorting
 
 # Install dependencies
@@ -74,31 +58,31 @@ npm install
 npm run dev
 ```
 
-### Basic Usage | 基本用法
+### Basic Usage
 
 ```typescript
 import { GPUContext, BitonicSorter, Validator } from './src';
 
 async function main() {
-  // 1. Initialize WebGPU | 初始化 WebGPU
+  // 1. Initialize WebGPU
   const context = new GPUContext();
   await context.initialize();
 
-  // 2. Create sorter | 创建排序器
+  // 2. Create sorter
   const sorter = new BitonicSorter(context);
 
-  // 3. Prepare data | 准备数据
+  // 3. Prepare data
   const data = new Uint32Array([5, 2, 8, 1, 9, 3, 7, 4, 6, 0]);
 
-  // 4. Sort | 执行排序
+  // 4. Sort
   const result = await sorter.sort(data);
   console.log('Sorted:', result.sortedData); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-  // 5. Validate | 验证结果
+  // 5. Validate
   const validation = Validator.validate(data, result.sortedData);
   console.log('Valid:', validation.isValid);
 
-  // 6. Cleanup | 清理资源
+  // 6. Cleanup
   sorter.destroy();
   context.destroy();
 }
@@ -108,9 +92,9 @@ main();
 
 ---
 
-## Performance | 性能
+## Performance
 
-### Benchmark Results | 基准测试结果
+### Benchmark Results
 
 | Array Size | JS Array.sort() | Bitonic Sort | Radix Sort | Speedup (Bitonic) | Speedup (Radix) |
 | ---------- | --------------- | ------------ | ---------- | ----------------- | --------------- |
@@ -123,23 +107,18 @@ _Note: Results may vary based on GPU hardware and browser implementation._
 
 ---
 
-## Documentation | 文档
+## Documentation
 
-### English
-
-- [Getting Started](./docs/en/GETTING_STARTED.md) - Installation and first steps
-- [API Reference](./docs/en/API.md) - Complete API documentation
-- [Technical Details](./docs/en/TECHNICAL.md) - Architecture and algorithms
-
-### 中文
-
-- [入门指南](./docs/zh/GETTING_STARTED.md) - 安装和快速开始
-- [API 参考](./docs/zh/API.md) - 完整 API 文档
-- [技术文档](./docs/zh/TECHNICAL.md) - 架构和算法实现
+| Category              | Link                                                          |
+| --------------------- | ------------------------------------------------------------- |
+| **Getting Started**   | [Setup Guide](./docs/setup/GETTING_STARTED.md)                |
+| **API Reference**     | [API Documentation](./docs/tutorials/API.md)                  |
+| **Technical Details** | [Architecture & Algorithms](./docs/architecture/TECHNICAL.md) |
+| **Project Specs**     | [Specifications](./specs/)                                    |
 
 ---
 
-## Browser Support | 浏览器支持
+## Browser Support
 
 | Browser | Version | Status             | Notes                       |
 | ------- | ------- | ------------------ | --------------------------- |
@@ -150,66 +129,73 @@ _Note: Results may vary based on GPU hardware and browser implementation._
 
 ---
 
-## Project Structure | 项目结构
+## Project Structure
 
 ```
 webgpu-sorting/
-├── src/
-│   ├── core/                    # WebGPU core infrastructure
-│   ├── sorting/                 # Sorting algorithm implementations
-│   ├── shaders/                 # WGSL compute shaders
-│   ├── benchmark/               # Performance benchmarking
-│   └── types.ts                 # Type definitions
-├── docs/
-│   ├── en/                      # English documentation
-│   ├── zh/                      # Chinese documentation
-│   └── README.md                # Documentation index
-├── test/                        # Test suite (38 tests)
-├── examples/                    # Code examples
-├── index.html                   # Interactive demo
+├── specs/                    # Spec-Driven Development docs
+│   ├── product/              # Product requirements (PRDs)
+│   ├── rfc/                  # Technical design documents
+│   ├── api/                  # API definitions
+│   ├── db/                   # Database/model specs
+│   └── testing/              # BDD test specifications
+├── docs/                     # User documentation
+│   ├── setup/                # Installation & setup guides
+│   ├── tutorials/            # API tutorials & examples
+│   ├── architecture/         # Technical deep-dives
+│   └── assets/               # Images & static assets
+├── src/                      # Source code
+│   ├── core/                 # WebGPU core infrastructure
+│   ├── sorting/              # Sorting algorithm implementations
+│   ├── shaders/              # WGSL compute shaders
+│   ├── benchmark/            # Performance benchmarking
+│   └── types.ts              # Type definitions
+├── test/                     # Test suite (38 tests)
+├── examples/                 # Code examples
+├── index.html                # Interactive demo
+├── AGENTS.md                 # AI agent workflow instructions
+├── README.md                 # This file
 └── package.json
 ```
 
 ---
 
-## Available Scripts | 可用脚本
+## Available Scripts
 
 ```bash
-# Development | 开发
+# Development
 npm run dev              # Start development server
 
-# Testing | 测试
+# Testing
 npm test                 # Run all tests
 npm run test:watch       # Run tests in watch mode
 npm run test:coverage    # Generate coverage report
 
-# Linting | 代码检查
+# Linting
 npm run lint             # Run ESLint
 npm run lint:fix         # Fix ESLint issues
 npm run format           # Format code with Prettier
 
-# Building | 构建
+# Building
 npm run build            # Build for production
 npm run preview          # Preview production build
 ```
 
 ---
 
-## Contributing | 贡献
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-欢迎贡献！请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解贡献指南。
-
 ---
 
-## License | 许可证
+## License
 
 [MIT License](./LICENSE)
 
 ---
 
-## Acknowledgments | 致谢
+## Acknowledgments
 
 - [WebGPU Specification](https://www.w3.org/TR/webgpu/) by W3C
 - [WebGPU Fundamentals](https://webgpufundamentals.org/) for tutorials
@@ -218,4 +204,4 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 ---
 
 **Version**: 1.0.1  
-**Last Updated**: 2026-04-16
+**Last Updated**: 2026-04-17

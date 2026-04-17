@@ -1,4 +1,4 @@
-import { ValidationResult } from '../types';
+import { ValidationResult } from '../shared/types';
 
 /**
  * Validates sorting results for correctness

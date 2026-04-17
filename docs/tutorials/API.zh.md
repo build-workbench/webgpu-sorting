@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="../en/API.md">English Version</a> | <strong>中文版本</strong>
+  <a href="./API.md">English Version</a> | <strong>中文版本</strong>
 </p>
 
 本文档详细描述 WebGPU 排序库的所有公开 API。
@@ -785,3 +785,8 @@ for (const data of datasets) {
 - [WebGPU Specification](https://www.w3.org/TR/webgpu/)
 - [WGSL Specification](https://www.w3.org/TR/WGSL/)
 - [WebGPU Fundamentals](https://webgpufundamentals.org/)
+
+---
+
+**最后更新**: 2026-04-17  
+**版本**: 1.0.1

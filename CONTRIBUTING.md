@@ -96,7 +96,7 @@
 # Fork 项目到你的 GitHub 账号
 # 然后克隆你的 fork
 
-git clone https://github.com/YOUR_USERNAME/webgpu-sorting.git
+git clone https://github.com/LessUp/webgpu-sorting.git
 cd webgpu-sorting
 ```
 
@@ -475,8 +475,8 @@ for (const message of compilationInfo.messages) {
 
 如果你有任何问题：
 
-1. 查看 [文档](./docs/)
-2. 搜索 [已有 Issues](https://github.com/your-repo/issues)
+1. 查看 [文档](./docs/README.md)
+2. 搜索 [已有 Issues](https://github.com/LessUp/webgpu-sorting/issues)
 3. 创建新 Issue 提问
 4. 加入讨论区
 
