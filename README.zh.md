@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/WebGPU-Compute-blue" alt="WebGPU">
   <img src="https://img.shields.io/badge/WGSL-Shaders-green" alt="WGSL">
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript">
-  <img src="https://img.shields.io/badge/tests-38%20passed-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-61%20passed-brightgreen" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
 </p>
 
@@ -28,7 +28,7 @@ WebGPU Sorting 是一个高性能排序库，利用 WebGPU API 在 GPU 上执行
 - **10-100 倍性能提升**，适用于大型数组
 - 两种优化算法：**双调排序（Bitonic Sort）** 和 **基数排序（Radix Sort）**
 - 清晰的 TypeScript API，具有类型安全
-- 完整的测试覆盖（38 个测试）
+- 完整的测试覆盖（61 个测试）
 - 支持所有启用 WebGPU 的浏览器
 
 ---
@@ -150,7 +150,7 @@ webgpu-sorting/
 │   ├── shaders/              # WGSL 计算着色器
 │   ├── benchmark/            # 性能基准测试
 │   └── types.ts              # 类型定义
-├── test/                     # 测试套件 (38 个测试)
+├── test/                     # 测试套件 (61 个测试)
 ├── examples/                 # 代码示例
 ├── index.html                # 交互式演示
 ├── AGENTS.md                 # AI 工作流指令

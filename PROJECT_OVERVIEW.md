@@ -5,7 +5,7 @@
 ✅ **Complete** - All features implemented, tests passing, documentation complete
 
 - **Version**: 1.0.1
-- **Tests**: 38/38 passing ✅
+- **Tests**: 61/61 passing ✅
 - **Build**: Successful ✅
 - **Documentation**: Complete ✅
 - **CI/CD**: Configured ✅
@@ -232,7 +232,7 @@ webgpu-sorting/
 | BitonicSorter | 3      | ✅ Pass         |
 | RadixSorter   | 4      | ✅ Pass         |
 | Benchmark     | 10     | ✅ Pass         |
-| **Total**     | **38** | **✅ All Pass** |
+| **Total**     | **61** | **✅ All Pass** |
 
 ### Test Types
 
@@ -378,7 +378,7 @@ npm run preview
 
 ### Engineering Practices
 
-1. **Complete Testing**: 38 tests, 100% pass rate
+1. **Complete Testing**: 61 tests, 100% pass rate
 2. **Property Testing**: Random testing with fast-check
 3. **Type Safety**: Complete TypeScript type definitions
 4. **Error Handling**: Custom error types and complete error handling

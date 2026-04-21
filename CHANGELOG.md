@@ -24,8 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2026-04-16
 
-[英文版本](./changelog/en/v1.0.1.md) | [中文版本](./changelog/zh/v1.0.1.md)
-
 ### Fixed | 修复
 
 - Removed non-null assertions in favor of explicit null checks | 移除非空断言，使用显式空值检查
@@ -66,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Benchmark Utility** for performance testing | 基准测试工具
 - **Interactive Demo** with real-time results | 交互式演示
 - **Comprehensive Documentation** (5 documents) | 完整文档（5 个文档）
-- **38 Unit Tests** with property-based testing | 38 个单元测试，属性测试
+- **61 Unit Tests** with property-based testing | 61 个单元测试，属性测试
 
 ### Performance | 性能
 
@@ -86,8 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links | 链接
 
-- [Detailed Changelogs](./changelog/) | [详细更新日志](./changelog/)
-- [GitHub Releases](https://github.com/your-username/webgpu-sorting/releases)
+- [GitHub Releases](https://github.com/LessUp/webgpu-sorting/releases)
 
 ---
 

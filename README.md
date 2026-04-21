@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/WebGPU-Compute-blue" alt="WebGPU">
   <img src="https://img.shields.io/badge/WGSL-Shaders-green" alt="WGSL">
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript">
-  <img src="https://img.shields.io/badge/tests-38%20passed-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-61%20passed-brightgreen" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
 </p>
 
@@ -28,7 +28,7 @@ WebGPU Sorting is a high-performance sorting library that leverages the WebGPU A
 - **10-100x performance** improvement for large arrays
 - Two optimized algorithms: **Bitonic Sort** and **Radix Sort**
 - Clean TypeScript API with type safety
-- Comprehensive test coverage (38 tests)
+- Comprehensive test coverage (61 tests)
 - Works in all WebGPU-enabled browsers
 
 ---
@@ -150,7 +150,7 @@ webgpu-sorting/
 │   ├── shaders/              # WGSL compute shaders
 │   ├── benchmark/            # Performance benchmarking
 │   └── types.ts              # Type definitions
-├── test/                     # Test suite (38 tests)
+├── test/                     # Test suite (61 tests)
 ├── examples/                 # Code examples
 ├── index.html                # Interactive demo
 ├── AGENTS.md                 # AI agent workflow instructions

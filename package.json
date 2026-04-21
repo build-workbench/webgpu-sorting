@@ -1,6 +1,6 @@
 {
   "name": "webgpu-sorting",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "High-performance GPU sorting algorithms using WebGPU compute shaders",
   "type": "module",
   "main": "dist/index.js",
