@@ -54,9 +54,16 @@ WebGPU Sorting is a high-performance GPU-accelerated sorting library using WebGP
 │   ├── core/              # Core module tests
 │   ├── sorting/           # Sorting algorithm tests
 │   └── benchmark/         # Benchmark tests
-├── specs/                 # Spec-Driven Development specs
-│   ├── product/           # Product requirements
-│   └── rfc/               # Technical design documents
+├── openspec/              # OpenSpec spec-driven development
+│   ├── specs/             # Source of truth specifications
+│   │   ├── sorting/       # Sorting algorithm specs
+│   │   ├── infrastructure/# WebGPU infrastructure specs
+│   │   ├── quality/       # Quality and tooling specs
+│   │   └── _archived/     # Historical design documents
+│   ├── changes/           # Active change proposals
+│   ├── archive/           # Completed changes
+│   ├── config.yaml        # OpenSpec configuration
+│   └── .templates/        # Spec and proposal templates
 ├── docs/                  # Documentation
 │   ├── setup/             # Getting started guides
 │   ├── tutorials/         # API reference
@@ -133,50 +140,122 @@ npm run docs:serve
 
 ---
 
-## Spec-Driven Development (SDD) Workflow
+## OpenSpec Workflow
 
-This project strictly follows the **Spec-Driven Development (SDD)** paradigm. All code implementations must use the `/specs` directory as the Single Source of Truth.
+This project uses **OpenSpec** for spec-driven development. All specifications in `openspec/specs/` serve as the Single Source of Truth for implementations.
 
-> 本项目严格遵循**规范驱动开发（Spec-Driven Development）**范式。所有的代码实现必须以 `/specs` 目录下的规范文档为唯一事实来源（Single Source of Truth）。
+> 本项目使用 **OpenSpec** 进行规范驱动开发。`openspec/specs/` 中的所有规范文档作为实现的唯一事实来源。
 
-### SDD Workflow Steps
+### OpenSpec Core Workflow
 
-When you (the AI) are asked to develop a new feature, modify an existing feature, or fix a bug, **you MUST strictly follow this workflow. Do NOT skip any steps**:
+```
+/opsx:propose → /opsx:apply → /opsx:archive
+```
 
-#### Step 1: Review Specs | 审查与分析
+When developing features, fixing bugs, or making changes, **follow this workflow**:
 
-- Before writing any code, first read the relevant documents in `/specs` (product docs, RFCs, API definitions).
-- If the user's instruction conflicts with existing specs, **stop coding immediately** and point out the conflict, asking the user whether they want to update the spec first.
+#### Step 1: Propose | 提案
 
-#### Step 2: Spec-First Update | 规范优先
+Before making any code changes, create a change proposal:
 
-- If this is a new feature, or if existing interfaces/database structures need to change, **you MUST first propose modifying or creating the corresponding Spec documents** (e.g., `/specs/api/openapi.yaml` or an RFC document).
-- Wait for user confirmation on the spec modifications before proceeding to the coding phase.
+```
+/opsx:propose "Add merge sort algorithm"
+```
 
-#### Step 3: Implementation | 代码实现
+This creates a change folder with:
 
-- When writing code, **100% comply with the specs** (including variable names, API paths, data types, status codes, etc.).
-- **Do NOT add features not defined in the spec** (No Gold-Plating).
+- `proposal.md` - Intent, scope, and approach
+- `specs/` - Delta specs describing ADDED/MODIFIED/REMOVED requirements
+- `tasks.md` - Implementation checklist
 
-#### Step 4: Test against Spec | 测试验证
+#### Step 2: Apply | 实施
 
-- Write unit tests and integration tests based on the acceptance criteria in `/specs`.
-- Ensure test cases cover all boundary conditions described in the specs.
+Once the proposal is approved, implement the changes:
+
+```
+/opsx:apply
+```
+
+This executes the tasks from the checklist in order, writing code and marking tasks complete.
+
+#### Step 3: Archive | 归档
+
+After implementation and testing, archive the change:
+
+```
+/opsx:archive
+```
+
+This merges delta specs into the main specs and moves the change to the archive.
+
+### OpenSpec Commands
+
+| Command                | Purpose                             | 说明               |
+| ---------------------- | ----------------------------------- | ------------------ |
+| `/opsx:propose "idea"` | Create a new change proposal        | 创建新的变更提案   |
+| `/opsx:apply`          | Implement tasks from current change | 实施当前变更的任务 |
+| `/opsx:archive`        | Complete and archive the change     | 归档已完成的变更   |
+| `/opsx:explore`        | Explore codebase before proposing   | 提案前探索代码库   |
 
 ### Spec Locations
 
-| Directory         | Purpose                                               | 说明                   |
-| ----------------- | ----------------------------------------------------- | ---------------------- |
-| `/specs/product/` | Product feature definitions and acceptance criteria   | 产品功能定义与验收标准 |
-| `/specs/rfc/`     | Technical design documents and architecture decisions | 技术设计文档与架构决策 |
+| Directory                        | Purpose                          | 说明                |
+| -------------------------------- | -------------------------------- | ------------------- |
+| `openspec/specs/sorting/`        | Sorting algorithm specifications | 排序算法规范        |
+| `openspec/specs/infrastructure/` | WebGPU infrastructure specs      | WebGPU 基础设施规范 |
+| `openspec/specs/quality/`        | Quality and tooling specs        | 质量与工具规范      |
+| `openspec/specs/_archived/`      | Historical design documents      | 历史设计文档        |
+| `openspec/changes/`              | Active change proposals          | 活跃的变更提案      |
+| `openspec/archive/`              | Completed changes                | 已完成的变更        |
 
 ### Current Specs
 
-| Spec                                                                       | Type    | Description                                    |
-| -------------------------------------------------------------------------- | ------- | ---------------------------------------------- |
-| [WebGPU Sorting](./specs/product/0001-webgpu-sorting.md)                   | Product | Feature requirements and acceptance criteria   |
-| [Quality Enhancement](./specs/product/0002-project-quality-enhancement.md) | Product | CI/CD, code quality, project metadata          |
-| [Core Architecture](./specs/rfc/0001-core-architecture.md)                 | RFC     | Technical design, data flow, algorithm details |
+| Spec                                                                    | Domain     | Description                                    |
+| ----------------------------------------------------------------------- | ---------- | ---------------------------------------------- |
+| [WebGPU Sorting](./openspec/specs/sorting/webgpu-sorting.md)            | sorting    | Feature requirements and acceptance criteria   |
+| [Project Enhancement](./openspec/specs/quality/project-enhancement.md)  | quality    | CI/CD, code quality, project metadata          |
+| [Core Architecture](./openspec/specs/_archived/core-architecture-v1.md) | \_archived | Technical design, data flow, algorithm details |
+
+### Writing Specs
+
+Follow the existing format with Requirements and Acceptance Criteria:
+
+```markdown
+### Requirement N: [Feature Name]
+
+**User Story:** As a [role], I want [feature] so that [benefit].
+
+#### Acceptance Criteria
+
+1. WHEN [condition], THE [component] SHALL [behavior]
+2. IF [error condition], THEN THE [component] SHALL [error handling]
+```
+
+### Delta Specs
+
+When proposing changes, use markers to indicate modifications:
+
+```markdown
+<!-- ADDED -->
+
+### New Requirement
+
+...
+
+<!-- MODIFIED -->
+
+### Existing Requirement
+
+~ Old text to be removed
+
+- New text to be added
+
+<!-- REMOVED -->
+
+### ~~Deprecated Requirement~~
+
+...
+```
 
 ---
 
@@ -509,10 +588,10 @@ npm run dev
 
 ## Code Generation Rules
 
-- Any external API changes **MUST** update `/specs/api/openapi.yaml` synchronously.
-  - 任何对外部暴露的 API 变更，必须同步修改 `/specs/api/openapi.yaml`。
-- If uncertain about technical details, refer to the architectural conventions in `/specs/rfc/`. **Do NOT invent design patterns on your own**.
-  - 如果遇到不确定的技术细节，请查阅 `/specs/rfc/` 下的架构约定，不要自行捏造设计模式。
+- Any external API changes **MUST** be proposed via `/opsx:propose` and documented in the corresponding spec.
+  - 任何对外部暴露的 API 变更，必须通过 `/opsx:propose` 提案并在相应规范中记录。
+- If uncertain about technical details, refer to the architectural conventions in `openspec/specs/_archived/`. **Do NOT invent design patterns on your own**.
+  - 如果遇到不确定的技术细节，请查阅 `openspec/specs/_archived/` 下的架构约定，不要自行捏造设计模式。
 - All documentation should be in English by default. Chinese translations should be linked or placed in corresponding `.zh.md` files.
   - 所有文档默认使用英文。中文翻译应链接到对应的 `.zh.md` 文件。
 - README.md is in English with a link to README.zh.md at the top.
@@ -520,4 +599,4 @@ npm run dev
 
 ---
 
-**Last Updated**: 2026-04-17
+**Last Updated**: 2026-04-23

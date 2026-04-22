@@ -1,0 +1,85 @@
+# OpenSpec Configuration for WebGPU Sorting Project
+# Generated: 2026-04-23
+
+project:
+  name: webgpu-sorting
+  version: 1.0.0
+  description: High-performance GPU-accelerated sorting library using WebGPU compute shaders
+
+  repository:
+    type: git
+    url: https://github.com/user/webgpu-sorting
+    branch: master
+
+  tech_stack:
+    language: TypeScript
+    version: '5.3+'
+    frameworks:
+      - WebGPU
+      - WGSL
+    build_tool: Vite
+    test_framework: Vitest
+    package_manager: npm
+
+specs:
+  root: openspec/specs
+
+  domains:
+    - name: sorting
+      description: Core sorting algorithms (Bitonic, Radix, Benchmark, Validation)
+      owners: []
+
+    - name: infrastructure
+      description: WebGPU context and buffer management
+      owners: []
+
+    - name: quality
+      description: CI/CD, code quality, and project metadata
+      owners: []
+
+    - name: _archived
+      description: Historical design documents and superseded specs
+      owners: []
+
+  naming:
+    spec_files: kebab-case.md
+    change_dirs: kebab-case
+    max_title_length: 60
+
+changes:
+  root: openspec/changes
+  archive_root: openspec/archive
+
+  required_artifacts:
+    - proposal.md
+    - tasks.md
+
+  optional_artifacts:
+    - design.md
+    - specs/
+
+workflow:
+  auto_generate_tasks: true
+  require_spec_review: true
+  archive_timestamp_format: '%Y%m%d-%H%M%S'
+
+validation:
+  require_change_markers: true
+  trace_to_code: false
+
+templates:
+  proposal: .templates/proposal.md
+  design: .templates/design.md
+  tasks: .templates/tasks.md
+  spec: .templates/spec.md
+
+docs:
+  languages:
+    - en
+    - zh
+  translation_suffix: '.zh.md'
+  auto_generate: false
+
+integration:
+  agents_file: AGENTS.md
+  contributing_file: CONTRIBUTING.md
