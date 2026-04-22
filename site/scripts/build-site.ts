@@ -1,6 +1,6 @@
 /**
- * Documentation Site Builder
- * Converts markdown files to HTML with unified navigation
+ * WebGPU Sorting - Complete Site Builder
+ * Builds documentation site with unified navigation
  */
 
 import * as fs from 'fs';
@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../..');
 const SITE_DIR = path.resolve(__dirname, '..');
+const PAGES_DIR = path.resolve(SITE_DIR, 'pages');
 const OUTPUT_DIR = path.resolve(ROOT_DIR, 'dist');
 
 // Navigation structure
@@ -21,33 +22,16 @@ interface NavItem {
 
 const NAVIGATION: NavItem[] = [
   {
-    title: 'Getting Started',
+    title: 'Home',
+    path: '/',
+  },
+  {
+    title: 'Documentation',
     path: '/docs/',
     children: [
-      { title: 'Installation', path: '/docs/#installation' },
-      { title: 'Quick Start', path: '/docs/#quick-start' },
-      { title: 'Troubleshooting', path: '/docs/#troubleshooting' },
-    ],
-  },
-  {
-    title: 'API Reference',
-    path: '/docs/api/',
-    children: [
-      { title: 'GPUContext', path: '/docs/api/#gpucontext' },
-      { title: 'BitonicSorter', path: '/docs/api/#bitonicsorter' },
-      { title: 'RadixSorter', path: '/docs/api/#radixsorter' },
-      { title: 'BufferManager', path: '/docs/api/#buffermanager' },
-      { title: 'Validator', path: '/docs/api/#validator' },
-      { title: 'Benchmark', path: '/docs/api/#benchmark' },
-    ],
-  },
-  {
-    title: 'Technical Details',
-    path: '/docs/architecture/',
-    children: [
-      { title: 'Architecture', path: '/docs/architecture/#architecture' },
-      { title: 'Algorithms', path: '/docs/architecture/#algorithms' },
-      { title: 'Optimization', path: '/docs/architecture/#optimization' },
+      { title: 'Getting Started', path: '/docs/getting-started/' },
+      { title: 'API Reference', path: '/docs/api/' },
+      { title: 'Architecture', path: '/docs/architecture/' },
     ],
   },
   {
@@ -56,7 +40,7 @@ const NAVIGATION: NavItem[] = [
   },
 ];
 
-// Simple markdown parser (basic implementation)
+// Simple markdown parser
 function parseMarkdown(content: string): { html: string; title: string } {
   let html = content;
   let title = 'Documentation';
@@ -92,7 +76,6 @@ function parseMarkdown(content: string): { html: string; title: string } {
 
   // Convert links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-    // Handle relative paths
     if (url.startsWith('./') || url.startsWith('../')) {
       url = url.replace(/\.md$/, '.html');
     }
@@ -146,13 +129,12 @@ function parseMarkdown(content: string): { html: string; title: string } {
   // Convert horizontal rules
   html = html.replace(/^---$/gm, '<hr>');
 
-  // Wrap paragraphs (lines separated by blank lines)
+  // Wrap paragraphs
   const paragraphs = html.split('\n\n');
   html = paragraphs
     .map((p) => {
       p = p.trim();
       if (!p) return '';
-      // Don't wrap if it already starts with a tag
       if (p.startsWith('<') && !p.startsWith('<code')) return p;
       return `<p>${p.replace(/\n/g, ' ')}</p>`;
     })
@@ -172,52 +154,73 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
-function generateSidebar(currentPath: string): string {
-  let html = '<nav class="sidebar-nav">';
+function generateHeader(currentPath: string): string {
+  const navLinks = NAVIGATION.map((item) => {
+    const isActive =
+      currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/');
+    return `<a href="${item.path}" class="nav-link ${isActive ? 'active' : ''}">${item.title}</a>`;
+  }).join('\n');
 
-  NAVIGATION.forEach((item) => {
-    const isActive = currentPath.startsWith(item.path);
-    const activeClass = isActive ? 'active' : '';
-
-    html += `<div class="nav-section ${activeClass}">`;
-    html += `<a href="${item.path}" class="nav-link ${activeClass}">${item.title}</a>`;
-
-    if (item.children && (isActive || item.path === '/docs/')) {
-      html += '<ul class="nav-sublist">';
-      item.children.forEach((child) => {
-        const childActive = currentPath === child.path;
-        html += `<li><a href="${child.path}" class="nav-sublink ${childActive ? 'active' : ''}">${child.title}</a></li>`;
-      });
-      html += '</ul>';
-    }
-
-    html += '</div>';
-  });
-
-  html += '</nav>';
-  return html;
+  return `<header class="site-header">
+  <div class="header-content">
+    <a href="/" class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">WebGPU Sorting</span>
+    </a>
+    <nav class="main-nav">
+      ${navLinks}
+      <a href="https://github.com/LessUp/webgpu-sorting" target="_blank" rel="noopener" class="github-link" aria-label="GitHub">
+        <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+      </a>
+    </nav>
+    <button class="mobile-menu-toggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>`;
 }
 
-function generateSearchIndex(): string {
-  const searchData = NAVIGATION.map((item) => ({
-    title: item.title,
-    path: item.path,
-    children: item.children || [],
-  }));
-
-  return `<script>
-window.SEARCH_INDEX = ${JSON.stringify(searchData)};
-</script>`;
+function generateFooter(): string {
+  return `<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>WebGPU Sorting</h4>
+      <p>High-performance GPU sorting algorithms using WebGPU compute shaders.</p>
+    </div>
+    <div class="footer-section">
+      <h4>Links</h4>
+      <ul>
+        <li><a href="/docs/">Documentation</a></li>
+        <li><a href="/demo/">Interactive Demo</a></li>
+        <li><a href="https://github.com/LessUp/webgpu-sorting" target="_blank">GitHub</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="https://www.w3.org/TR/webgpu/" target="_blank">WebGPU Spec</a></li>
+        <li><a href="https://www.w3.org/TR/WGSL/" target="_blank">WGSL Spec</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 WebGPU Sorting Contributors. Licensed under MIT.</p>
+  </div>
+</footer>`;
 }
 
-function wrapInTemplate(
+function wrapPage(
   content: string,
   title: string,
   currentPath: string,
-  description = 'WebGPU Sorting Documentation'
+  description = 'WebGPU Sorting - High-performance GPU sorting algorithms',
+  extraHead = '',
+  extraBodyClass = ''
 ): string {
-  const sidebar = generateSidebar(currentPath);
-  const searchIndex = generateSearchIndex();
+  const header = generateHeader(currentPath);
+  const footer = generateFooter();
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -225,96 +228,46 @@ function wrapInTemplate(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="${description}">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#00d4ff">
   <link rel="canonical" href="https://lessup.github.io/webgpu-sorting${currentPath}">
   
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="${title} - WebGPU Sorting">
+  <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:url" content="https://lessup.github.io/webgpu-sorting${currentPath}">
   
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="${title} - WebGPU Sorting">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
   
-  <title>${title} - WebGPU Sorting</title>
+  <title>${title}</title>
   <link rel="stylesheet" href="/shared/styles.css">
-  <link rel="stylesheet" href="/shared/docs.css">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/shared/icon-192.png">
+  ${extraHead}
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 </head>
-<body>
-  <div class="docs-layout">
-    <header class="docs-header">
-      <div class="header-content">
-        <a href="/" class="logo">
-          <span class="logo-icon">⚡</span>
-          <span class="logo-text">WebGPU Sorting</span>
-        </a>
-        <div class="header-actions">
-          <div class="search-container">
-            <input type="search" id="searchInput" placeholder="Search docs..." aria-label="Search">
-            <div id="searchResults" class="search-results"></div>
-          </div>
-          <a href="https://github.com/LessUp/webgpu-sorting" target="_blank" rel="noopener" class="github-link" aria-label="GitHub">
-            <svg height="24" width="24" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </header>
-    
-    <div class="docs-container">
-      <aside class="docs-sidebar">
-        ${sidebar}
-      </aside>
-      
-      <main class="docs-main">
-        <article class="docs-content">
-          ${content}
-          <footer class="docs-footer">
-            <p>
-              <a href="https://github.com/LessUp/webgpu-sorting/edit/master/docs/${currentPath.replace('/docs/', '').replace('.html', '.md')}" target="_blank" rel="noopener">
-                Edit this page on GitHub
-              </a>
-            </p>
-            <p class="copyright">© 2026 WebGPU Sorting Contributors. Licensed under MIT.</p>
-          </footer>
-        </article>
-      </main>
-    </div>
-  </div>
-  
-  <button class="mobile-menu-toggle" aria-label="Toggle menu">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-  
-  <div class="overlay"></div>
-  
-  <script src="/shared/docs.js"></script>
-  ${searchIndex}
+<body class="${extraBodyClass}">
+  ${header}
+  ${content}
+  ${footer}
+  <script src="/shared/main.js"></script>
 </body>
 </html>`;
 }
 
-function copyAssets() {
-  const assetsDir = path.join(SITE_DIR, 'shared');
+function copySharedAssets() {
+  const sharedDir = path.join(SITE_DIR, 'shared');
   const destDir = path.join(OUTPUT_DIR, 'shared');
 
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, { recursive: true });
   }
 
-  // Copy all shared assets
-  if (fs.existsSync(assetsDir)) {
-    const files = fs.readdirSync(assetsDir);
+  if (fs.existsSync(sharedDir)) {
+    const files = fs.readdirSync(sharedDir);
     files.forEach((file) => {
-      const src = path.join(assetsDir, file);
+      const src = path.join(sharedDir, file);
       const dest = path.join(destDir, file);
       if (fs.statSync(src).isFile()) {
         fs.copyFileSync(src, dest);
@@ -326,7 +279,29 @@ function copyAssets() {
 function processMarkdownFile(inputPath: string, outputPath: string, urlPath: string) {
   const content = fs.readFileSync(inputPath, 'utf-8');
   const { html, title } = parseMarkdown(content);
-  const fullHtml = wrapInTemplate(html, title, urlPath);
+
+  const pageContent = `<main class="docs-page">
+  <div class="docs-container">
+    <aside class="docs-sidebar">
+      ${generateDocsSidebar(urlPath)}
+    </aside>
+    <article class="docs-content">
+      ${html}
+      <footer class="page-footer">
+        <a href="https://github.com/LessUp/webgpu-sorting/edit/master/docs/${path.basename(inputPath)}" target="_blank" rel="noopener">
+          Edit this page on GitHub
+        </a>
+      </footer>
+    </article>
+  </div>
+</main>`;
+
+  const fullHtml = wrapPage(
+    pageContent,
+    `${title} - WebGPU Sorting`,
+    urlPath,
+    `${title} - WebGPU Sorting Documentation`
+  );
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, fullHtml, 'utf-8');
@@ -334,11 +309,28 @@ function processMarkdownFile(inputPath: string, outputPath: string, urlPath: str
   console.log(`  ✓ ${urlPath}`);
 }
 
+function generateDocsSidebar(currentPath: string): string {
+  const docsNav = [
+    { title: 'Getting Started', path: '/docs/getting-started/' },
+    { title: 'API Reference', path: '/docs/api/' },
+    { title: 'Architecture', path: '/docs/architecture/' },
+  ];
+
+  let html = '<nav class="docs-nav"><ul>';
+  docsNav.forEach((item) => {
+    const isActive = currentPath === item.path;
+    html += `<li><a href="${item.path}" class="${isActive ? 'active' : ''}">${item.title}</a></li>`;
+  });
+  html += '</ul></nav>';
+  return html;
+}
+
 function generateSitemap(baseUrl: string): string {
   const urls = [
     { path: '/', priority: '1.0' },
     { path: '/demo/', priority: '0.9' },
     { path: '/docs/', priority: '0.9' },
+    { path: '/docs/getting-started/', priority: '0.8' },
     { path: '/docs/api/', priority: '0.8' },
     { path: '/docs/architecture/', priority: '0.7' },
   ];
@@ -361,7 +353,7 @@ function generateSitemap(baseUrl: string): string {
 }
 
 function main() {
-  console.log('🚀 Building documentation site...\n');
+  console.log('🚀 Building WebGPU Sorting site...\n');
 
   // Clean and create output directory
   if (fs.existsSync(OUTPUT_DIR)) {
@@ -371,17 +363,21 @@ function main() {
 
   // Process documentation files
   const docsMapping = [
-    { input: 'docs/setup/GETTING_STARTED.md', output: 'docs/index.html', path: '/docs/' },
+    {
+      input: 'docs/setup/GETTING_STARTED.md',
+      output: 'docs/getting-started/index.html',
+      path: '/docs/getting-started/',
+    },
     { input: 'docs/tutorials/API.md', output: 'docs/api/index.html', path: '/docs/api/' },
     {
       input: 'docs/architecture/TECHNICAL.md',
       output: 'docs/architecture/index.html',
       path: '/docs/architecture/',
     },
-    { input: 'docs/README.md', output: 'docs/overview/index.html', path: '/docs/overview/' },
+    { input: 'docs/README.md', output: 'docs/index.html', path: '/docs/' },
   ];
 
-  console.log('📄 Processing markdown files:');
+  console.log('📄 Processing documentation:');
   docsMapping.forEach(({ input, output, path: urlPath }) => {
     const inputPath = path.join(ROOT_DIR, input);
     if (fs.existsSync(inputPath)) {
@@ -392,14 +388,47 @@ function main() {
     }
   });
 
+  // Copy home page
+  console.log('\n🏠 Copying home page:');
+  const homePagePath = path.join(PAGES_DIR, 'index.html');
+  if (fs.existsSync(homePagePath)) {
+    const homeContent = fs.readFileSync(homePagePath, 'utf-8');
+    fs.writeFileSync(path.join(OUTPUT_DIR, 'index.html'), homeContent, 'utf-8');
+    console.log('  ✓ /');
+  } else {
+    console.log('  ⚠ home page not found, will create default');
+  }
+
+  // Copy demo page
+  console.log('\n⚡ Copying demo page:');
+  const demoPagePath = path.join(PAGES_DIR, 'demo.html');
+  if (fs.existsSync(demoPagePath)) {
+    let demoContent = fs.readFileSync(demoPagePath, 'utf-8');
+    // Update script path for demo
+    demoContent = demoContent.replace('src="/src/main.ts"', 'src="/demo/main.js"');
+
+    fs.mkdirSync(path.join(OUTPUT_DIR, 'demo'), { recursive: true });
+    fs.writeFileSync(path.join(OUTPUT_DIR, 'demo/index.html'), demoContent, 'utf-8');
+    console.log('  ✓ /demo/');
+  } else {
+    console.log('  ⚠ demo page not found');
+  }
+
+  // Process demo TypeScript to JS (simplified - in production, use vite build)
+  console.log('\n📦 Building demo assets:');
+  // For now, we'll rely on vite build to process src/main.ts
+  // The pages.yml workflow will handle this
+
   // Copy shared assets
-  console.log('\n📦 Copying assets...');
-  copyAssets();
+  console.log('\n📦 Copying assets:');
+  copySharedAssets();
+  console.log('  ✓ /shared/');
 
   // Generate sitemap
   console.log('\n🗺 Generating sitemap...');
   const sitemap = generateSitemap('https://lessup.github.io/webgpu-sorting');
   fs.writeFileSync(path.join(OUTPUT_DIR, 'sitemap.xml'), sitemap, 'utf-8');
+  console.log('  ✓ sitemap.xml');
 
   // Generate robots.txt
   const robots = `User-agent: *
@@ -407,12 +436,17 @@ Allow: /
 Sitemap: https://lessup.github.io/webgpu-sorting/sitemap.xml
 `;
   fs.writeFileSync(path.join(OUTPUT_DIR, 'robots.txt'), robots, 'utf-8');
+  console.log('  ✓ robots.txt');
 
   // Copy .nojekyll
   fs.writeFileSync(path.join(OUTPUT_DIR, '.nojekyll'), '', 'utf-8');
+  console.log('  ✓ .nojekyll');
 
-  console.log('\n✅ Documentation site built successfully!');
+  console.log('\n✅ Site built successfully!');
   console.log(`\nOutput: ${OUTPUT_DIR}`);
+  console.log('\nNext steps:');
+  console.log('  1. Run vite build to compile demo assets');
+  console.log('  2. Copy dist/assets and dist/main.js to dist/demo/');
 }
 
 main();

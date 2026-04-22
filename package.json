@@ -47,6 +47,10 @@
     "typecheck": "tsc --noEmit",
     "docs:generate": "typedoc --options typedoc.json",
     "docs:serve": "npx serve docs/api",
+    "site:build": "node site/scripts/build-site.ts",
+    "site:dev": "npm run site:build && npx serve dist",
+    "pages:build": "bash scripts/build-pages.sh",
+    "pages:preview": "npm run pages:build && cd dist && npx serve",
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "prepare": "husky"

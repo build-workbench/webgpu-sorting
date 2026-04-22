@@ -1,0 +1,25 @@
+{
+  "name": "WebGPU Sorting",
+  "short_name": "WebGPU Sort",
+  "description": "High-performance GPU sorting algorithms using WebGPU compute shaders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#00d4ff",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/shared/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/shared/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["developer", "education", "utilities"],
+  "lang": "en"
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive Demo - WebGPU Sorting. Run benchmarks comparing GPU Bitonic Sort and Radix Sort against JavaScript Array.sort()">
+  <meta name="theme-color" content="#00d4ff">
+  <link rel="canonical" href="https://lessup.github.io/webgpu-sorting/demo/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Interactive Demo - WebGPU Sorting">
+  <meta property="og:description" content="Run GPU sorting benchmarks in your browser. Compare WebGPU performance vs JavaScript native sort.">
+  <meta property="og:url" content="https://lessup.github.io/webgpu-sorting/demo/">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Interactive Demo - WebGPU Sorting">
+  <meta name="twitter:description" content="Run GPU sorting benchmarks in your browser.">
+
+  <title>Interactive Demo - WebGPU Sorting</title>
+  <link rel="stylesheet" href="/shared/styles.css">
+  <link rel="stylesheet" href="/shared/demo.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body class="demo-page">
+  <header class="site-header">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">WebGPU Sorting</span>
+      </a>
+      <nav class="main-nav">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/docs/" class="nav-link">Documentation</a>
+        <a href="/demo/" class="nav-link active">Demo</a>
+        <a href="https://github.com/LessUp/webgpu-sorting" target="_blank" rel="noopener" class="github-link" aria-label="GitHub">
+          <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+        </a>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="demo-main">
+    <div class="container">
+      <div class="demo-header">
+        <h1>⚡ Interactive Benchmark</h1>
+        <p class="subtitle">Compare GPU sorting performance against JavaScript native sort</p>
+      </div>
+
+      <div id="unsupported" class="card unsupported" style="display: none;">
+        <h2>⚠️ WebGPU Not Supported</h2>
+        <p>Your browser does not support WebGPU.</p>
+        <p>Please use Chrome 113+, Edge 113+, Firefox Nightly (with WebGPU flag), or Safari 18+ (macOS 14+).</p>
+        <div class="tech-badges">
+          <span class="badge">Chrome 113+</span>
+          <span class="badge">Edge 113+</span>
+          <span class="badge">Firefox Nightly</span>
+          <span class="badge">Safari 18+</span>
+        </div>
+      </div>
+
+      <div id="app">
+        <div class="card demo-config">
+          <h2>🎛️ Configuration</h2>
+          <div class="controls">
+            <div class="control-group">
+              <label for="algorithm">Algorithm</label>
+              <select id="algorithm">
+                <option value="bitonic">Bitonic Sort</option>
+                <option value="radix">Radix Sort</option>
+                <option value="both">Both (Compare)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="arraySize">Array Size</label>
+              <select id="arraySize">
+                <option value="1024">1K (1,024)</option>
+                <option value="10240">10K (10,240)</option>
+                <option value="102400" selected>100K (102,400)</option>
+                <option value="1048576">1M (1,048,576)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="iterations">Iterations</label>
+              <select id="iterations">
+                <option value="1">1</option>
+                <option value="3">3</option>
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+          </div>
+          <div class="button-group">
+            <button id="runBtn" class="btn btn-primary">▶️ Run Benchmark</button>
+            <button id="runAllBtn" class="btn btn-secondary">📊 Run Full Suite</button>
+          </div>
+        </div>
+
+        <div id="status" class="card status-card">
+          <div class="status-header">
+            <span id="statusText">Ready</span>
+            <span id="statusIcon" class="status-icon">⏳</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+        </div>
+
+        <div class="card results-card" id="resultsCard" style="display: none;">
+          <h2>📈 Results</h2>
+          <div class="table-container">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Array Size</th>
+                  <th>Total Time</th>
+                  <th>GPU Time</th>
+                  <th>Speedup vs JS</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card info-card">
+          <h2>ℹ️ About the Algorithms</h2>
+          <div class="algorithm-info">
+            <div class="algo">
+              <h3>Bitonic Sort</h3>
+              <p>A comparison-based parallel sorting network with <code>O(n log²n)</code> complexity. Uses parallel compare-exchange operations across the GPU.</p>
+            </div>
+            <div class="algo">
+              <h3>Radix Sort</h3>
+              <p>A non-comparison integer sorting algorithm with <code>O(n × k)</code> complexity. Uses parallel histogram and prefix sum operations for extreme speed.</p>
+            </div>
+          </div>
+          <div class="tech-badges">
+            <span class="badge">WebGPU</span>
+            <span class="badge">WGSL</span>
+            <span class="badge">Compute Shaders</span>
+            <span class="badge">workgroupBarrier()</span>
+            <span class="badge">Shared Memory</span>
+            <span class="badge">Parallel Reduction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>WebGPU Sorting</h4>
+        <p>High-performance GPU sorting algorithms using WebGPU compute shaders.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/demo/">Interactive Demo</a></li>
+          <li><a href="https://github.com/LessUp/webgpu-sorting" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://www.w3.org/TR/webgpu/" target="_blank">WebGPU Spec</a></li>
+          <li><a href="https://www.w3.org/TR/WGSL/" target="_blank">WGSL Spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 WebGPU Sorting Contributors. Licensed under MIT.</p>
+    </div>
+  </footer>
+
+  <!-- Vite compiled assets will be injected here by CI -->
+<script type="module" src="/demo/assets/index.js"></script>
+</body>
+</html>

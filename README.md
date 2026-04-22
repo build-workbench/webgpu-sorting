@@ -5,15 +5,18 @@
 </p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/webgpu-sorting"><img src="https://img.shields.io/npm/v/webgpu-sorting" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/webgpu-sorting"><img src="https://img.shields.io/npm/dw/webgpu-sorting" alt="npm downloads"></a>
+  <img src="https://img.shields.io/bundlephobia/minzip/webgpu-sorting" alt="bundle size">
   <a href="https://github.com/LessUp/webgpu-sorting/actions"><img src="https://img.shields.io/badge/CI-passing-brightgreen" alt="CI Status"></a>
   <img src="https://img.shields.io/badge/WebGPU-Compute-blue" alt="WebGPU">
-  <img src="https://img.shields.io/badge/WGSL-Shaders-green" alt="WGSL">
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue" alt="TypeScript">
   <img src="https://img.shields.io/badge/tests-61%20passed-brightgreen" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
 </p>
 
 <p align="center">
+  <a href="https://lessup.github.io/webgpu-sorting/">🚀 Live Demo</a> •
   <a href="./README.zh.md">🇨🇳 中文版</a>
 </p>
 
@@ -25,9 +28,10 @@ WebGPU Sorting is a high-performance sorting library that leverages the WebGPU A
 
 **Key Features:**
 
-- **10-100x performance** improvement for large arrays
+- **10-100x performance** improvement for large arrays (100K+ elements)
 - Two optimized algorithms: **Bitonic Sort** and **Radix Sort**
-- Clean TypeScript API with type safety
+- Clean TypeScript API with full type safety
+- Zero dependencies, small bundle size (~10KB gzipped)
 - Comprehensive test coverage (61 tests)
 - Works in all WebGPU-enabled browsers
 
@@ -40,11 +44,36 @@ WebGPU Sorting is a high-performance sorting library that leverages the WebGPU A
 | **Bitonic Sort** | O(n log²n)      | O(1) - in-place  | Medium arrays, general purpose |
 | **Radix Sort**   | O(n × k)        | O(n)             | Large arrays, 32-bit integers  |
 
+**Algorithm Selection Guide:**
+
+| Array Size           | Recommendation        | Reason                       |
+| -------------------- | --------------------- | ---------------------------- |
+| < 10,000             | Native `Array.sort()` | GPU overhead not worth it    |
+| 10K - 100K           | Bitonic Sort          | Best overall performance     |
+| > 100K               | Radix Sort            | Linear time complexity wins  |
+| 32-bit integers only | Radix Sort            | Optimal for fixed-width data |
+
 ---
 
 ## Quick Start
 
 ### Installation
+
+#### npm (Recommended)
+
+```bash
+npm install webgpu-sorting
+```
+
+#### CDN / ES Module
+
+```html
+<script type="module">
+  import { BitonicSorter, GPUContext } from 'https://unpkg.com/webgpu-sorting@latest/dist/index.js';
+</script>
+```
+
+#### Development (Clone Repository)
 
 ```bash
 # Clone the repository
@@ -58,10 +87,10 @@ npm install
 npm run dev
 ```
 
-### Basic Usage
+### Basic Usage (npm)
 
 ```typescript
-import { GPUContext, BitonicSorter, Validator } from './src';
+import { GPUContext, BitonicSorter, Validator } from 'webgpu-sorting';
 
 async function main() {
   // 1. Initialize WebGPU
@@ -90,6 +119,51 @@ async function main() {
 main();
 ```
 
+### Using Radix Sort (for 32-bit integers)
+
+```typescript
+import { GPUContext, RadixSorter } from 'webgpu-sorting';
+
+async function main() {
+  const context = new GPUContext();
+  await context.initialize();
+
+  // Use RadixSorter for better performance on 32-bit integers
+  const sorter = new RadixSorter(context);
+  const data = new Uint32Array([
+    /* 100K+ elements */
+  ]);
+
+  const result = await sorter.sort(data);
+  console.log('Sorted:', result.sortedData);
+
+  sorter.destroy();
+  context.destroy();
+}
+
+main();
+```
+
+### Benchmarking
+
+```typescript
+import { GPUContext, Benchmark } from 'webgpu-sorting';
+
+async function runBenchmark() {
+  const context = new GPUContext();
+  await context.initialize();
+
+  const benchmark = new Benchmark();
+  await benchmark.initialize(context);
+
+  // Run benchmark for specific size
+  const results = await benchmark.runBitonicSort(102400);
+  console.log(`Speedup: ${results.speedup}x`);
+}
+
+runBenchmark();
+```
+
 ---
 
 ## Performance
@@ -103,7 +177,9 @@ main();
 | 100K       | ~15ms           | ~2ms         | ~3ms       | **7.5x**          | **5.0x**        |
 | 1M         | ~200ms          | ~10ms        | ~15ms      | **20x**           | **13x**         |
 
-_Note: Results may vary based on GPU hardware and browser implementation._
+_Note: Results from Chrome 120 on NVIDIA RTX 3060. Results may vary based on GPU hardware and browser implementation._
+
+**Key Takeaway:** GPU sorting shows clear advantages for arrays with 100K+ elements. For smaller arrays (<10K), the GPU overhead may outweigh the benefits.
 
 ---
 
@@ -114,7 +190,9 @@ _Note: Results may vary based on GPU hardware and browser implementation._
 | **Getting Started**   | [Setup Guide](./docs/setup/GETTING_STARTED.md)                |
 | **API Reference**     | [API Documentation](./docs/tutorials/API.md)                  |
 | **Technical Details** | [Architecture & Algorithms](./docs/architecture/TECHNICAL.md) |
+| **Examples**          | [Code Examples](./examples/)                                  |
 | **Project Specs**     | [Specifications](./specs/)                                    |
+| **Changelog**         | [Version History](./CHANGELOG.md)                             |
 
 ---
 
@@ -126,6 +204,27 @@ _Note: Results may vary based on GPU hardware and browser implementation._
 | Edge    | 113+    | ✅ Fully Supported | Based on Chromium           |
 | Firefox | Nightly | ⚠️ Experimental    | Enable `dom.webgpu.enabled` |
 | Safari  | 18+     | ⚠️ Partial         | macOS 14+ required          |
+
+### WebGPU Configuration
+
+WebGPU requires specific security headers for cross-origin isolation. Ensure your server or HTML includes:
+
+**HTTP Headers:**
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+**Or in your HTML:**
+
+```html
+<script>
+  if (crossOriginIsolated) {
+    // WebGPU is ready to use
+  }
+</script>
+```
 
 ---
 

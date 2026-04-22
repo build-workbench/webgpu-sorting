@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WebGPU Sorting - High-performance GPU sorting algorithms using WebGPU compute shaders. Achieve 10-100x speedup over JavaScript Array.sort() with Bitonic Sort and Radix Sort.">
+  <meta name="keywords" content="WebGPU, GPU sorting, Bitonic Sort, Radix Sort, compute shaders, parallel computing, TypeScript">
+  <meta name="theme-color" content="#00d4ff">
+  <link rel="canonical" href="https://lessup.github.io/webgpu-sorting/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="WebGPU Sorting - High-Performance GPU Sorting">
+  <meta property="og:description" content="GPU-accelerated sorting algorithms using WebGPU compute shaders. 10-100x faster than JavaScript native sort.">
+  <meta property="og:url" content="https://lessup.github.io/webgpu-sorting/">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WebGPU Sorting - High-Performance GPU Sorting">
+  <meta name="twitter:description" content="GPU-accelerated sorting algorithms using WebGPU compute shaders.">
+
+  <title>WebGPU Sorting - High-Performance GPU Sorting</title>
+  <link rel="stylesheet" href="/shared/styles.css">
+  <link rel="stylesheet" href="/shared/home.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body class="home-page">
+  <header class="site-header">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">WebGPU Sorting</span>
+      </a>
+      <nav class="main-nav">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="/docs/" class="nav-link">Documentation</a>
+        <a href="/demo/" class="nav-link">Demo</a>
+        <a href="https://github.com/LessUp/webgpu-sorting" target="_blank" rel="noopener" class="github-link" aria-label="GitHub">
+          <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+        </a>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge">WebGPU Compute Shaders</span>
+        </div>
+        <h1 class="hero-title">
+          High-Performance<br>
+          <span class="gradient-text">GPU Sorting</span>
+        </h1>
+        <p class="hero-subtitle">
+          Sorting algorithms that harness the power of your GPU. Achieve <strong>10-100x speedup</strong> over JavaScript's native <code>Array.sort()</code> using WebGPU compute shaders.
+        </p>
+        <div class="hero-actions">
+          <a href="/demo/" class="btn btn-primary btn-lg">
+            <span>⚡ Try Interactive Demo</span>
+          </a>
+          <a href="/docs/getting-started/" class="btn btn-secondary btn-lg">
+            <span>📖 Read Documentation</span>
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-value">100x</span>
+            <span class="stat-label">Speedup vs JS</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">2</span>
+            <span class="stat-label">Algorithms</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">MIT</span>
+            <span class="stat-label">License</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="code-preview">
+          <div class="code-header">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+            <span class="code-title">example.ts</span>
+          </div>
+          <pre><code><span class="code-keyword">import</span> { GPUContext, BitonicSorter } <span class="code-keyword">from</span> <span class="code-string">'webgpu-sorting'</span>;
+
+<span class="code-comment">// Initialize WebGPU context</span>
+<span class="code-keyword">const</span> gpu = <span class="code-keyword">new</span> <span class="code-function">GPUContext</span>();
+<span class="code-keyword">await</span> gpu.<span class="code-function">initialize</span>();
+
+<span class="code-comment">// Create sorter</span>
+<span class="code-keyword">const</span> sorter = <span class="code-keyword">new</span> <span class="code-function">BitonicSorter</span>(gpu);
+
+<span class="code-comment">// Sort data on GPU</span>
+<span class="code-keyword">const</span> data = <span class="code-keyword">new</span> <span class="code-function">Uint32Array</span>([<span class="code-number">5</span>, <span class="code-number">2</span>, <span class="code-number">8</span>, <span class="code-number">1</span>, <span class="code-number">9</span>]);
+<span class="code-keyword">const</span> { sortedData } = <span class="code-keyword">await</span> sorter.<span class="code-function">sort</span>(data);
+
+<span class="code-comment">// 10-100x faster than Array.sort()!</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+      <div class="container">
+        <h2 class="section-title">Key Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>High Performance</h3>
+            <p>Leverage GPU parallelism to sort millions of elements in milliseconds. Perfect for data visualization, game engines, and scientific computing.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔧</div>
+            <h3>Two Algorithms</h3>
+            <p><strong>Bitonic Sort</strong> for comparison-based sorting and <strong>Radix Sort</strong> for integer sorting. Choose the right tool for your data.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🚀</div>
+            <h3>WebGPU Native</h3>
+            <p>Built on modern WebGPU API with WGSL compute shaders. Hardware-accelerated on all major browsers supporting WebGPU.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📦</div>
+            <h3>TypeScript First</h3>
+            <p>Full TypeScript support with comprehensive type definitions. Easy integration into modern web applications.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Validated & Tested</h3>
+            <p>Extensive test suite with property-based testing. Results validated against JavaScript native sort.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔬</div>
+            <h3>Benchmark Tools</h3>
+            <p>Built-in benchmarking utilities to measure performance against native JavaScript sorting on your hardware.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Algorithms Section -->
+    <section class="algorithms">
+      <div class="container">
+        <h2 class="section-title">Sorting Algorithms</h2>
+        <div class="algorithm-cards">
+          <div class="algorithm-card">
+            <div class="algorithm-header">
+              <h3>Bitonic Sort</h3>
+              <span class="complexity">O(n log²n)</span>
+            </div>
+            <p>A comparison-based parallel sorting network. Excellent for general-purpose sorting with predictable performance characteristics.</p>
+            <ul class="algorithm-specs">
+              <li>Works with any comparable data type</li>
+              <li>Stable sorting network</li>
+              <li>Best for: General-purpose sorting</li>
+            </ul>
+          </div>
+          <div class="algorithm-card">
+            <div class="algorithm-header">
+              <h3>Radix Sort</h3>
+              <span class="complexity">O(n × k)</span>
+            </div>
+            <p>A non-comparison integer sorting algorithm using parallel histogram and prefix sum operations. Extremely fast for 32-bit integers.</p>
+            <ul class="algorithm-specs">
+              <li>Specialized for integer sorting</li>
+              <li>Parallel histogram computation</li>
+              <li>Best for: Large integer arrays</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Performance Section -->
+    <section class="performance">
+      <div class="container">
+        <h2 class="section-title">Benchmark Results</h2>
+        <p class="section-subtitle">Typical performance on mid-range GPU vs JavaScript Array.sort()</p>
+        <div class="performance-chart">
+          <div class="chart-bars">
+            <div class="chart-bar-group">
+              <div class="bar-label">1K elements</div>
+              <div class="bars">
+                <div class="bar js" style="--height: 20%">
+                  <span class="bar-value">JS</span>
+                </div>
+                <div class="bar gpu" style="--height: 100%">
+                  <span class="bar-value">5-10x</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-bar-group">
+              <div class="bar-label">100K elements</div>
+              <div class="bars">
+                <div class="bar js" style="--height: 10%">
+                  <span class="bar-value">JS</span>
+                </div>
+                <div class="bar gpu" style="--height: 100%">
+                  <span class="bar-value">20-50x</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-bar-group">
+              <div class="bar-label">1M elements</div>
+              <div class="bars">
+                <div class="bar js" style="--height: 5%">
+                  <span class="bar-value">JS</span>
+                </div>
+                <div class="bar gpu" style="--height: 100%">
+                  <span class="bar-value">50-100x</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="performance-cta">
+          <a href="/demo/" class="btn btn-primary">Run Your Own Benchmark</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="quick-start">
+      <div class="container">
+        <h2 class="section-title">Quick Start</h2>
+        <div class="quick-start-steps">
+          <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+              <h3>Install</h3>
+              <pre class="step-code"><code>npm install webgpu-sorting</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+              <h3>Import</h3>
+              <pre class="step-code"><code>import { GPUContext, BitonicSorter } from 'webgpu-sorting';</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+              <h3>Sort</h3>
+              <pre class="step-code"><code>const gpu = new GPUContext();
+await gpu.initialize();
+const sorter = new BitonicSorter(gpu);
+const result = await sorter.sort(data);</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="quick-start-actions">
+          <a href="/docs/getting-started/" class="btn btn-secondary">View Full Documentation</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Browser Support Section -->
+    <section class="browser-support">
+      <div class="container">
+        <h2 class="section-title">Browser Support</h2>
+        <div class="browser-grid">
+          <div class="browser-item supported">
+            <div class="browser-icon">🌐</div>
+            <span class="browser-name">Chrome 113+</span>
+            <span class="browser-status">Supported</span>
+          </div>
+          <div class="browser-item supported">
+            <div class="browser-icon">🌊</div>
+            <span class="browser-name">Edge 113+</span>
+            <span class="browser-status">Supported</span>
+          </div>
+          <div class="browser-item partial">
+            <div class="browser-icon">🦊</div>
+            <span class="browser-name">Firefox Nightly</span>
+            <span class="browser-status">Flag Required</span>
+          </div>
+          <div class="browser-item partial">
+            <div class="browser-icon">🧭</div>
+            <span class="browser-name">Safari 18+</span>
+            <span class="browser-status">macOS 14+</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>WebGPU Sorting</h4>
+        <p>High-performance GPU sorting algorithms using WebGPU compute shaders.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/demo/">Interactive Demo</a></li>
+          <li><a href="https://github.com/LessUp/webgpu-sorting" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://www.w3.org/TR/webgpu/" target="_blank">WebGPU Spec</a></li>
+          <li><a href="https://www.w3.org/TR/WGSL/" target="_blank">WGSL Spec</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 WebGPU Sorting Contributors. Licensed under MIT.</p>
+    </div>
+  </footer>
+
+  <script src="/shared/main.js"></script>
+</body>
+</html>
