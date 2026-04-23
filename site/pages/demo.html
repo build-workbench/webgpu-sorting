@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Interactive Demo - WebGPU Sorting. Run benchmarks comparing GPU Bitonic Sort and Radix Sort against JavaScript Array.sort()">
+  <meta name="description" content="Interactive benchmark for WebGPU Sorting. Compare Bitonic Sort and Radix Sort against JavaScript sorting on your own hardware.">
   <meta name="theme-color" content="#00d4ff">
   <link rel="canonical" href="https://lessup.github.io/webgpu-sorting/demo/">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Interactive Demo - WebGPU Sorting">
-  <meta property="og:description" content="Run GPU sorting benchmarks in your browser. Compare WebGPU performance vs JavaScript native sort.">
+  <meta property="og:description" content="Benchmark WebGPU sorting on your own browser and compare GPU timings with JavaScript sorting.">
   <meta property="og:url" content="https://lessup.github.io/webgpu-sorting/demo/">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Interactive Demo - WebGPU Sorting">
-  <meta name="twitter:description" content="Run GPU sorting benchmarks in your browser.">
+  <meta name="twitter:description" content="Benchmark Bitonic Sort and Radix Sort in your own browser.">
 
   <title>Interactive Demo - WebGPU Sorting</title>
   <link rel="stylesheet" href="/shared/styles.css">
@@ -50,7 +50,7 @@
     <div class="container">
       <div class="demo-header">
         <h1>⚡ Interactive Benchmark</h1>
-        <p class="subtitle">Compare GPU sorting performance against JavaScript native sort</p>
+        <p class="subtitle">Compare Bitonic Sort, Radix Sort, and JavaScript sorting on your own browser and hardware.</p>
       </div>
 
       <div id="unsupported" class="card unsupported" style="display: none;">
@@ -132,15 +132,15 @@
         </div>
 
         <div class="card info-card">
-          <h2>ℹ️ About the Algorithms</h2>
+          <h2>ℹ️ What you are measuring</h2>
           <div class="algorithm-info">
             <div class="algo">
               <h3>Bitonic Sort</h3>
-              <p>A comparison-based parallel sorting network with <code>O(n log²n)</code> complexity. Uses parallel compare-exchange operations across the GPU.</p>
+               <p>A comparison-based GPU sorting network. Useful as the easiest implementation path to inspect and reason about.</p>
             </div>
             <div class="algo">
               <h3>Radix Sort</h3>
-              <p>A non-comparison integer sorting algorithm with <code>O(n × k)</code> complexity. Uses parallel histogram and prefix sum operations for extreme speed.</p>
+               <p>A non-comparison integer sorter for <code>Uint32Array</code> workloads. It uses histogram-style passes and tends to shine on larger arrays.</p>
             </div>
           </div>
           <div class="tech-badges">
@@ -160,7 +160,7 @@
     <div class="footer-content">
       <div class="footer-section">
         <h4>WebGPU Sorting</h4>
-        <p>High-performance GPU sorting algorithms using WebGPU compute shaders.</p>
+         <p>Benchmark GPU sorting in the browser and inspect the underlying project if you want the implementation details.</p>
       </div>
       <div class="footer-section">
         <h4>Links</h4>
