@@ -3,12 +3,12 @@
 
 project:
   name: webgpu-sorting
-  version: 1.0.0
+  version: 1.0.1
   description: High-performance GPU-accelerated sorting library using WebGPU compute shaders
 
   repository:
     type: git
-    url: https://github.com/user/webgpu-sorting
+    url: https://github.com/LessUp/webgpu-sorting
     branch: master
 
   tech_stack:
@@ -35,10 +35,6 @@ specs:
 
     - name: quality
       description: CI/CD, code quality, and project metadata
-      owners: []
-
-    - name: _archived
-      description: Historical design documents and superseded specs
       owners: []
 
   naming:
