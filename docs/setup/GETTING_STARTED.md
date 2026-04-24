@@ -421,7 +421,7 @@ Now that you're up and running:
 
 ### Get Help
 
-- 📋 [GitHub Issues](https://github.com/your-username/webgpu-sorting/issues)
+- 📋 [GitHub Issues](https://github.com/LessUp/webgpu-sorting/issues)
 - 📚 [WebGPU Specification](https://www.w3.org/TR/webgpu/)
 - 🎓 [WebGPU Fundamentals](https://webgpufundamentals.org/)
 

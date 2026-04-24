@@ -1,7 +1,7 @@
 {
   "name": "webgpu-sorting",
   "version": "1.0.1",
-  "description": "High-performance GPU sorting algorithms using WebGPU compute shaders",
+  "description": "WebGPU + WGSL sorting reference project with Bitonic Sort, Radix Sort, live demo, and TypeScript API",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,13 +11,14 @@
   ],
   "keywords": [
     "webgpu",
-    "gpu",
+    "wgsl",
     "sorting",
     "bitonic-sort",
     "radix-sort",
-    "compute-shader",
-    "wgsl",
-    "parallel-computing"
+    "compute-shaders",
+    "gpu-computing",
+    "benchmark",
+    "typescript"
   ],
   "author": "WebGPU Sorting Contributors",
   "license": "MIT",
@@ -28,7 +29,7 @@
   "bugs": {
     "url": "https://github.com/LessUp/webgpu-sorting/issues"
   },
-  "homepage": "https://github.com/LessUp/webgpu-sorting#readme",
+  "homepage": "https://lessup.github.io/webgpu-sorting/",
   "engines": {
     "node": ">=18.0.0"
   },

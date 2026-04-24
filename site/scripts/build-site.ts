@@ -40,8 +40,48 @@ const NAVIGATION: NavItem[] = [
   },
 ];
 
+const DOC_ROUTE_MAP: Record<string, string> = {
+  'docs/README.md': '/docs/',
+  'docs/setup/GETTING_STARTED.md': '/docs/getting-started/',
+  'docs/setup/WORKFLOW.md': '/docs/workflow/',
+  'docs/tutorials/API.md': '/docs/api/',
+  'docs/architecture/TECHNICAL.md': '/docs/architecture/',
+};
+
+function resolveContentLink(sourcePath: string, url: string): string {
+  if (
+    url.startsWith('http') ||
+    url.startsWith('#') ||
+    url.startsWith('mailto:') ||
+    url.startsWith('javascript:') ||
+    url.startsWith('/')
+  ) {
+    return url;
+  }
+
+  const [rawPath, hash = ''] = url.split('#');
+  const sourceRelativePath = path.relative(ROOT_DIR, sourcePath).split(path.sep).join('/');
+  const normalizedPath = path.posix.normalize(
+    path.posix.join(path.posix.dirname(sourceRelativePath), rawPath)
+  );
+  const resolvedPath = DOC_ROUTE_MAP[normalizedPath];
+  const hashSuffix = hash ? `#${hash}` : '';
+
+  if (resolvedPath) {
+    return `${resolvedPath}${hashSuffix}`;
+  }
+
+  if (normalizedPath.endsWith('.md')) {
+    return `https://github.com/LessUp/webgpu-sorting/blob/master/${normalizedPath}${hashSuffix}`;
+  }
+
+  const isDirectoryLike = rawPath.endsWith('/') || path.posix.extname(normalizedPath) === '';
+  const githubPathType = isDirectoryLike ? 'tree' : 'blob';
+  return `https://github.com/LessUp/webgpu-sorting/${githubPathType}/master/${normalizedPath}${hashSuffix}`;
+}
+
 // Simple markdown parser
-function parseMarkdown(content: string): { html: string; title: string } {
+function parseMarkdown(content: string, sourcePath: string): { html: string; title: string } {
   let html = content;
   let title = 'Documentation';
 
@@ -76,12 +116,10 @@ function parseMarkdown(content: string): { html: string; title: string } {
 
   // Convert links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-    if (url.startsWith('./') || url.startsWith('../')) {
-      url = url.replace(/\.md$/, '.html');
-    }
-    const isExternal = url.startsWith('http');
+    const resolvedUrl = resolveContentLink(sourcePath, url);
+    const isExternal = resolvedUrl.startsWith('http');
     const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return `<a href="${url}"${target}>${text}</a>`;
+    return `<a href="${resolvedUrl}"${target}>${text}</a>`;
   });
 
   // Convert tables
@@ -278,7 +316,8 @@ function copySharedAssets() {
 
 function processMarkdownFile(inputPath: string, outputPath: string, urlPath: string) {
   const content = fs.readFileSync(inputPath, 'utf-8');
-  const { html, title } = parseMarkdown(content);
+  const { html, title } = parseMarkdown(content, inputPath);
+  const relativeInputPath = path.relative(ROOT_DIR, inputPath).split(path.sep).join('/');
 
   const pageContent = `<main class="docs-page">
   <div class="docs-container">
@@ -288,7 +327,7 @@ function processMarkdownFile(inputPath: string, outputPath: string, urlPath: str
     <article class="docs-content">
       ${html}
       <footer class="page-footer">
-        <a href="https://github.com/LessUp/webgpu-sorting/edit/master/docs/${path.basename(inputPath)}" target="_blank" rel="noopener">
+        <a href="https://github.com/LessUp/webgpu-sorting/edit/master/${relativeInputPath}" target="_blank" rel="noopener">
           Edit this page on GitHub
         </a>
       </footer>
@@ -312,6 +351,7 @@ function processMarkdownFile(inputPath: string, outputPath: string, urlPath: str
 function generateDocsSidebar(currentPath: string): string {
   const docsNav = [
     { title: 'Getting Started', path: '/docs/getting-started/' },
+    { title: 'Workflow', path: '/docs/workflow/' },
     { title: 'API Reference', path: '/docs/api/' },
     { title: 'Architecture', path: '/docs/architecture/' },
   ];
@@ -331,6 +371,7 @@ function generateSitemap(baseUrl: string): string {
     { path: '/demo/', priority: '0.9' },
     { path: '/docs/', priority: '0.9' },
     { path: '/docs/getting-started/', priority: '0.8' },
+    { path: '/docs/workflow/', priority: '0.8' },
     { path: '/docs/api/', priority: '0.8' },
     { path: '/docs/architecture/', priority: '0.7' },
   ];
@@ -367,6 +408,11 @@ function main() {
       input: 'docs/setup/GETTING_STARTED.md',
       output: 'docs/getting-started/index.html',
       path: '/docs/getting-started/',
+    },
+    {
+      input: 'docs/setup/WORKFLOW.md',
+      output: 'docs/workflow/index.html',
+      path: '/docs/workflow/',
     },
     { input: 'docs/tutorials/API.md', output: 'docs/api/index.html', path: '/docs/api/' },
     {

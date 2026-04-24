@@ -55,3 +55,9 @@ pnpm-debug.log*
 # WebGPU specific
 *.spv
 *.spirv
+
+# Claude Code personal settings
+CLAUDE.local.md
+
+# oh-my-claudecode
+.omc/
