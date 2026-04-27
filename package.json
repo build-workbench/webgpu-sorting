@@ -1,6 +1,6 @@
 {
   "name": "webgpu-sorting",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "WebGPU + WGSL sorting reference project with Bitonic Sort, Radix Sort, live demo, and TypeScript API",
   "type": "module",
   "main": "dist/index.js",
