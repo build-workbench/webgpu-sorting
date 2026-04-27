@@ -1,6 +1,13 @@
 import { BufferAllocationError, BufferMapError } from './errors';
 
 /**
+ * Formats an unknown error into a string for error messages
+ */
+function formatError(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
  * Manages GPU buffer creation, data transfer, and lifecycle
  */
 export class BufferManager {
@@ -44,7 +51,7 @@ export class BufferManager {
       this.buffers.add(buffer);
       return buffer;
     } catch (e) {
-      throw new BufferAllocationError(`Failed to create storage buffer: ${e}`);
+      throw new BufferAllocationError(`Failed to create storage buffer: ${formatError(e)}`);
     }
   }
 
@@ -64,7 +71,7 @@ export class BufferManager {
       this.buffers.add(buffer);
       return buffer;
     } catch (e) {
-      throw new BufferAllocationError(`Failed to create staging buffer: ${e}`);
+      throw new BufferAllocationError(`Failed to create staging buffer: ${formatError(e)}`);
     }
   }
 
@@ -84,7 +91,7 @@ export class BufferManager {
       this.buffers.add(buffer);
       return buffer;
     } catch (e) {
-      throw new BufferAllocationError(`Failed to create uniform buffer: ${e}`);
+      throw new BufferAllocationError(`Failed to create uniform buffer: ${formatError(e)}`);
     }
   }
 
@@ -113,7 +120,7 @@ export class BufferManager {
       return result;
     } catch (e) {
       this.releaseBuffer(stagingBuffer);
-      throw new BufferMapError(`Failed to read buffer: ${e}`);
+      throw new BufferMapError(`Failed to read buffer: ${formatError(e)}`);
     }
   }
 

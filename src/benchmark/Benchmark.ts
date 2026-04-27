@@ -34,12 +34,19 @@ export class Benchmark {
   }
 
   /**
-   * Generate random test data
+   * Generate random test data using crypto for better randomness
    */
   static generateRandomData(size: number): Uint32Array {
     const data = new Uint32Array(size);
-    for (let i = 0; i < size; i++) {
-      data[i] = Math.floor(Math.random() * 0xffffffff);
+    // Use crypto.getRandomValues for cryptographically secure random numbers
+    // Falls back to Math.random if crypto is not available (e.g., older Node.js)
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(data);
+    } else {
+      // Fallback for environments without crypto.getRandomValues
+      for (let i = 0; i < size; i++) {
+        data[i] = Math.floor(Math.random() * 0xffffffff);
+      }
     }
     return data;
   }

@@ -1,4 +1,4 @@
-import { GPUContextConfig } from '../shared/types';
+import { GPUContextConfig, GPULimitsInfo } from '../shared/types';
 import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from './errors';
 
 /**
@@ -14,6 +14,7 @@ export class GPUContext {
   private device: GPUDevice | null = null;
   private initialized = false;
   private deviceLossCallbacks: Set<DeviceLossCallback> = new Set();
+  private limitsInfo: GPULimitsInfo | null = null;
 
   /**
    * Check if WebGPU is supported in the current environment
@@ -44,9 +45,20 @@ export class GPUContext {
     this.initialized = false;
     this.device = null;
     this.adapter = null;
+    this.limitsInfo = null;
 
     // Re-initialize
     await this.initialize(config);
+  }
+
+  /**
+   * Get information about GPU limits (throws if not initialized)
+   */
+  getLimitsInfo(): GPULimitsInfo {
+    if (!this.limitsInfo) {
+      throw new GPUDeviceError('GPUContext not initialized. Call initialize() first.');
+    }
+    return this.limitsInfo;
   }
 
   /**
@@ -70,18 +82,43 @@ export class GPUContext {
       throw new GPUAdapterError();
     }
 
-    // Request device
+    // Get adapter limits for dynamic configuration
+    const adapterLimits = this.adapter.limits;
+
+    // Store limits info for later use
+    this.limitsInfo = {
+      maxStorageBufferBindingSize: adapterLimits.maxStorageBufferBindingSize,
+      maxComputeInvocationsPerWorkgroup: adapterLimits.maxComputeInvocationsPerWorkgroup,
+      maxComputeWorkgroupSizeX: adapterLimits.maxComputeWorkgroupSizeX,
+      maxBufferSize: adapterLimits.maxBufferSize,
+    };
+
+    // Request device with reasonable limits based on adapter capabilities
+    // We request limits that are important for our sorting operations
+    const requiredLimits: Record<string, number> = {
+      // Ensure we can handle large storage buffers
+      maxStorageBufferBindingSize: Math.min(
+        adapterLimits.maxStorageBufferBindingSize,
+        config?.requiredLimits?.maxStorageBufferBindingSize ??
+          adapterLimits.maxStorageBufferBindingSize
+      ),
+      maxBufferSize: Math.min(
+        adapterLimits.maxBufferSize,
+        config?.requiredLimits?.maxBufferSize ?? adapterLimits.maxBufferSize
+      ),
+    };
+
     this.device = await this.adapter.requestDevice({
       requiredFeatures: [],
-      requiredLimits: {},
+      requiredLimits,
     });
 
     if (!this.device) {
       throw new GPUDeviceError();
     }
 
-    // Handle device loss
-    this.device.lost.then((info) => {
+    // Handle device loss (fire-and-forget with explicit void)
+    void this.device.lost.then((info) => {
       console.error('GPU device lost:', info.message);
       this.initialized = false;
       this.device = null;
@@ -136,6 +173,7 @@ export class GPUContext {
       this.device = null;
     }
     this.adapter = null;
+    this.limitsInfo = null;
     this.initialized = false;
   }
 }

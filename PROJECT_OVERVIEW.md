@@ -30,13 +30,13 @@ When these layers disagree, treat them in this order:
 
 ## Main code areas
 
-| Area                         | Purpose                                     |
-| ---------------------------- | ------------------------------------------- |
-| `src/core/`                  | WebGPU context, buffers, validation, errors |
-| `src/sorting/`               | Bitonic and radix sorter implementations    |
-| `src/shaders/`               | WGSL compute shaders                        |
-| `src/benchmark/`             | Performance comparison utilities            |
-| `src/main.ts` + `index.html` | Browser demo entry                          |
+| Area                         | Purpose                                              |
+| ---------------------------- | ---------------------------------------------------- |
+| `src/core/`                  | WebGPU context, buffers, validation, errors, timeout |
+| `src/sorting/`               | Bitonic and radix sorter implementations             |
+| `src/shaders/`               | WGSL compute shaders                                 |
+| `src/benchmark/`             | Performance comparison utilities                     |
+| `src/main.ts` + `index.html` | Browser demo entry                                   |
 
 ## Main non-code areas
 

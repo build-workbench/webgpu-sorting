@@ -4,6 +4,8 @@
 
 export interface GPUContextConfig {
   powerPreference?: 'low-power' | 'high-performance';
+  /** Optional custom limits to request from the device */
+  requiredLimits?: Record<string, number>;
 }
 
 export interface SortResult {
@@ -26,4 +28,14 @@ export interface ValidationResult {
   isSorted: boolean;
   hasAllElements: boolean;
   errors: string[];
+}
+
+/**
+ * Information about GPU device limits
+ */
+export interface GPULimitsInfo {
+  maxStorageBufferBindingSize: number;
+  maxComputeInvocationsPerWorkgroup: number;
+  maxComputeWorkgroupSizeX: number;
+  maxBufferSize: number;
 }

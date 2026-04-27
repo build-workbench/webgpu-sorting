@@ -3,6 +3,8 @@ export { GPUContext } from './core/GPUContext';
 export type { DeviceLossCallback } from './core/GPUContext';
 export { BufferManager } from './core/BufferManager';
 export { Validator } from './core/Validator';
+export { withTimeout, createTimeoutWrapper } from './core/timeout';
+export type { TimeoutOptions } from './core/timeout';
 export * from './core/errors';
 
 // Sorting exports

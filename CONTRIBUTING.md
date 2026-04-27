@@ -76,6 +76,41 @@ English is the default language for shared docs. Add a `.zh.md` companion only i
 - mention any GitHub-side changes made through `gh`
 - avoid noisy “drive-by” edits outside the task scope
 
+## Publishing to npm
+
+The project is configured for npm publishing via GitHub Actions but is currently **disabled by default**.
+
+### Why publishing is disabled
+
+The npm publish workflow in `.github/workflows/release.yml` has `if: false` set, meaning it won't run automatically. This is intentional:
+
+1. The project may not be ready for public npm distribution
+2. Publishing requires an `NPM_TOKEN` secret to be configured
+3. Manual control over when to publish is preferred
+
+### How to enable publishing
+
+1. Create an npm access token with “Automation” type
+2. Add the token as a repository secret named `NPM_TOKEN` in GitHub Settings → Secrets and variables → Actions
+3. Edit `.github/workflows/release.yml` and change `if: false` to `if: true`
+4. Create a new version tag to trigger the release workflow:
+
+```bash
+npm version patch  # or minor, or major
+git push --tags
+```
+
+### Pre-publish checklist
+
+Before enabling npm publishing:
+
+- [ ] Update `package.json` with correct package name (check npm registry availability)
+- [ ] Ensure `files` field includes all necessary distribution files
+- [ ] Verify `README.md` has installation and usage instructions
+- [ ] Run full test suite: `npm run test`
+- [ ] Build successfully: `npm run build`
+- [ ] Consider adding npm provenance for supply chain security
+
 ## Reporting bugs
 
 When filing a bug, include:

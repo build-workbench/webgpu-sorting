@@ -118,25 +118,8 @@ export class RadixSorter {
     const histogramSize = RADIX * numWorkgroups;
 
     // Create buffers
-    let inputBuffer: GPUBuffer;
-    let outputBuffer: GPUBuffer;
-
-    const cleanupBuffers = (
-      input: GPUBuffer | undefined,
-      output: GPUBuffer | undefined,
-      histogram: GPUBuffer | undefined,
-      prefixSum: GPUBuffer | undefined,
-      uniform: GPUBuffer | undefined
-    ) => {
-      if (input) input.destroy();
-      if (output) output.destroy();
-      if (histogram) histogram.destroy();
-      if (prefixSum) prefixSum.destroy();
-      if (uniform) this.bufferManager.releaseBuffer(uniform);
-    };
-
-    inputBuffer = this.bufferManager.createStorageBuffer(data, 'radix-input');
-    outputBuffer = this.device.createBuffer({
+    const inputBuffer = this.bufferManager.createStorageBuffer(data, 'radix-input');
+    const outputBuffer = this.device.createBuffer({
       label: 'radix-output',
       size: BufferManager.alignSize(size * 4, 4),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -156,146 +139,145 @@ export class RadixSorter {
 
     const uniformBuffer = this.bufferManager.createUniformBuffer(16, 'radix-uniforms');
 
-    const gpuStartTime = performance.now();
+    // Track current input/output for swapping
+    let currentInput = inputBuffer;
+    let currentOutput = outputBuffer;
 
-    // Perform 8 passes (4 bits each)
-    for (let pass = 0; pass < NUM_PASSES; pass++) {
-      const bitOffset = pass * BITS_PER_PASS;
+    const cleanupBuffers = () => {
+      inputBuffer.destroy();
+      outputBuffer.destroy();
+      histogramBuffer.destroy();
+      prefixSumBuffer.destroy();
+      this.bufferManager.releaseBuffer(uniformBuffer);
+    };
 
-      // Clear histogram
-      const zeroHistogram = new Uint32Array(histogramSize);
-      this.device.queue.writeBuffer(histogramBuffer, 0, zeroHistogram);
+    try {
+      const gpuStartTime = performance.now();
 
-      // Update uniforms
-      const uniformData = new Uint32Array([bitOffset, size, numWorkgroups, 0]);
-      this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+      // Perform 8 passes (4 bits each)
+      for (let pass = 0; pass < NUM_PASSES; pass++) {
+        const bitOffset = pass * BITS_PER_PASS;
 
-      // Create bind group for this pass
-      const bindGroupLayout = this.bindGroupLayout;
-      if (!bindGroupLayout) {
-        cleanupBuffers(inputBuffer, outputBuffer, histogramBuffer, prefixSumBuffer, uniformBuffer);
-        throw new ShaderCompilationError('Shader pipelines not initialized');
-      }
+        // Clear histogram
+        const zeroHistogram = new Uint32Array(histogramSize);
+        this.device.queue.writeBuffer(histogramBuffer, 0, zeroHistogram);
 
-      const bindGroup = this.device.createBindGroup({
-        label: `radix-bind-group-pass-${pass}`,
-        layout: bindGroupLayout,
-        entries: [
-          { binding: 0, resource: { buffer: inputBuffer } },
-          { binding: 1, resource: { buffer: outputBuffer } },
-          { binding: 2, resource: { buffer: histogramBuffer } },
-          { binding: 3, resource: { buffer: prefixSumBuffer } },
-          { binding: 4, resource: { buffer: uniformBuffer } },
-        ],
-      });
+        // Update uniforms
+        const uniformData = new Uint32Array([bitOffset, size, numWorkgroups, 0]);
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-      // Step 1: Compute histogram
-      {
-        const histogramPipeline = this.histogramPipeline;
-        if (!histogramPipeline) {
-          cleanupBuffers(
-            inputBuffer,
-            outputBuffer,
-            histogramBuffer,
-            prefixSumBuffer,
-            uniformBuffer
-          );
-          throw new ShaderCompilationError('Histogram pipeline not initialized');
+        // Create bind group for this pass
+        const bindGroupLayout = this.bindGroupLayout;
+        if (!bindGroupLayout) {
+          throw new ShaderCompilationError('Shader pipelines not initialized');
         }
 
-        const commandEncoder = this.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(histogramPipeline);
-        passEncoder.setBindGroup(0, bindGroup);
-        passEncoder.dispatchWorkgroups(numWorkgroups);
-        passEncoder.end();
-        this.device.queue.submit([commandEncoder.finish()]);
-      }
+        const bindGroup = this.device.createBindGroup({
+          label: `radix-bind-group-pass-${pass}`,
+          layout: bindGroupLayout,
+          entries: [
+            { binding: 0, resource: { buffer: currentInput } },
+            { binding: 1, resource: { buffer: currentOutput } },
+            { binding: 2, resource: { buffer: histogramBuffer } },
+            { binding: 3, resource: { buffer: prefixSumBuffer } },
+            { binding: 4, resource: { buffer: uniformBuffer } },
+          ],
+        });
 
-      // Step 2: Read histogram and compute prefix sum on CPU
-      await this.device.queue.onSubmittedWorkDone();
-
-      const stagingBuffer = this.device.createBuffer({
-        size: BufferManager.alignSize(histogramSize * 4, 4),
-        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-      });
-
-      try {
+        // Step 1: Compute histogram
         {
+          const histogramPipeline = this.histogramPipeline;
+          if (!histogramPipeline) {
+            throw new ShaderCompilationError('Histogram pipeline not initialized');
+          }
+
           const commandEncoder = this.device.createCommandEncoder();
-          commandEncoder.copyBufferToBuffer(
-            histogramBuffer,
-            0,
-            stagingBuffer,
-            0,
-            histogramSize * 4
-          );
+          const passEncoder = commandEncoder.beginComputePass();
+          passEncoder.setPipeline(histogramPipeline);
+          passEncoder.setBindGroup(0, bindGroup);
+          passEncoder.dispatchWorkgroups(numWorkgroups);
+          passEncoder.end();
           this.device.queue.submit([commandEncoder.finish()]);
         }
 
-        await stagingBuffer.mapAsync(GPUMapMode.READ);
-        const histogram = new Uint32Array(stagingBuffer.getMappedRange().slice(0));
-        stagingBuffer.unmap();
+        // Step 2: Read histogram and compute prefix sum on CPU
+        await this.device.queue.onSubmittedWorkDone();
 
-        // Compute prefix sum
-        const prefixSums = this.computePrefixSum(histogram);
-        this.device.queue.writeBuffer(
-          prefixSumBuffer,
-          0,
-          prefixSums.buffer,
-          prefixSums.byteOffset,
-          prefixSums.byteLength
-        );
-      } finally {
-        stagingBuffer.destroy();
-      }
+        const stagingBuffer = this.device.createBuffer({
+          size: BufferManager.alignSize(histogramSize * 4, 4),
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
 
-      // Step 3: Scatter elements
-      {
-        const scatterPipeline = this.scatterPipeline;
-        if (!scatterPipeline) {
-          cleanupBuffers(
-            inputBuffer,
-            outputBuffer,
-            histogramBuffer,
+        try {
+          {
+            const commandEncoder = this.device.createCommandEncoder();
+            commandEncoder.copyBufferToBuffer(
+              histogramBuffer,
+              0,
+              stagingBuffer,
+              0,
+              histogramSize * 4
+            );
+            this.device.queue.submit([commandEncoder.finish()]);
+          }
+
+          await stagingBuffer.mapAsync(GPUMapMode.READ);
+          const histogram = new Uint32Array(stagingBuffer.getMappedRange().slice(0));
+          stagingBuffer.unmap();
+
+          // Compute prefix sum
+          const prefixSums = this.computePrefixSum(histogram);
+          this.device.queue.writeBuffer(
             prefixSumBuffer,
-            uniformBuffer
+            0,
+            prefixSums.buffer,
+            prefixSums.byteOffset,
+            prefixSums.byteLength
           );
-          throw new ShaderCompilationError('Scatter pipeline not initialized');
+        } finally {
+          stagingBuffer.destroy();
         }
 
-        const commandEncoder = this.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(scatterPipeline);
-        passEncoder.setBindGroup(0, bindGroup);
-        passEncoder.dispatchWorkgroups(numWorkgroups);
-        passEncoder.end();
-        this.device.queue.submit([commandEncoder.finish()]);
+        // Step 3: Scatter elements
+        {
+          const scatterPipeline = this.scatterPipeline;
+          if (!scatterPipeline) {
+            throw new ShaderCompilationError('Scatter pipeline not initialized');
+          }
+
+          const commandEncoder = this.device.createCommandEncoder();
+          const passEncoder = commandEncoder.beginComputePass();
+          passEncoder.setPipeline(scatterPipeline);
+          passEncoder.setBindGroup(0, bindGroup);
+          passEncoder.dispatchWorkgroups(numWorkgroups);
+          passEncoder.end();
+          this.device.queue.submit([commandEncoder.finish()]);
+        }
+
+        // Swap buffers for next pass
+        const temp = currentInput;
+        currentInput = currentOutput;
+        currentOutput = temp;
       }
 
-      // Swap buffers for next pass
-      const temp = inputBuffer;
-      inputBuffer = outputBuffer;
-      outputBuffer = temp;
+      await this.device.queue.onSubmittedWorkDone();
+
+      const gpuEndTime = performance.now();
+
+      // Read results (currentInput has final sorted data after even number of swaps)
+      const result = await this.bufferManager.readBuffer(currentInput, size * 4);
+
+      const totalEndTime = performance.now();
+
+      return {
+        sortedData: result,
+        gpuTimeMs: gpuEndTime - gpuStartTime,
+        totalTimeMs: totalEndTime - totalStartTime,
+      };
+    } finally {
+      // Cleanup - guaranteed to run even if an exception is thrown
+      cleanupBuffers();
     }
-
-    await this.device.queue.onSubmittedWorkDone();
-
-    const gpuEndTime = performance.now();
-
-    // Read results (inputBuffer has final sorted data after even number of swaps)
-    const result = await this.bufferManager.readBuffer(inputBuffer, size * 4);
-
-    // Cleanup
-    cleanupBuffers(inputBuffer, outputBuffer, histogramBuffer, prefixSumBuffer, uniformBuffer);
-
-    const totalEndTime = performance.now();
-
-    return {
-      sortedData: result,
-      gpuTimeMs: gpuEndTime - gpuStartTime,
-      totalTimeMs: totalEndTime - totalStartTime,
-    };
   }
 
   /**

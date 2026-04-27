@@ -162,9 +162,15 @@ export class BitonicSorter {
 
     const gpuStartTime = performance.now();
 
+    // Validate paddedSize is a valid power of 2 (defensive check)
+    if (!BitonicSorter.isPowerOf2(paddedSize)) {
+      throw new Error(`Invalid paddedSize: ${paddedSize} is not a power of 2`);
+    }
+
     // Calculate number of workgroups
     const numWorkgroups = Math.ceil(paddedSize / WORKGROUP_SIZE);
-    const numStages = Math.log2(paddedSize);
+    // Safe integer log2 - paddedSize is guaranteed to be power of 2
+    const numStages = Math.trunc(Math.log2(paddedSize));
 
     // First, do local sort within each workgroup
     {
@@ -186,7 +192,8 @@ export class BitonicSorter {
     }
 
     // Then do global merge stages
-    const localStages = Math.log2(WORKGROUP_SIZE);
+    // Safe integer log2 - WORKGROUP_SIZE is guaranteed to be power of 2
+    const localStages = Math.trunc(Math.log2(WORKGROUP_SIZE));
     const globalPipeline = this.globalPipeline;
     if (!globalPipeline) {
       throw new ShaderCompilationError('Global pipeline not initialized');
