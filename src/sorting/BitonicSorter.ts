@@ -1,7 +1,8 @@
 import { GPUContext } from '../core/GPUContext';
 import { BufferManager } from '../core/BufferManager';
-import { SortResult } from '../shared/types';
+import { SortResult, SortOptions } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
+import { Validator } from '../core/Validator';
 import bitonicShaderCode from '../shaders/bitonic.wgsl?raw';
 import { WORKGROUP_SIZE } from '../shared/constants';
 
@@ -21,9 +22,52 @@ export class BitonicSorter {
   private bindGroupLayout: GPUBindGroupLayout | null = null;
   private initialized = false;
 
+  // Preallocation state
+  private preallocatedBuffer: GPUBuffer | null = null;
+  private _preallocatedSize: number = 0;
+
   constructor(context: GPUContext) {
     this.device = context.getDevice();
     this.bufferManager = new BufferManager(this.device);
+  }
+
+  /**
+   * The current preallocation size, or 0 if not preallocated.
+   */
+  get preallocatedSize(): number {
+    return this._preallocatedSize;
+  }
+
+  /**
+   * Preallocate GPU buffers for sorting arrays up to maxSize.
+   * Reuse buffers across multiple sort() calls for better performance.
+   * @param maxSize - Maximum array size to preallocate for
+   */
+  preallocate(maxSize: number): void {
+    // Release any existing preallocation
+    this.clearPreallocation();
+
+    // For bitonic sort, we need to pad to power of 2
+    const paddedSize = BitonicSorter.nextPowerOf2(maxSize);
+
+    this.preallocatedBuffer = this.device.createBuffer({
+      label: 'preallocated-bitonic-data',
+      size: BufferManager.alignSize(paddedSize * 4, 4),
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    this._preallocatedSize = maxSize;
+  }
+
+  /**
+   * Release preallocated buffers. Buffers will be allocated on-demand.
+   */
+  clearPreallocation(): void {
+    if (this.preallocatedBuffer) {
+      this.preallocatedBuffer.destroy();
+      this.preallocatedBuffer = null;
+      this._preallocatedSize = 0;
+    }
   }
 
   /**
@@ -115,8 +159,10 @@ export class BitonicSorter {
 
   /**
    * Sort an array using GPU bitonic sort
+   * @param data - The array to sort
+   * @param options - Optional sorting options
    */
-  async sort(data: Uint32Array): Promise<SortResult> {
+  async sort(data: Uint32Array, options?: SortOptions): Promise<SortResult> {
     const totalStartTime = performance.now();
 
     await this.initializePipelines();
@@ -141,8 +187,28 @@ export class BitonicSorter {
       paddedData[i] = 0xffffffff;
     }
 
-    // Create GPU buffers
-    const dataBuffer = this.bufferManager.createStorageBuffer(paddedData, 'sort-data');
+    // Check if preallocated buffer can be used
+    const usePreallocated = this.preallocatedBuffer && this._preallocatedSize >= originalSize;
+
+    let dataBuffer: GPUBuffer;
+    let needsCleanup = false;
+
+    if (usePreallocated) {
+      // Write data to preallocated buffer
+      this.device.queue.writeBuffer(
+        this.preallocatedBuffer!,
+        0,
+        paddedData.buffer,
+        paddedData.byteOffset,
+        paddedData.byteLength
+      );
+      dataBuffer = this.preallocatedBuffer!;
+    } else {
+      // Fall back to temporary allocation
+      dataBuffer = this.bufferManager.createStorageBuffer(paddedData, 'sort-data');
+      needsCleanup = true;
+    }
+
     const uniformBuffer = this.bufferManager.createUniformBuffer(16, 'sort-uniforms');
 
     // Create bind group
@@ -226,10 +292,20 @@ export class BitonicSorter {
     const sortedData = result.slice(0, originalSize);
 
     // Cleanup
-    this.bufferManager.releaseBuffer(dataBuffer);
+    if (needsCleanup) {
+      this.bufferManager.releaseBuffer(dataBuffer);
+    }
     this.bufferManager.releaseBuffer(uniformBuffer);
 
     const totalEndTime = performance.now();
+
+    // Validate if requested
+    if (options?.validate) {
+      const validation = Validator.validate(data, sortedData);
+      if (!validation.isValid) {
+        throw new Error(`Sort validation failed: ${validation.errors.join(', ')}`);
+      }
+    }
 
     return {
       sortedData,
@@ -242,6 +318,7 @@ export class BitonicSorter {
    * Release all resources
    */
   destroy(): void {
+    this.clearPreallocation();
     this.bufferManager.releaseAll();
     this.localPipeline = null;
     this.globalPipeline = null;

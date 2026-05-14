@@ -2,6 +2,18 @@
  * Type definitions for WebGPU sorting
  */
 
+/**
+ * Options for sorting operations
+ */
+export interface SortOptions {
+  /**
+   * Verify the output is correctly sorted after sorting completes.
+   * Useful for debugging and testing.
+   * @default false
+   */
+  validate?: boolean;
+}
+
 export interface GPUContextConfig {
   powerPreference?: 'low-power' | 'high-performance';
   /** Optional custom limits to request from the device */

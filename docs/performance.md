@@ -158,16 +158,7 @@ Sort multiple arrays in sequence:
 const results = await Promise.all([sorter.sort(array1), sorter.sort(array2), sorter.sort(array3)]);
 ```
 
-### 3. Async Readback
-
-Use non-blocking readback for pipeline parallelism:
-
-```typescript
-const result = await sorter.sortAsync(data);
-// GPU works while CPU does other tasks
-```
-
-### 4. Choose the Right Algorithm
+### 3. Choose the Right Algorithm
 
 ```typescript
 // For general-purpose sorting

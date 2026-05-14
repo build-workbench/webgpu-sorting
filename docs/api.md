@@ -95,7 +95,6 @@ Sort an array of unsigned 32-bit integers.
 ```typescript
 interface SortOptions {
   validate?: boolean; // Verify output is sorted (default: false)
-  timing?: boolean; // Measure GPU time (default: true)
 }
 
 interface SortResult {
@@ -113,6 +112,35 @@ Release GPU resources used by the sorter.
 
 ```typescript
 sorter.destroy();
+```
+
+##### `preallocate(maxSize: number): void`
+
+Preallocate GPU buffers for sorting arrays up to `maxSize`. Buffers are reused across multiple `sort()` calls for better performance in batch sorting scenarios.
+
+```typescript
+sorter.preallocate(1_000_000); // Preallocate for up to 1M elements
+
+// Multiple sorts reuse the same buffers
+for (const arr of arrays) {
+  const result = await sorter.sort(arr);
+}
+```
+
+##### `clearPreallocation(): void`
+
+Release preallocated buffers. Buffers will be allocated on-demand for subsequent sorts.
+
+```typescript
+sorter.clearPreallocation();
+```
+
+##### `preallocatedSize: number` (readonly)
+
+Returns the current preallocation size, or 0 if not preallocated.
+
+```typescript
+console.log(sorter.preallocatedSize); // 1000000 or 0
 ```
 
 ---
@@ -148,6 +176,43 @@ const result = await sorter.sort(data);
 ::: tip Best For
 Radix Sort is optimized for **Uint32Array** datasets. For other data types, use BitonicSorter.
 :::
+
+##### `destroy(): void`
+
+Release GPU resources used by the sorter.
+
+```typescript
+sorter.destroy();
+```
+
+##### `preallocate(maxSize: number): void`
+
+Preallocate GPU buffers for sorting arrays up to `maxSize`. Buffers are reused across multiple `sort()` calls for better performance in batch sorting scenarios.
+
+```typescript
+sorter.preallocate(1_000_000); // Preallocate for up to 1M elements
+
+// Multiple sorts reuse the same buffers
+for (const arr of arrays) {
+  const result = await sorter.sort(arr);
+}
+```
+
+##### `clearPreallocation(): void`
+
+Release preallocated buffers. Buffers will be allocated on-demand for subsequent sorts.
+
+```typescript
+sorter.clearPreallocation();
+```
+
+##### `preallocatedSize: number` (readonly)
+
+Returns the current preallocation size, or 0 if not preallocated.
+
+```typescript
+console.log(sorter.preallocatedSize); // 1000000 or 0
+```
 
 ---
 
@@ -210,16 +275,11 @@ import { ShaderCompilationError } from 'webgpu-sorting';
 ```typescript
 interface SortOptions {
   /**
-   * Verify the output is correctly sorted
+   * Verify the output is correctly sorted after sorting completes.
+   * Useful for debugging and testing.
    * @default false
    */
   validate?: boolean;
-
-  /**
-   * Measure GPU execution time
-   * @default true
-   */
-  timing?: boolean;
 }
 ```
 
