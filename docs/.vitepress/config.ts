@@ -10,8 +10,24 @@ export default defineConfig({
   description: 'GPU-Accelerated Sorting Algorithms - Technical Whitepaper',
 
   head: [
+    // Security headers
+    [
+      'meta',
+      {
+        'http-equiv': 'Content-Security-Policy',
+        content:
+          "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:",
+      },
+    ],
+    [
+      'meta',
+      {
+        'http-equiv': 'Permissions-Policy',
+        content: 'geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()',
+      },
+    ],
     ['meta', { name: 'theme-color', content: '#00d4aa' }],
-    ['meta', { name: 'author', content: 'lessup' }],
+    ['meta', { name: 'author', content: 'AICL-Lab' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'WebGPU Sorting - Technical Whitepaper' }],
     [
@@ -77,7 +93,7 @@ export default defineConfig({
     },
 
     // Social links
-    socialLinks: [{ icon: 'github', link: 'https://github.com/lessup/webgpu-sorting' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/AICL-Lab/webgpu-sorting' }],
 
     // Built-in local search
     search: {
@@ -96,7 +112,7 @@ export default defineConfig({
 
     // Edit link for contributions
     editLink: {
-      pattern: 'https://github.com/lessup/webgpu-sorting/edit/main/docs/:path',
+      pattern: 'https://github.com/AICL-Lab/webgpu-sorting/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
 

@@ -2,7 +2,8 @@ import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
 
 // Demo builds go to docs/public/demo/ for VitePress
-const base = process.env.VITE_BASE_PATH || '/webgpu-sorting/demo/';
+// Use relative path for better portability
+const base = process.env.VITE_BASE_PATH || './';
 
 export default defineConfig(async ({ mode }) => {
   const plugins: Plugin[] = [];

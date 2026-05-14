@@ -2,18 +2,18 @@
   "name": "WebGPU Sorting",
   "short_name": "GPU Sort",
   "description": "GPU-accelerated sorting algorithms with WebGPU compute shaders",
-  "start_url": "/webgpu-sorting/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0d1117",
   "theme_color": "#00d4aa",
   "icons": [
     {
-      "src": "/webgpu-sorting/icons/icon-192.svg",
+      "src": "./icons/icon-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml"
     },
     {
-      "src": "/webgpu-sorting/icons/icon-512.svg",
+      "src": "./icons/icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml"
     }

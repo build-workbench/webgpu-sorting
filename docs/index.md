@@ -19,7 +19,7 @@ hero:
       link: /architecture
     - theme: alt
       text: GitHub
-      link: https://github.com/lessup/webgpu-sorting
+      link: https://github.com/AICL-Lab/webgpu-sorting
 
 features:
   - icon: 🚀
