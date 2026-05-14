@@ -24,12 +24,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LessUp/webgpu-sorting.git"
+    "url": "git+https://github.com/AICL-Lab/webgpu-sorting.git"
   },
   "bugs": {
-    "url": "https://github.com/LessUp/webgpu-sorting/issues"
+    "url": "https://github.com/AICL-Lab/webgpu-sorting/issues"
   },
-  "homepage": "https://lessup.github.io/webgpu-sorting/",
+  "homepage": "https://aicl-lab.github.io/webgpu-sorting/",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -42,6 +42,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:browser": "playwright test",
+    "test:browser:ui": "playwright test --ui",
+    "test:all": "npm run test && npm run test:browser",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
@@ -63,6 +66,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
     "@vitest/coverage-v8": "^4.1.5",

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Project instructions for AI coding agents working in `LessUp/webgpu-sorting`.
+Project instructions for AI coding agents working in `AICL-Lab/webgpu-sorting`.
 
 ## Mission
 

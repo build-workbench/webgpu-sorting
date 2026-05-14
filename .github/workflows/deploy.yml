@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.repository == 'LessUp/webgpu-sorting'
+    if: github.repository == 'AICL-Lab/webgpu-sorting'
     runs-on: ubuntu-latest
 
     steps:
