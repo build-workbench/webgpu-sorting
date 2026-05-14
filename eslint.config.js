@@ -28,7 +28,15 @@ export default ts.config(
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', '*.wgsl', 'coverage/', 'eslint.config.js'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '*.wgsl',
+      'coverage/',
+      'eslint.config.js',
+      'docs/',
+      'scripts/',
+    ],
   },
   {
     files: ['test/**/*.ts', '**/*.test.ts'],
@@ -38,7 +46,7 @@ export default ts.config(
     },
   },
   {
-    files: ['examples/**/*.ts', 'site/scripts/**/*.ts'],
+    files: ['examples/**/*.ts'],
     rules: {
       'no-console': 'off',
     },

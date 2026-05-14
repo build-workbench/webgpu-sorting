@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0d1117" rx="51.2"/>
+  <text
+    x="50%"
+    y="55%"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    font-family="monospace"
+    font-size="179.2"
+    font-weight="bold"
+    fill="#00d4aa"
+  >GPU</text>
+</svg>
