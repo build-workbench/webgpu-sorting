@@ -208,6 +208,9 @@ export class ScanModule {
     const scanUniformData = new Uint32Array([dataSize, numScanBlocks, 0, 0]);
     this.device.queue.writeBuffer(uniformBuffer, 0, scanUniformData);
 
+    // Use a single command encoder for all dispatches to ensure proper ordering
+    const commandEncoder = this.device.createCommandEncoder();
+
     // Step 1: Local Blelloch scan within each workgroup
     {
       const bindGroup = this.device.createBindGroup({
@@ -221,13 +224,11 @@ export class ScanModule {
         ],
       });
 
-      const commandEncoder = this.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginComputePass();
       passEncoder.setPipeline(blellochPipeline);
       passEncoder.setBindGroup(0, bindGroup);
       passEncoder.dispatchWorkgroups(numScanBlocks);
       passEncoder.end();
-      this.device.queue.submit([commandEncoder.finish()]);
     }
 
     // Step 2: Scan the block sums (if more than one block)
@@ -243,13 +244,11 @@ export class ScanModule {
         ],
       });
 
-      const commandEncoder = this.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginComputePass();
       passEncoder.setPipeline(scanBlockSumsPipeline);
       passEncoder.setBindGroup(0, bindGroup);
       passEncoder.dispatchWorkgroups(1);
       passEncoder.end();
-      this.device.queue.submit([commandEncoder.finish()]);
 
       // Step 3: Add block prefixes to each block's local results
       {
@@ -264,15 +263,16 @@ export class ScanModule {
           ],
         });
 
-        const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setPipeline(addBlockPrefixesPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numScanBlocks);
         passEncoder.end();
-        this.device.queue.submit([commandEncoder.finish()]);
       }
     }
+
+    // Submit all commands together
+    this.device.queue.submit([commandEncoder.finish()]);
   }
 
   /**
