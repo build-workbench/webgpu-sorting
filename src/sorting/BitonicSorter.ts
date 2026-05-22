@@ -1,5 +1,6 @@
 import { GPUContext } from '../core/GPUContext';
 import { BufferManager } from '../core/BufferManager';
+import { BufferScope } from '../core/BufferScope';
 import { SortResult, SortOptions } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
 import { Validator } from '../core/Validator';
@@ -188,114 +189,125 @@ export class BitonicSorter {
     }
 
     // Check if preallocated buffer can be used
-    const usePreallocated = this.preallocatedBuffer && this._preallocatedSize >= originalSize;
+    const preallocatedBuffer = this.preallocatedBuffer;
+    const usePreallocated = preallocatedBuffer !== null && this._preallocatedSize >= originalSize;
+    const bufferScope = new BufferScope();
 
     let dataBuffer: GPUBuffer;
-    let needsCleanup = false;
+    let sortedData: Uint32Array | undefined;
+    let gpuTimeMs: number | undefined;
 
-    if (usePreallocated) {
-      // Write data to preallocated buffer
-      this.device.queue.writeBuffer(
-        this.preallocatedBuffer!,
-        0,
-        paddedData.buffer,
-        paddedData.byteOffset,
-        paddedData.byteLength
-      );
-      dataBuffer = this.preallocatedBuffer!;
-    } else {
-      // Fall back to temporary allocation
-      dataBuffer = this.bufferManager.createStorageBuffer(paddedData, 'sort-data');
-      needsCleanup = true;
-    }
-
-    const uniformBuffer = this.bufferManager.createUniformBuffer(16, 'sort-uniforms');
-
-    // Create bind group
-    const bindGroupLayout = this.bindGroupLayout;
-    if (!bindGroupLayout) {
-      throw new ShaderCompilationError('Shader pipelines not initialized');
-    }
-
-    const bindGroup = this.device.createBindGroup({
-      label: 'bitonic-bind-group',
-      layout: bindGroupLayout,
-      entries: [
-        { binding: 0, resource: { buffer: dataBuffer } },
-        { binding: 1, resource: { buffer: uniformBuffer } },
-      ],
-    });
-
-    const gpuStartTime = performance.now();
-
-    // Validate paddedSize is a valid power of 2 (defensive check)
-    if (!BitonicSorter.isPowerOf2(paddedSize)) {
-      throw new Error(`Invalid paddedSize: ${paddedSize} is not a power of 2`);
-    }
-
-    // Calculate number of workgroups
-    const numWorkgroups = Math.ceil(paddedSize / WORKGROUP_SIZE);
-    // Safe integer log2 - paddedSize is guaranteed to be power of 2
-    const numStages = Math.trunc(Math.log2(paddedSize));
-
-    // First, do local sort within each workgroup
-    {
-      const localPipeline = this.localPipeline;
-      if (!localPipeline) {
-        throw new ShaderCompilationError('Local pipeline not initialized');
+    try {
+      if (usePreallocated) {
+        this.device.queue.writeBuffer(
+          preallocatedBuffer,
+          0,
+          paddedData.buffer,
+          paddedData.byteOffset,
+          paddedData.byteLength
+        );
+        dataBuffer = preallocatedBuffer;
+      } else {
+        dataBuffer = bufferScope.track(
+          this.bufferManager.createStorageBuffer(paddedData, 'sort-data'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
       }
 
-      const uniformData = new Uint32Array([0, 0, paddedSize, 0]);
-      this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+      const uniformBuffer = bufferScope.track(
+        this.bufferManager.createUniformBuffer(16, 'sort-uniforms'),
+        (buffer) => this.bufferManager.releaseBuffer(buffer)
+      );
 
-      const commandEncoder = this.device.createCommandEncoder();
-      const passEncoder = commandEncoder.beginComputePass();
-      passEncoder.setPipeline(localPipeline);
-      passEncoder.setBindGroup(0, bindGroup);
-      passEncoder.dispatchWorkgroups(numWorkgroups);
-      passEncoder.end();
-      this.device.queue.submit([commandEncoder.finish()]);
-    }
+      const bindGroupLayout = this.bindGroupLayout;
+      if (!bindGroupLayout) {
+        throw new ShaderCompilationError('Shader pipelines not initialized');
+      }
 
-    // Then do global merge stages
-    // Safe integer log2 - WORKGROUP_SIZE is guaranteed to be power of 2
-    const localStages = Math.trunc(Math.log2(WORKGROUP_SIZE));
-    const globalPipeline = this.globalPipeline;
-    if (!globalPipeline) {
-      throw new ShaderCompilationError('Global pipeline not initialized');
-    }
+      const bindGroup = this.device.createBindGroup({
+        label: 'bitonic-bind-group',
+        layout: bindGroupLayout,
+        entries: [
+          { binding: 0, resource: { buffer: dataBuffer } },
+          { binding: 1, resource: { buffer: uniformBuffer } },
+        ],
+      });
 
-    for (let stage = localStages; stage < numStages; stage++) {
-      for (let passNum = stage; passNum >= 0; passNum--) {
-        const uniformData = new Uint32Array([stage, passNum, paddedSize, 0]);
+      const gpuStartTime = performance.now();
+
+      // Validate paddedSize is a valid power of 2 (defensive check)
+      if (!BitonicSorter.isPowerOf2(paddedSize)) {
+        throw new Error(`Invalid paddedSize: ${paddedSize} is not a power of 2`);
+      }
+
+      // Calculate number of workgroups
+      const numWorkgroups = Math.ceil(paddedSize / WORKGROUP_SIZE);
+      // Safe integer log2 - paddedSize is guaranteed to be power of 2
+      const numStages = Math.trunc(Math.log2(paddedSize));
+
+      // First, do local sort within each workgroup
+      {
+        const localPipeline = this.localPipeline;
+        if (!localPipeline) {
+          throw new ShaderCompilationError('Local pipeline not initialized');
+        }
+
+        const uniformData = new Uint32Array([0, 0, paddedSize, 0]);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(globalPipeline);
+        passEncoder.setPipeline(localPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
         this.device.queue.submit([commandEncoder.finish()]);
       }
+
+      // Then do global merge stages
+      // Safe integer log2 - WORKGROUP_SIZE is guaranteed to be power of 2
+      const localStages = Math.trunc(Math.log2(WORKGROUP_SIZE));
+      const globalPipeline = this.globalPipeline;
+      if (!globalPipeline) {
+        throw new ShaderCompilationError('Global pipeline not initialized');
+      }
+
+      for (let stage = localStages; stage < numStages; stage++) {
+        for (let passNum = stage; passNum >= 0; passNum--) {
+          const uniformData = new Uint32Array([stage, passNum, paddedSize, 0]);
+          this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+          const commandEncoder = this.device.createCommandEncoder();
+          const passEncoder = commandEncoder.beginComputePass();
+          passEncoder.setPipeline(globalPipeline);
+          passEncoder.setBindGroup(0, bindGroup);
+          passEncoder.dispatchWorkgroups(numWorkgroups);
+          passEncoder.end();
+          this.device.queue.submit([commandEncoder.finish()]);
+        }
+      }
+
+      // Wait for GPU to finish
+      await this.device.queue.onSubmittedWorkDone();
+
+      const gpuEndTime = performance.now();
+
+      // Read back results
+      const result = await this.bufferManager.readBuffer(dataBuffer, paddedSize * 4);
+
+      // Remove padding
+      sortedData = result.slice(0, originalSize);
+      gpuTimeMs = gpuEndTime - gpuStartTime;
+    } finally {
+      bufferScope.releaseAll();
     }
 
-    // Wait for GPU to finish
-    await this.device.queue.onSubmittedWorkDone();
-
-    const gpuEndTime = performance.now();
-
-    // Read back results
-    const result = await this.bufferManager.readBuffer(dataBuffer, paddedSize * 4);
-
-    // Remove padding
-    const sortedData = result.slice(0, originalSize);
-
-    // Cleanup
-    if (needsCleanup) {
-      this.bufferManager.releaseBuffer(dataBuffer);
+    if (!sortedData) {
+      throw new Error('Bitonic sort completed without producing output');
     }
-    this.bufferManager.releaseBuffer(uniformBuffer);
+    if (gpuTimeMs === undefined) {
+      throw new Error('Bitonic sort completed without timing information');
+    }
 
     const totalEndTime = performance.now();
 
@@ -309,7 +321,7 @@ export class BitonicSorter {
 
     return {
       sortedData,
-      gpuTimeMs: gpuEndTime - gpuStartTime,
+      gpuTimeMs,
       totalTimeMs: totalEndTime - totalStartTime,
     };
   }

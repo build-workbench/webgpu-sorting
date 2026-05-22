@@ -1,4 +1,5 @@
-import { BufferAllocationError, BufferMapError } from './errors';
+import { BufferAllocationError, BufferMapError, GPUTimeoutError } from './errors';
+import { withTimeout } from './timeout';
 
 /**
  * Formats an unknown error into a string for error messages
@@ -102,14 +103,16 @@ export class BufferManager {
     const alignedSize = BufferManager.alignSize(size, 4);
     const stagingBuffer = this.createStagingBuffer(alignedSize);
 
-    // Copy from source to staging
-    const commandEncoder = this.device.createCommandEncoder();
-    commandEncoder.copyBufferToBuffer(sourceBuffer, 0, stagingBuffer, 0, alignedSize);
-    this.device.queue.submit([commandEncoder.finish()]);
-
-    // Map and read
     try {
-      await stagingBuffer.mapAsync(GPUMapMode.READ);
+      // Copy from source to staging
+      const commandEncoder = this.device.createCommandEncoder();
+      commandEncoder.copyBufferToBuffer(sourceBuffer, 0, stagingBuffer, 0, alignedSize);
+      this.device.queue.submit([commandEncoder.finish()]);
+
+      // Map and read
+      await withTimeout(stagingBuffer.mapAsync(GPUMapMode.READ), {
+        message: 'Buffer mapping timed out',
+      });
       const mappedRange = stagingBuffer.getMappedRange();
       const result = new Uint32Array(mappedRange.slice(0, size));
       stagingBuffer.unmap();
@@ -120,6 +123,9 @@ export class BufferManager {
       return result;
     } catch (e) {
       this.releaseBuffer(stagingBuffer);
+      if (e instanceof GPUTimeoutError) {
+        throw e;
+      }
       throw new BufferMapError(`Failed to read buffer: ${formatError(e)}`);
     }
   }

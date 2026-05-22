@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { Benchmark } from '../../src/benchmark/Benchmark';
 
 describe('Benchmark', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   // Feature: webgpu-sorting, Property 6: Speedup Calculation Correctness
   // Validates: Requirements 5.3
   describe('Property 6: Speedup Calculation Correctness', () => {
@@ -93,6 +98,29 @@ describe('Benchmark', () => {
       for (const value of data) {
         expect(value).toBeGreaterThanOrEqual(0);
         expect(value).toBeLessThanOrEqual(0xffffffff);
+      }
+    });
+
+    it('fills large arrays in crypto-safe chunks', () => {
+      const getRandomValues = vi.fn((view: Uint32Array) => {
+        if (view.byteLength > 65536) {
+          throw new Error('QuotaExceededError');
+        }
+        view.fill(7);
+        return view;
+      });
+
+      vi.stubGlobal('crypto', { getRandomValues });
+
+      const data = Benchmark.generateRandomData(20000);
+
+      expect(data.length).toBe(20000);
+      expect(data[0]).toBe(7);
+      expect(data[data.length - 1]).toBe(7);
+      expect(getRandomValues).toHaveBeenCalledTimes(2);
+
+      for (const [view] of getRandomValues.mock.calls) {
+        expect((view as Uint32Array).byteLength).toBeLessThanOrEqual(65536);
       }
     });
   });

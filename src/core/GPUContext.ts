@@ -1,5 +1,7 @@
 import { GPUContextConfig, GPULimitsInfo } from '../shared/types';
 import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from './errors';
+import { browserGPURuntime } from './runtime/browserGPURuntime';
+import type { GPURuntime } from './runtime/GPURuntime';
 
 /**
  * Callback type for device loss events
@@ -15,12 +17,17 @@ export class GPUContext {
   private initialized = false;
   private deviceLossCallbacks: Set<DeviceLossCallback> = new Set();
   private limitsInfo: GPULimitsInfo | null = null;
+  private runtime: GPURuntime;
+
+  constructor(runtime: GPURuntime = browserGPURuntime) {
+    this.runtime = runtime;
+  }
 
   /**
    * Check if WebGPU is supported in the current environment
    */
-  static isSupported(): boolean {
-    return typeof navigator !== 'undefined' && 'gpu' in navigator;
+  static isSupported(runtime: GPURuntime = browserGPURuntime): boolean {
+    return runtime.isSupported();
   }
 
   /**
@@ -69,12 +76,12 @@ export class GPUContext {
       return;
     }
 
-    if (!GPUContext.isSupported()) {
+    if (!this.runtime.isSupported()) {
       throw new WebGPUNotSupportedError();
     }
 
     // Request adapter
-    this.adapter = await navigator.gpu.requestAdapter({
+    this.adapter = await this.runtime.requestAdapter({
       powerPreference: config?.powerPreference ?? 'high-performance',
     });
 

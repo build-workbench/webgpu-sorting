@@ -89,13 +89,14 @@ test.describe('BitonicSorter', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, BitonicSorter, Validator } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
 
         const sorter = new BitonicSorter(gpu);
-        const data = new Uint32Array(4096);
-        crypto.getRandomValues(data);
+        const data = createRandomUint32Array(4096);
 
         const result = await sorter.sort(data);
         const isSorted = Validator.isSorted(result.sortedData);
@@ -199,13 +200,14 @@ test.describe('RadixSorter', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, RadixSorter, Validator } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
 
         const sorter = new RadixSorter(gpu);
-        const data = new Uint32Array(4096);
-        crypto.getRandomValues(data);
+        const data = createRandomUint32Array(4096);
 
         const result = await sorter.sort(data);
         const isSorted = Validator.isSorted(result.sortedData);
@@ -229,13 +231,14 @@ test.describe('RadixSorter', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, RadixSorter, Validator } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
 
         const sorter = new RadixSorter(gpu);
-        const data = new Uint32Array(100000);
-        crypto.getRandomValues(data);
+        const data = createRandomUint32Array(100000);
 
         const result = await sorter.sort(data);
         const isSorted = Validator.isSorted(result.sortedData);
@@ -259,6 +262,8 @@ test.describe('RadixSorter', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, BitonicSorter, RadixSorter } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
@@ -266,8 +271,7 @@ test.describe('RadixSorter', () => {
         const bitonic = new BitonicSorter(gpu);
         const radix = new RadixSorter(gpu);
 
-        const data = new Uint32Array(1000);
-        crypto.getRandomValues(data);
+        const data = createRandomUint32Array(1000);
 
         const r1 = await bitonic.sort(data);
         const r2 = await radix.sort(data);
@@ -295,6 +299,8 @@ test.describe('Preallocation', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, BitonicSorter } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
@@ -305,12 +311,10 @@ test.describe('Preallocation', () => {
         const sizeBefore = sorter.preallocatedSize;
 
         // Sort multiple times
-        const data1 = new Uint32Array(1000);
-        crypto.getRandomValues(data1);
+        const data1 = createRandomUint32Array(1000);
         await sorter.sort(data1);
 
-        const data2 = new Uint32Array(5000);
-        crypto.getRandomValues(data2);
+        const data2 = createRandomUint32Array(5000);
         await sorter.sort(data2);
 
         sorter.clearPreallocation();
@@ -335,6 +339,8 @@ test.describe('Preallocation', () => {
       try {
         // @ts-expect-error - module import in browser
         const { GPUContext, RadixSorter } = await import('/src/index.ts');
+        // @ts-expect-error - module import in browser
+        const { createRandomUint32Array } = await import('/src/shared/random.ts');
 
         const gpu = new GPUContext();
         await gpu.initialize();
@@ -345,12 +351,10 @@ test.describe('Preallocation', () => {
         const sizeBefore = sorter.preallocatedSize;
 
         // Sort multiple times
-        const data1 = new Uint32Array(1000);
-        crypto.getRandomValues(data1);
+        const data1 = createRandomUint32Array(1000);
         await sorter.sort(data1);
 
-        const data2 = new Uint32Array(5000);
-        crypto.getRandomValues(data2);
+        const data2 = createRandomUint32Array(5000);
         await sorter.sort(data2);
 
         sorter.clearPreallocation();

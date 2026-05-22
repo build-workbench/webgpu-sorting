@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { BufferManager } from '../../src/core/BufferManager';
+import { BufferMapError, GPUTimeoutError } from '../../src/core/errors';
 
 describe('BufferManager', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
   // Feature: webgpu-sorting, Property 2: Buffer Size Alignment
   // Validates: Requirements 2.5
   describe('Property 2: Buffer Size Alignment', () => {
@@ -55,4 +62,79 @@ describe('BufferManager', () => {
   // which is not available in Node.js test environment.
   // These tests would need to run in a browser environment with WebGPU support.
   // For now, we test the alignSize function which is pure and testable.
+
+  describe('readBuffer', () => {
+    it('wraps copy failures and releases the staging buffer', async () => {
+      const sourceBuffer = {} as GPUBuffer;
+      const stagingBuffer = {
+        destroy: vi.fn(),
+      } as unknown as GPUBuffer;
+
+      const commandEncoder = {
+        copyBufferToBuffer: vi.fn(() => {
+          throw new Error('copy failed');
+        }),
+        finish: vi.fn(() => ({})),
+      };
+
+      const device = {
+        createCommandEncoder: vi.fn(() => commandEncoder),
+        queue: {
+          submit: vi.fn(),
+        },
+      } as unknown as GPUDevice;
+
+      const manager = new BufferManager(device);
+      vi.spyOn(manager, 'createStagingBuffer').mockReturnValue(stagingBuffer);
+      const releaseBuffer = vi.spyOn(manager, 'releaseBuffer').mockImplementation(() => {});
+
+      await expect(manager.readBuffer(sourceBuffer, 4)).rejects.toThrow(BufferMapError);
+      expect(releaseBuffer).toHaveBeenCalledWith(stagingBuffer);
+    });
+
+    it('times out stalled mapping and releases the staging buffer', async () => {
+      vi.useFakeTimers();
+      vi.stubGlobal('GPUMapMode', { READ: 1 });
+
+      const sourceBuffer = {} as GPUBuffer;
+      const stagingBuffer = {
+        mapAsync: vi.fn(() => new Promise<void>(() => {})),
+        getMappedRange: vi.fn(),
+        unmap: vi.fn(),
+        destroy: vi.fn(),
+      } as unknown as GPUBuffer;
+
+      const commandEncoder = {
+        copyBufferToBuffer: vi.fn(),
+        finish: vi.fn(() => ({})),
+      };
+
+      const device = {
+        createCommandEncoder: vi.fn(() => commandEncoder),
+        queue: {
+          submit: vi.fn(),
+        },
+      } as unknown as GPUDevice;
+
+      const manager = new BufferManager(device);
+      vi.spyOn(manager, 'createStagingBuffer').mockReturnValue(stagingBuffer);
+      const releaseBuffer = vi.spyOn(manager, 'releaseBuffer').mockImplementation(() => {});
+
+      const readPromise = manager.readBuffer(sourceBuffer, 4);
+      const outcome = Promise.race([
+        readPromise.then(
+          () => new Error('readBuffer should not resolve'),
+          (error: unknown) => error
+        ),
+        new Promise<string>((resolve) => setTimeout(() => resolve('pending'), 30001)),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(30001);
+
+      const result = await outcome;
+
+      expect(result).toBeInstanceOf(GPUTimeoutError);
+      expect(releaseBuffer).toHaveBeenCalledWith(stagingBuffer);
+    });
+  });
 });

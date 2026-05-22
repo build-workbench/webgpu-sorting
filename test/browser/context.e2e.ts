@@ -32,7 +32,7 @@ test.describe('GPUContext', () => {
         const { GPUContext } = await import('/src/index.ts');
         const gpu = new GPUContext();
         await gpu.initialize();
-        const isInitialized = gpu.isInitialized;
+        const isInitialized = gpu.isInitialized();
         gpu.destroy();
         return { success: true, isInitialized };
       } catch (error) {

@@ -3,6 +3,7 @@ import { BitonicSorter } from '../sorting/BitonicSorter';
 import { RadixSorter } from '../sorting/RadixSorter';
 import { BenchmarkResult } from '../shared/types';
 import { DEFAULT_BENCHMARK_SIZES } from '../shared/constants';
+import { createRandomUint32Array } from '../shared/random';
 
 /**
  * Performance benchmark for sorting algorithms
@@ -37,18 +38,7 @@ export class Benchmark {
    * Generate random test data using crypto for better randomness
    */
   static generateRandomData(size: number): Uint32Array {
-    const data = new Uint32Array(size);
-    // Use crypto.getRandomValues for cryptographically secure random numbers
-    // Falls back to Math.random if crypto is not available (e.g., older Node.js)
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      crypto.getRandomValues(data);
-    } else {
-      // Fallback for environments without crypto.getRandomValues
-      for (let i = 0; i < size; i++) {
-        data[i] = Math.floor(Math.random() * 0xffffffff);
-      }
-    }
-    return data;
+    return createRandomUint32Array(size);
   }
 
   /**

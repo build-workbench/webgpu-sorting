@@ -1,5 +1,6 @@
 import { GPUContext } from '../core/GPUContext';
 import { BufferManager } from '../core/BufferManager';
+import { BufferScope } from '../core/BufferScope';
 import { SortResult, SortOptions } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
 import { Validator } from '../core/Validator';
@@ -344,82 +345,91 @@ export class RadixSorter {
     const numScanBlocks = Math.ceil(histogramSize / ELEMENTS_PER_SCAN_BLOCK);
 
     // Check if preallocated buffers can be used
-    const usePreallocated = this.preallocatedBuffers && this._preallocatedSize >= size;
+    const preallocatedBuffers = this.preallocatedBuffers;
+    const usePreallocated = preallocatedBuffers !== null && this._preallocatedSize >= size;
+    const bufferScope = new BufferScope();
 
     let inputBuffer: GPUBuffer;
     let outputBuffer: GPUBuffer;
     let histogramBuffer: GPUBuffer;
     let prefixSumBuffer: GPUBuffer;
     let blockSumsBuffer: GPUBuffer;
-    let uniformBuffer: GPUBuffer;
-    let scanUniformBuffer: GPUBuffer;
-    let needsCleanup = false;
 
-    if (usePreallocated) {
-      // Write data to preallocated input buffer
-      this.device.queue.writeBuffer(
-        this.preallocatedBuffers!.input,
-        0,
-        data.buffer,
-        data.byteOffset,
-        data.byteLength
-      );
-      inputBuffer = this.preallocatedBuffers!.input;
-      outputBuffer = this.preallocatedBuffers!.output;
-      histogramBuffer = this.preallocatedBuffers!.histogram;
-      prefixSumBuffer = this.preallocatedBuffers!.prefixSum;
-      blockSumsBuffer = this.preallocatedBuffers!.blockSums;
-
-      // Uniform and scan uniform buffers are small, allocate on-demand
-      uniformBuffer = this.bufferManager.createUniformBuffer(16, 'radix-uniforms');
-      scanUniformBuffer = this.bufferManager.createUniformBuffer(16, 'scan-uniforms');
-    } else {
-      // Fall back to temporary allocation
-      inputBuffer = this.bufferManager.createStorageBuffer(data, 'radix-input');
-      outputBuffer = this.device.createBuffer({
-        label: 'radix-output',
-        size: BufferManager.alignSize(size * 4, 4),
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-      histogramBuffer = this.device.createBuffer({
-        label: 'radix-histogram',
-        size: BufferManager.alignSize(histogramSize * 4, 4),
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-      prefixSumBuffer = this.device.createBuffer({
-        label: 'radix-prefix-sum',
-        size: BufferManager.alignSize(histogramSize * 4, 4),
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-      blockSumsBuffer = this.device.createBuffer({
-        label: 'radix-block-sums',
-        size: BufferManager.alignSize(numScanBlocks * 4, 4),
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-      uniformBuffer = this.bufferManager.createUniformBuffer(16, 'radix-uniforms');
-      scanUniformBuffer = this.bufferManager.createUniformBuffer(16, 'scan-uniforms');
-      needsCleanup = true;
-    }
-
-    // Track current input/output for swapping
-    let currentInput = inputBuffer;
-    let currentOutput = outputBuffer;
-
-    const cleanupTempBuffers = () => {
-      // Only destroy non-preallocated buffers
-      if (needsCleanup) {
-        inputBuffer.destroy();
-        outputBuffer.destroy();
-        histogramBuffer.destroy();
-        prefixSumBuffer.destroy();
-        blockSumsBuffer.destroy();
-      }
-      // Always clean up small uniform buffers
-      this.bufferManager.releaseBuffer(uniformBuffer);
-      this.bufferManager.releaseBuffer(scanUniformBuffer);
-    };
+    let sortedData: Uint32Array | undefined;
+    let gpuTimeMs: number | undefined;
 
     try {
+      let uniformBuffer: GPUBuffer;
+      let scanUniformBuffer: GPUBuffer;
+
+      if (usePreallocated) {
+        this.device.queue.writeBuffer(
+          preallocatedBuffers.input,
+          0,
+          data.buffer,
+          data.byteOffset,
+          data.byteLength
+        );
+        inputBuffer = preallocatedBuffers.input;
+        outputBuffer = preallocatedBuffers.output;
+        histogramBuffer = preallocatedBuffers.histogram;
+        prefixSumBuffer = preallocatedBuffers.prefixSum;
+        blockSumsBuffer = preallocatedBuffers.blockSums;
+
+        uniformBuffer = bufferScope.track(
+          this.bufferManager.createUniformBuffer(16, 'radix-uniforms'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
+        scanUniformBuffer = bufferScope.track(
+          this.bufferManager.createUniformBuffer(16, 'scan-uniforms'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
+      } else {
+        inputBuffer = bufferScope.track(
+          this.bufferManager.createStorageBuffer(data, 'radix-input'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
+        outputBuffer = bufferScope.track(
+          this.device.createBuffer({
+            label: 'radix-output',
+            size: BufferManager.alignSize(size * 4, 4),
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
+        histogramBuffer = bufferScope.track(
+          this.device.createBuffer({
+            label: 'radix-histogram',
+            size: BufferManager.alignSize(histogramSize * 4, 4),
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
+        prefixSumBuffer = bufferScope.track(
+          this.device.createBuffer({
+            label: 'radix-prefix-sum',
+            size: BufferManager.alignSize(histogramSize * 4, 4),
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
+        blockSumsBuffer = bufferScope.track(
+          this.device.createBuffer({
+            label: 'radix-block-sums',
+            size: BufferManager.alignSize(numScanBlocks * 4, 4),
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
+        uniformBuffer = bufferScope.track(
+          this.bufferManager.createUniformBuffer(16, 'radix-uniforms'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
+        scanUniformBuffer = bufferScope.track(
+          this.bufferManager.createUniformBuffer(16, 'scan-uniforms'),
+          (buffer) => this.bufferManager.releaseBuffer(buffer)
+        );
+      }
+
+      let currentInput = inputBuffer;
+      let currentOutput = outputBuffer;
+
       const gpuStartTime = performance.now();
 
       // Perform 8 passes (4 bits each)
@@ -504,27 +514,34 @@ export class RadixSorter {
       const gpuEndTime = performance.now();
 
       // Read results (currentInput has final sorted data after even number of swaps)
-      const result = await this.bufferManager.readBuffer(currentInput, size * 4);
-
-      const totalEndTime = performance.now();
-
-      // Validate if requested
-      if (options?.validate) {
-        const validation = Validator.validate(data, result);
-        if (!validation.isValid) {
-          throw new Error(`Sort validation failed: ${validation.errors.join(', ')}`);
-        }
-      }
-
-      return {
-        sortedData: result,
-        gpuTimeMs: gpuEndTime - gpuStartTime,
-        totalTimeMs: totalEndTime - totalStartTime,
-      };
+      sortedData = await this.bufferManager.readBuffer(currentInput, size * 4);
+      gpuTimeMs = gpuEndTime - gpuStartTime;
     } finally {
-      // Cleanup - guaranteed to run even if an exception is thrown
-      cleanupTempBuffers();
+      bufferScope.releaseAll();
     }
+
+    if (!sortedData) {
+      throw new Error('Radix sort completed without producing output');
+    }
+    if (gpuTimeMs === undefined) {
+      throw new Error('Radix sort completed without timing information');
+    }
+
+    const totalEndTime = performance.now();
+
+    // Validate if requested
+    if (options?.validate) {
+      const validation = Validator.validate(data, sortedData);
+      if (!validation.isValid) {
+        throw new Error(`Sort validation failed: ${validation.errors.join(', ')}`);
+      }
+    }
+
+    return {
+      sortedData,
+      gpuTimeMs,
+      totalTimeMs: totalEndTime - totalStartTime,
+    };
   }
 
   /**
