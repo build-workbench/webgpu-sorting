@@ -27,7 +27,7 @@
 - [x] Create `test/browser/` directory
 - [x] Create `playwright.config.ts`
 - [x] Add test scripts to `package.json`
-- [ ] Install Playwright browsers: `npx playwright install chromium`
+- [x] Install Playwright browsers: `npx playwright install chromium`
 
 ## Phase 2: Test Infrastructure
 
@@ -105,6 +105,7 @@ None.
 - Browser tests require a display (use xvfb in CI if needed)
 - WebGPU may not be available in all CI environments
 - Consider using `test.skip()` for GPU tests when WebGPU unavailable
+- **Blocker (2026-05-22)**: System lacks `libasound.so.2` and other libraries required by Playwright's Chromium. Installing requires sudo: `npx playwright install-deps chromium`
 
 ---
 
