@@ -4,19 +4,9 @@ import { BufferScope } from '../core/BufferScope';
 import { SortResult, SortOptions } from '../shared/types';
 import { ShaderCompilationError } from '../core/errors';
 import { Validator } from '../core/Validator';
+import { ScanModule } from './scan/ScanModule';
 import radixShaderCode from '../shaders/radix.wgsl?raw';
 import { WORKGROUP_SIZE, RADIX, BITS_PER_PASS, NUM_PASSES } from '../shared/constants';
-
-/**
- * IMPORTANT: These constants must match the values in src/shaders/radix.wgsl
- * @see src/shaders/radix.wgsl:14-15 - const WORKGROUP_SIZE: u32 = 256u; const RADIX: u32 = 16u;
- * @see src/shaders/radix.wgsl:16 - const SCAN_WORKGROUP_SIZE: u32 = 256u;
- */
-
-/** Size for Blelloch scan workgroups */
-const SCAN_WORKGROUP_SIZE = 256;
-/** Elements processed per scan workgroup (each thread handles 2 elements) */
-const ELEMENTS_PER_SCAN_BLOCK = SCAN_WORKGROUP_SIZE * 2;
 
 /**
  * GPU-accelerated Radix Sort implementation with GPU-based prefix sum
@@ -24,15 +14,11 @@ const ELEMENTS_PER_SCAN_BLOCK = SCAN_WORKGROUP_SIZE * 2;
 export class RadixSorter {
   private device: GPUDevice;
   private bufferManager: BufferManager;
+  private scanModule: ScanModule;
+
   private histogramPipeline: GPUComputePipeline | null = null;
   private scatterPipeline: GPUComputePipeline | null = null;
   private bindGroupLayout: GPUBindGroupLayout | null = null;
-
-  // Blelloch scan pipelines
-  private blellochScanPipeline: GPUComputePipeline | null = null;
-  private scanBlockSumsPipeline: GPUComputePipeline | null = null;
-  private addBlockPrefixesPipeline: GPUComputePipeline | null = null;
-  private scanBindGroupLayout: GPUBindGroupLayout | null = null;
 
   // Preallocation state
   private preallocatedBuffers: {
@@ -50,6 +36,7 @@ export class RadixSorter {
   constructor(context: GPUContext) {
     this.device = context.getDevice();
     this.bufferManager = new BufferManager(this.device);
+    this.scanModule = new ScanModule(context);
   }
 
   /**
@@ -68,9 +55,10 @@ export class RadixSorter {
     // Release any existing preallocation
     this.clearPreallocation();
 
+    const { elementsPerScanBlock } = ScanModule.getConstants();
     const numWorkgroups = Math.ceil(maxSize / WORKGROUP_SIZE);
     const histogramSize = RADIX * numWorkgroups;
-    const numScanBlocks = Math.ceil(histogramSize / ELEMENTS_PER_SCAN_BLOCK);
+    const numScanBlocks = Math.ceil(histogramSize / elementsPerScanBlock);
 
     this.preallocatedBuffers = {
       input: this.device.createBuffer({
@@ -171,153 +159,10 @@ export class RadixSorter {
       },
     });
 
-    // Create scan bind group layout for Blelloch scan
-    this.scanBindGroupLayout = this.device.createBindGroupLayout({
-      label: 'scan-bind-group-layout',
-      entries: [
-        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
-        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-        { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
-      ],
-    });
-
-    const scanPipelineLayout = this.device.createPipelineLayout({
-      label: 'scan-pipeline-layout',
-      bindGroupLayouts: [this.scanBindGroupLayout],
-    });
-
-    // Create Blelloch scan pipelines
-    this.blellochScanPipeline = this.device.createComputePipeline({
-      label: 'blelloch-scan-pipeline',
-      layout: scanPipelineLayout,
-      compute: {
-        module: shaderModule,
-        entryPoint: 'blelloch_scan',
-      },
-    });
-
-    this.scanBlockSumsPipeline = this.device.createComputePipeline({
-      label: 'scan-block-sums-pipeline',
-      layout: scanPipelineLayout,
-      compute: {
-        module: shaderModule,
-        entryPoint: 'scan_block_sums',
-      },
-    });
-
-    this.addBlockPrefixesPipeline = this.device.createComputePipeline({
-      label: 'add-block-prefixes-pipeline',
-      layout: scanPipelineLayout,
-      compute: {
-        module: shaderModule,
-        entryPoint: 'add_block_prefixes',
-      },
-    });
+    // Initialize scan module
+    await this.scanModule.initialize();
 
     this.initialized = true;
-  }
-
-  /**
-   * Compute exclusive prefix sum on GPU using Blelloch scan
-   * Uses a two-level scan for large histograms:
-   * 1. Local scan within each workgroup
-   * 2. Scan of block sums
-   * 3. Add block prefixes to local results
-   */
-  private computePrefixSumGPU(
-    inputBuffer: GPUBuffer,
-    outputBuffer: GPUBuffer,
-    blockSumsBuffer: GPUBuffer,
-    scanUniformBuffer: GPUBuffer,
-    dataSize: number
-  ): void {
-    const scanBindGroupLayout = this.scanBindGroupLayout;
-    const blellochPipeline = this.blellochScanPipeline;
-    const scanBlockSumsPipeline = this.scanBlockSumsPipeline;
-    const addBlockPrefixesPipeline = this.addBlockPrefixesPipeline;
-
-    if (
-      !scanBindGroupLayout ||
-      !blellochPipeline ||
-      !scanBlockSumsPipeline ||
-      !addBlockPrefixesPipeline
-    ) {
-      throw new ShaderCompilationError('Scan pipelines not initialized');
-    }
-
-    // Calculate number of scan blocks
-    const numScanBlocks = Math.ceil(dataSize / ELEMENTS_PER_SCAN_BLOCK);
-
-    // Update scan uniforms
-    const scanUniformData = new Uint32Array([dataSize, numScanBlocks, 0, 0]);
-    this.device.queue.writeBuffer(scanUniformBuffer, 0, scanUniformData);
-
-    // Step 1: Local Blelloch scan within each workgroup
-    {
-      const bindGroup = this.device.createBindGroup({
-        label: 'blelloch-scan-bind-group',
-        layout: scanBindGroupLayout,
-        entries: [
-          { binding: 0, resource: { buffer: inputBuffer } },
-          { binding: 1, resource: { buffer: outputBuffer } },
-          { binding: 2, resource: { buffer: blockSumsBuffer } },
-          { binding: 3, resource: { buffer: scanUniformBuffer } },
-        ],
-      });
-
-      const commandEncoder = this.device.createCommandEncoder();
-      const passEncoder = commandEncoder.beginComputePass();
-      passEncoder.setPipeline(blellochPipeline);
-      passEncoder.setBindGroup(0, bindGroup);
-      passEncoder.dispatchWorkgroups(numScanBlocks);
-      passEncoder.end();
-      this.device.queue.submit([commandEncoder.finish()]);
-    }
-
-    // Step 2: Scan the block sums (if more than one block)
-    if (numScanBlocks > 1) {
-      const bindGroup = this.device.createBindGroup({
-        label: 'scan-block-sums-bind-group',
-        layout: scanBindGroupLayout,
-        entries: [
-          { binding: 0, resource: { buffer: blockSumsBuffer } },
-          { binding: 1, resource: { buffer: blockSumsBuffer } },
-          { binding: 2, resource: { buffer: blockSumsBuffer } },
-          { binding: 3, resource: { buffer: scanUniformBuffer } },
-        ],
-      });
-
-      const commandEncoder = this.device.createCommandEncoder();
-      const passEncoder = commandEncoder.beginComputePass();
-      passEncoder.setPipeline(scanBlockSumsPipeline);
-      passEncoder.setBindGroup(0, bindGroup);
-      passEncoder.dispatchWorkgroups(1);
-      passEncoder.end();
-      this.device.queue.submit([commandEncoder.finish()]);
-
-      // Step 3: Add block prefixes to each block's local results
-      {
-        const bindGroup = this.device.createBindGroup({
-          label: 'add-block-prefixes-bind-group',
-          layout: scanBindGroupLayout,
-          entries: [
-            { binding: 0, resource: { buffer: inputBuffer } },
-            { binding: 1, resource: { buffer: outputBuffer } },
-            { binding: 2, resource: { buffer: blockSumsBuffer } },
-            { binding: 3, resource: { buffer: scanUniformBuffer } },
-          ],
-        });
-
-        const commandEncoder = this.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(addBlockPrefixesPipeline);
-        passEncoder.setBindGroup(0, bindGroup);
-        passEncoder.dispatchWorkgroups(numScanBlocks);
-        passEncoder.end();
-        this.device.queue.submit([commandEncoder.finish()]);
-      }
-    }
   }
 
   /**
@@ -340,9 +185,10 @@ export class RadixSorter {
       };
     }
 
+    const { elementsPerScanBlock } = ScanModule.getConstants();
     const numWorkgroups = Math.ceil(size / WORKGROUP_SIZE);
     const histogramSize = RADIX * numWorkgroups;
-    const numScanBlocks = Math.ceil(histogramSize / ELEMENTS_PER_SCAN_BLOCK);
+    const numScanBlocks = Math.ceil(histogramSize / elementsPerScanBlock);
 
     // Check if preallocated buffers can be used
     const preallocatedBuffers = this.preallocatedBuffers;
@@ -479,7 +325,7 @@ export class RadixSorter {
         }
 
         // Step 2: Compute prefix sum on GPU using Blelloch scan
-        this.computePrefixSumGPU(
+        this.scanModule.computePrefixSumGPU(
           histogramBuffer,
           prefixSumBuffer,
           blockSumsBuffer,
@@ -550,13 +396,10 @@ export class RadixSorter {
   destroy(): void {
     this.clearPreallocation();
     this.bufferManager.releaseAll();
+    this.scanModule.destroy();
     this.histogramPipeline = null;
     this.scatterPipeline = null;
     this.bindGroupLayout = null;
-    this.blellochScanPipeline = null;
-    this.scanBlockSumsPipeline = null;
-    this.addBlockPrefixesPipeline = null;
-    this.scanBindGroupLayout = null;
     this.initialized = false;
   }
 }
