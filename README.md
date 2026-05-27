@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://lessup.github.io/webgpu-sorting/">Home</a> •
-  <a href="https://lessup.github.io/webgpu-sorting/demo/">Live Demo</a> •
-  <a href="./docs/README.md">Docs</a> •
+  <a href="https://aicl-lab.github.io/webgpu-sorting/">Home</a> •
+  <a href="https://aicl-lab.github.io/webgpu-sorting/demo/">Live Demo</a> •
+  <a href="./docs/index.md">Docs</a> •
   <a href="./README.zh.md">中文</a>
 </p>
 
@@ -18,7 +18,7 @@ WebGPU Sorting is a TypeScript library and demo project that explores high-throu
 - **Bitonic Sort** for predictable sorting-network behavior
 - **Radix Sort** for large `Uint32Array` workloads
 
-The repository also includes a benchmark utility, an interactive demo, a custom GitHub Pages site, and an OpenSpec-driven workflow for maintaining the project coherently.
+The repository also includes benchmark utilities, an interactive demo, and a VitePress site built from the same `docs/` directory that holds the written documentation.
 
 ## What you get
 
@@ -26,7 +26,7 @@ The repository also includes a benchmark utility, an interactive demo, a custom 
 - WGSL shader implementations for bitonic and radix sorting
 - Browser benchmark helpers for comparing GPU and JS sorting
 - A live demo site for trying the project quickly
-- OpenSpec specs and tasks for structured maintenance
+- A small contributor workflow built around code, tests, docs, and one root changelog
 
 ## Quick start
 
@@ -76,14 +76,13 @@ WebGPU requires cross-origin isolation when running in the browser. The dev serv
 
 ```text
 webgpu-sorting/
-├── openspec/            # Specs, change proposals, tasks, archive
-├── docs/                # User documentation
-├── site/                # Custom GitHub Pages site
-├── src/                 # Library and demo source
-├── test/                # Vitest suite
+├── docs/                # VitePress docs, Pages source, and generated demo assets
+├── src/                 # Library and standalone demo source
+├── test/                # Vitest and browser tests
 ├── examples/            # Usage examples
-├── AGENTS.md            # Project-wide AI and workflow guidance
-└── CLAUDE.md            # Project-specific assistant guidance
+├── .github/workflows/   # CI, Pages, and release automation
+├── PROJECT_OVERVIEW.md  # Concise architecture and repo map
+└── CHANGELOG.md         # Single changelog for the whole repository
 ```
 
 ## Development commands
@@ -99,31 +98,25 @@ Other useful commands:
 
 ```bash
 npm run dev
+npm run build:demo
+npm run build:site
 npm run test:coverage
-npm run pages:build
 ```
 
 ## Documentation and specs
 
 | Surface             | Link                                                                                             |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
-| Docs hub            | [docs/README.md](./docs/README.md)                                                               |
-| Getting started     | [docs/setup/GETTING_STARTED.md](./docs/setup/GETTING_STARTED.md)                                 |
-| API reference       | [docs/tutorials/API.md](./docs/tutorials/API.md)                                                 |
-| Technical notes     | [docs/architecture/TECHNICAL.md](./docs/architecture/TECHNICAL.md)                               |
-| Sorting spec        | [openspec/specs/sorting/webgpu-sorting.md](./openspec/specs/sorting/webgpu-sorting.md)           |
-| Quality spec        | [openspec/specs/quality/project-enhancement.md](./openspec/specs/quality/project-enhancement.md) |
-| Current change work | [openspec/changes/](./openspec/changes/)                                                         |
+| Docs hub        | [docs/index.md](./docs/index.md)                     |
+| Getting started | [docs/getting-started.md](./docs/getting-started.md) |
+| API reference   | [docs/api.md](./docs/api.md)                         |
+| Architecture    | [docs/architecture.md](./docs/architecture.md)       |
+| Performance     | [docs/performance.md](./docs/performance.md)         |
+| Demo page       | [docs/demo.md](./docs/demo.md)                       |
 
 ## Contributing
 
-For non-trivial changes, start with OpenSpec instead of editing files directly:
-
-```text
-/opsx:explore → /opsx:propose → /opsx:apply → /review → /opsx:archive
-```
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contributor workflow and [AGENTS.md](./AGENTS.md) for project-specific guidance.
+Keep changes small, update the matching docs when behavior or workflow changes, and run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` before merge. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
 
 ## License
 

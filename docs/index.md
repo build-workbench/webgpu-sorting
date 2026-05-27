@@ -1,12 +1,12 @@
 ---
 layout: home
 title: WebGPU Sorting
-titleTemplate: GPU-Accelerated Sorting Algorithms
+titleTemplate: Library, Demo, and Docs
 
 hero:
   name: WebGPU Sorting
-  text: High-Performance GPU-Accelerated Sorting
-  tagline: Achieve 10-100× speedup using WebGPU compute shaders for large array workloads
+  text: WebGPU Sorting Library and Demo
+  tagline: Sort Uint32Array workloads in the browser, inspect the implementation, and benchmark on your own hardware.
   image:
     src: /icons/icon-192.svg
     alt: WebGPU Sorting Logo
@@ -23,41 +23,41 @@ hero:
 
 features:
   - icon: 🚀
-    title: GPU Acceleration
-    details: Leverage WebGPU compute shaders for parallel sorting with up to 100× speedup over CPU implementations for large datasets
+    title: Browser-side GPU sorting
+    details: Run Bitonic and Radix sort implementations through WebGPU compute shaders from a small TypeScript API.
   - icon: 📊
     title: Bitonic Sort
-    details: O(n log²n) comparison-based sorting network optimized for GPU parallelism with predictable performance characteristics
+    details: A predictable sorting-network implementation that works well as the general-purpose reference algorithm.
   - icon: 🔢
     title: Radix Sort
-    details: O(n×k) non-comparison integer sorter for Uint32Array workloads, ideal for large integer-heavy datasets
+    details: A Uint32-focused implementation for larger integer workloads where fixed-width passes pay off.
   - icon: 🔧
-    title: WebGPU Native
-    details: Built from scratch for WebGPU with WGSL shaders, no WebGL fallbacks or legacy dependencies
+    title: Standalone demo app
+    details: A maintained playground build is embedded in the docs site so you can benchmark on the target browser directly.
   - icon: 📐
-    title: Technical Docs
-    details: Comprehensive architecture documentation with interactive diagrams, algorithm analysis, and performance benchmarks
+    title: Reference docs
+    details: Docs focus on the library API, architecture, demo usage, and practical benchmark guidance.
   - icon: 🛡️
-    title: Production Ready
-    details: Full TypeScript API, comprehensive test suite, and detailed error handling for robust integration
+    title: Maintained workflow
+    details: The repository keeps one validation baseline, one docs site, and one root changelog instead of layered maintenance frameworks.
 ---
 
 <div class="quick-stats">
   <div class="stat">
-    <span class="stat-value">10-100×</span>
-    <span class="stat-label">Speedup vs CPU</span>
+    <span class="stat-value">2</span>
+    <span class="stat-label">GPU sorters</span>
   </div>
   <div class="stat">
-    <span class="stat-value">1M+</span>
-    <span class="stat-label">Elements Sorted</span>
+    <span class="stat-value">1</span>
+    <span class="stat-label">Demo playground</span>
   </div>
   <div class="stat">
-    <span class="stat-value">&lt;1ms</span>
-    <span class="stat-label">GPU Latency</span>
+    <span class="stat-value">4</span>
+    <span class="stat-label">Core validation commands</span>
   </div>
   <div class="stat">
-    <span class="stat-value">61</span>
-    <span class="stat-label">Tests</span>
+    <span class="stat-value">1</span>
+    <span class="stat-label">Root changelog</span>
   </div>
 </div>
 
@@ -109,12 +109,12 @@ console.log(sortedData); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 GPU sorting becomes advantageous when:
 
-- **Array size > 65,536 elements** - The overhead of GPU buffer transfer is amortized
+- **Array size is large enough** - Buffer upload and readback overhead is amortized
 - **Batch processing** - Multiple sorts can share GPU context
 - **Real-time applications** - Low-latency sorting for visualizations, simulations
 - **Integer-heavy workloads** - Radix sort excels on Uint32Array data
 
-Use the [interactive demo](/demo/) to benchmark on your own hardware and determine the crossover point for your use case.
+Use the [interactive demo](/demo/) to measure the crossover point on your own hardware instead of relying on fixed benchmark claims.
 
 ## Architecture Overview
 

@@ -1,19 +1,21 @@
 # Interactive Demo
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue';
+import { withBase } from 'vitepress';
 
-const isSupported = ref(null)
-const isLoading = ref(true)
+const isSupported = ref(null);
+const isLoading = ref(true);
+const demoSrc = withBase('/playground/');
 
 onMounted(() => {
   if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-    isSupported.value = true
+    isSupported.value = true;
   } else {
-    isSupported.value = false
+    isSupported.value = false;
   }
-  isLoading.value = false
-})
+  isLoading.value = false;
+});
 </script>
 
 <div v-if="isLoading" class="demo-container">
@@ -54,7 +56,7 @@ onMounted(() => {
   <h3>🚀 WebGPU Sorting Demo</h3>
   <p>Run the interactive benchmark to compare GPU and CPU sorting performance on your hardware.</p>
   <iframe
-    src="/demo/"
+    :src="demoSrc"
     class="demo-iframe"
     title="WebGPU Sorting Interactive Demo"
     allow="cross-origin-isolated"
