@@ -1,182 +1,70 @@
 # Performance Benchmarks
 
-Comprehensive benchmarks across different hardware and array sizes.
+This project does not treat any single benchmark table as universal truth. WebGPU performance depends heavily on browser version, driver quality, GPU architecture, array size, and whether you can reuse buffers across runs.
 
-## Test Environment
+## How to evaluate performance
 
-- **GPU**: NVIDIA RTX 3080 / AMD RX 6800 / Apple M1 Pro
-- **Browser**: Chrome 120+ / Edge 120+
-- **CPU**: Intel i7-12700K (baseline)
+Use the [interactive demo](/demo/) to test the current build on your own machine. Compare:
 
-## Quick Results
+1. **GPU time** - compute work only
+2. **Total time** - upload, compute, and readback together
+3. **CPU time** - `TypedArray.sort()` as a local baseline
 
-<div class="quick-stats">
-  <div class="stat">
-    <span class="stat-value">55×</span>
-    <span class="stat-label">Bitonic Speedup</span>
-  </div>
-  <div class="stat">
-    <span class="stat-value">63×</span>
-    <span class="stat-label">Radix Speedup</span>
-  </div>
-  <div class="stat">
-    <span class="stat-value">0.82ms</span>
-    <span class="stat-label">1M Elements (GPU)</span>
-  </div>
-</div>
+## What usually matters most
 
-## Sorting 1,048,576 Integers
+### Input size
 
-| Algorithm    | GPU Time | CPU Time | Speedup   |
-| ------------ | -------- | -------- | --------- |
-| Bitonic Sort | 0.82ms   | 45.3ms   | **55.2×** |
-| Radix Sort   | 0.61ms   | 38.7ms   | **63.4×** |
+Small arrays often stay CPU-favorable because buffer transfer overhead dominates. Larger arrays are where GPU sorting becomes interesting.
 
-## Scaling Analysis
+### Reuse
 
-```mermaid
-xychart-beta
-    title "Sorting Performance (ms)"
-    x-axis [1024, 4096, 16384, 65536, 262144, 1048576]
-    y-axis "Time (ms)" 0 --> 100
-    line [0.01, 0.03, 0.09, 0.28, 0.94, 3.2]
-    line [0.05, 0.21, 0.89, 3.8, 15.2, 61.0]
-```
+Repeated sorts get better when you reuse the same `GPUContext` and keep buffers alive between runs.
 
-## Detailed Benchmarks
+### Algorithm choice
 
-### Small Arrays (≤ 16K elements)
+| Use case | Better starting point | Why |
+| --- | --- | --- |
+| General reference implementation | `BitonicSorter` | Predictable structure and simpler reasoning |
+| Large `Uint32Array` workloads | `RadixSorter` | Fewer wasted comparisons on integer-heavy data |
+| Small or one-off arrays | CPU sort | Lower setup cost |
 
-| Size   | GPU Bitonic | GPU Radix | CPU Sort | Winner |
-| ------ | ----------- | --------- | -------- | ------ |
-| 1,024  | 0.12ms      | 0.15ms    | 0.05ms   | CPU    |
-| 4,096  | 0.18ms      | 0.22ms    | 0.21ms   | Tie    |
-| 16,384 | 0.35ms      | 0.41ms    | 0.89ms   | GPU    |
+## Benchmark workflow
 
-::: tip Crossover Point
-For most hardware, GPU sorting becomes faster at around **16,384 elements**. Below this threshold, CPU sorting may be faster due to GPU overhead.
-:::
+1. Start with a small array and confirm correctness.
+2. Increase array size until transfer overhead stops dominating.
+3. Compare GPU-only time with total time; both matter.
+4. Repeat the same run several times to smooth out shader compilation and warm-up effects.
 
-### Large Arrays (≥ 100K elements)
+## Interpreting results
 
-| Size      | GPU Bitonic | GPU Radix | CPU Sort | Speedup |
-| --------- | ----------- | --------- | -------- | ------- |
-| 65,536    | 0.28ms      | 0.31ms    | 3.8ms    | 13.6×   |
-| 262,144   | 0.94ms      | 0.89ms    | 15.2ms   | 17.1×   |
-| 1,048,576 | 3.2ms       | 2.8ms     | 61.0ms   | 21.8×   |
+- **GPU time faster, total time slower** usually means the shader work is fine but transfer/setup cost dominates.
+- **Both GPU and total time faster** indicates a good browser/GPU fit for that workload.
+- **Radix slower than Bitonic** can happen on smaller arrays where extra passes do not amortize well.
 
-### Very Large Arrays (≥ 4M elements)
+## Practical tips
 
-| Size       | GPU Bitonic | GPU Radix | CPU Sort | Speedup |
-| ---------- | ----------- | --------- | -------- | ------- |
-| 4,194,304  | 12.1ms      | 10.5ms    | 245ms    | 23.3×   |
-| 16,777,216 | 48.2ms      | 41.3ms    | 982ms    | 23.8×   |
+### Reuse the same context
 
-## Algorithm Comparison
+```ts
+const gpu = new GPUContext();
+await gpu.initialize();
 
-### Bitonic Sort Performance
-
-```mermaid
-graph LR
-    A[Input] --> B[Stage 1: Pairs]
-    B --> C[Stage 2: Quads]
-    C --> D[Stage 3: Octets]
-    D --> E[...]
-    E --> F[Stage log n: Sorted]
-
-    style A fill:#00d4aa,color:#0d1117
-    style F fill:#00d4aa,color:#0d1117
-```
-
-**Characteristics:**
-
-- Predictable O(n log²n) performance
-- Consistent timing across data distributions
-- Works well for power-of-2 sizes (padding for others)
-
-### Radix Sort Performance
-
-```mermaid
-graph TB
-    A[Input] --> B[Pass 1: Bits 0-3]
-    B --> C[Pass 2: Bits 4-7]
-    C --> D[Pass 3: Bits 8-11]
-    D --> E[...]
-    E --> F[Pass 8: Bits 28-31]
-    F --> G[Sorted]
-
-    style A fill:#00d4aa,color:#0d1117
-    style G fill:#00d4aa,color:#0d1117
-```
-
-**Characteristics:**
-
-- O(n × k) where k = 8 passes for 32-bit integers
-- Faster for large integer arrays
-- Specialized for Uint32Array
-
-## Hardware Variation
-
-### NVIDIA RTX 3080
-
-| Size | Bitonic | Radix  | Speedup |
-| ---- | ------- | ------ | ------- |
-| 1M   | 0.82ms  | 0.61ms | 55-63×  |
-
-### AMD RX 6800
-
-| Size | Bitonic | Radix  | Speedup |
-| ---- | ------- | ------ | ------- |
-| 1M   | 0.95ms  | 0.72ms | 48-55×  |
-
-### Apple M1 Pro
-
-| Size | Bitonic | Radix  | Speedup |
-| ---- | ------- | ------ | ------- |
-| 1M   | 1.2ms   | 0.95ms | 38-48×  |
-
-## Optimization Tips
-
-### 1. Buffer Reuse
-
-Pre-allocate buffers to avoid allocation overhead:
-
-```typescript
 const sorter = new BitonicSorter(gpu);
-sorter.preallocate(maxSize);
-
-// Multiple sorts reuse buffers
-await sorter.sort(data1);
-await sorter.sort(data2);
+await sorter.sort(batchA);
+await sorter.sort(batchB);
 ```
 
-### 2. Batch Processing
+### Preallocate when sizes are predictable
 
-Sort multiple arrays in sequence:
-
-```typescript
-const results = await Promise.all([sorter.sort(array1), sorter.sort(array2), sorter.sort(array3)]);
-```
-
-### 3. Choose the Right Algorithm
-
-```typescript
-// For general-purpose sorting
-const sorter = new BitonicSorter(gpu);
-
-// For large Uint32Array datasets
+```ts
 const sorter = new RadixSorter(gpu);
+sorter.preallocate(1_000_000);
 ```
 
-## Run Your Own Benchmarks
+### Measure both correctness and throughput
 
-Visit the [Interactive Demo](/demo/) to benchmark on your own hardware and see real-time comparisons.
+Enable validation while developing, then disable it when you only want raw throughput measurements.
 
-::: info Note
-Benchmark results vary significantly based on:
+## Run your own benchmark
 
-- GPU model and driver version
-- Browser implementation
-- System memory bandwidth
-- Data distribution (sorted, random, reverse)
-  :::
+The repository ships a maintained browser playground specifically for this purpose. Open the [interactive demo](/demo/), choose your workload size, and compare Bitonic, Radix, and CPU timings on the target machine.

@@ -2,31 +2,30 @@
 
 ## Purpose
 
-WebGPU Sorting is a browser-focused GPU sorting project built around WebGPU compute shaders. The repository serves three roles at once:
+WebGPU Sorting is a browser-focused GPU sorting project built around WebGPU compute shaders. The repository serves three roles:
 
 1. A small TypeScript library for GPU sorting experiments
 2. A benchmark/demo application
-3. A curated reference repo for WebGPU compute, project quality, and OpenSpec-driven maintenance
+3. A reference docs site for the library, demo, and implementation notes
 
 ## Current repository shape
 
 ```text
-openspec/   Specs, active changes, templates, archive
-docs/       User-facing documentation
-site/       GitHub Pages site source
-src/        Library and demo implementation
-test/       Vitest suite
+docs/       VitePress docs, Pages source, and generated demo assets
+src/        Library and standalone demo implementation
+test/       Vitest and browser tests
 examples/   Usage snippets
+.github/    CI, Pages, and release workflows
 ```
 
 ## Source-of-truth order
 
 When these layers disagree, treat them in this order:
 
-1. `openspec/changes/<change-id>/` for active change intent and tasks
-2. `openspec/specs/` for stable requirements
-3. `src/` and `test/` for implementation reality
-4. README, docs, and Pages for public explanation
+1. `src/` and `test/` for runtime behavior
+2. `package.json` and `.github/workflows/` for supported commands and automation
+3. `README.md`, `README.zh.md`, `CONTRIBUTING.md`, and `docs/` for public and contributor guidance
+4. `CHANGELOG.md` for project history
 
 ## Main code areas
 
@@ -40,18 +39,18 @@ When these layers disagree, treat them in this order:
 
 ## Main non-code areas
 
-| Area                              | Purpose                                  |
-| --------------------------------- | ---------------------------------------- |
-| `AGENTS.md`                       | Project-wide AI and workflow conventions |
-| `CLAUDE.md`                       | Project-specific assistant instructions  |
-| `.github/copilot-instructions.md` | Copilot project instructions             |
-| `.github/workflows/`              | CI, Pages, release, security workflows   |
-| `.vscode/`                        | Workspace editor defaults                |
-| `.husky/`                         | Git hook entrypoints                     |
+| Area                              | Purpose                                        |
+| --------------------------------- | ---------------------------------------------- |
+| `docs/`                           | Public docs and Pages source                   |
+| `.github/workflows/`              | CI, Pages, release, security workflows         |
+| `.github/copilot-instructions.md` | Optional, concise Copilot repo guidance        |
+| `.husky/`                         | Git hook entrypoints                           |
+| `CHANGELOG.md`                    | Single repository changelog                    |
+| `CONTRIBUTING.md`                 | Direct contributor workflow and expectations   |
 
 ## Validation baseline
 
-The repository currently uses these validation commands:
+The supported validation commands are:
 
 ```bash
 npm run lint
@@ -64,7 +63,7 @@ npm run build
 
 This repository should optimize for coherence and trust:
 
-- keep docs purposeful
+- keep docs purposeful and accurate
 - keep workflows high-signal
-- keep OpenSpec current
+- prefer direct maintenance over meta-process
 - prefer small serial improvements over sprawling branches

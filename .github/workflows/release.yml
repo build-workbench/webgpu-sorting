@@ -36,7 +36,7 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Build
+      - name: Build project
         run: npm run build
 
       - name: Generate Release Notes

@@ -4,19 +4,7 @@ Thanks for your interest in WebGPU Sorting.
 
 ## Before you change code
 
-For any non-trivial change, use the project's OpenSpec workflow first:
-
-```text
-/opsx:explore → /opsx:propose → /opsx:apply → /review → /opsx:archive
-```
-
-Why this matters:
-
-- specs stay aligned with implementation
-- docs and workflow changes do not drift silently
-- cross-cutting cleanup can be executed in a controlled order
-
-For the project-specific AI/tooling workflow, see [docs/setup/WORKFLOW.md](./docs/setup/WORKFLOW.md).
+Keep the change directly connected to the shipped project: the library in `src/`, the tests in `test/`, and the docs and Pages surface in `docs/`.
 
 ## What kinds of contributions fit this repo
 
@@ -27,7 +15,7 @@ Good contributions usually fall into one of these buckets:
 - workflow / tooling improvements with clear payoff
 - small maintainability improvements around the existing sorting implementations
 
-Large feature expansions should start with a clear OpenSpec proposal and a strong justification.
+Large feature expansions should come with a clear problem statement, matching tests, and updated docs.
 
 ## Local setup
 
@@ -57,13 +45,21 @@ npm run dev
 
 If your change affects behavior, workflow, or public positioning, update the matching authority files:
 
-- `openspec/` for requirements and task flow
-- `README.md` / `docs/` for public explanation
-- `AGENTS.md`, `CLAUDE.md`, and Copilot instructions for AI workflow guidance
+- `src/` and `test/` for implementation and correctness
+- `README.md`, `README.zh.md`, `PROJECT_OVERVIEW.md`, and `docs/` for public explanation
+- `CHANGELOG.md` for meaningful repository changes
+- `.github/workflows/` and `package.json` when commands or automation change
 
-### 3. Use review intentionally
+### 3. Run the validation baseline
 
-Before considering a meaningful slice complete, run a review step such as `/review` or an equivalent focused code review pass.
+Before considering a meaningful slice complete, run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
 
 ### 4. Keep docs English-first
 
@@ -72,7 +68,7 @@ English is the default language for shared docs. Add a `.zh.md` companion only i
 ## Pull request guidance
 
 - explain the user-visible or maintainer-visible impact
-- call out spec/doc/workflow changes explicitly
+- call out doc/workflow/config changes explicitly
 - mention any GitHub-side changes made through `gh`
 - avoid noisy “drive-by” edits outside the task scope
 

@@ -1,24 +1,14 @@
 # GitHub Copilot Instructions
 
-This repository uses OpenSpec for non-trivial changes.
+Keep this repository simple and product-focused.
 
-## Before editing
+## Priorities
 
-- Check `AGENTS.md` for project-wide workflow and architectural guidance.
-- If the task affects behavior, workflow, docs architecture, public positioning, or engineering policy, work from an OpenSpec change first.
-
-Preferred flow:
-
-```text
-/opsx:explore → /opsx:propose → /opsx:apply → /review → /opsx:archive
-```
-
-## What good changes look like here
-
-- small, scoped, serial changes
-- high-signal workflow simplification instead of automation sprawl
-- docs that match the real repo structure
-- minimal duplication across README, docs, Pages, and AI instruction files
+- Keep changes small, concrete, and easy to maintain.
+- Prefer deleting stale workflow/docs/config over adding new scaffolding.
+- Keep README, `README.zh.md`, `PROJECT_OVERVIEW.md`, `CONTRIBUTING.md`, and `docs/` aligned with the actual repository.
+- Treat `docs/` as the only maintained Pages source.
+- Update `CHANGELOG.md` for meaningful repository changes.
 
 ## Validation commands
 
@@ -29,16 +19,8 @@ npm run test
 npm run build
 ```
 
-## Tooling policy
+## Engineering guidance
 
-- Prefer committed repo config first.
-- Recommend global tooling only when it clearly improves this project's workflow.
-- Keep MCP/plugin usage minimal and justified.
-- Avoid heavy parallel `/fleet` usage unless the work is clearly independent and worth the cost.
-
-## Public surfaces to keep aligned
-
-- `README.md`
-- `docs/README.md`
-- `site/`
-- GitHub repository description / homepage / topics
+- Reuse existing patterns in `src/` and `test/`; do not introduce repo-local AI workflow frameworks.
+- When behavior or workflow changes, update tests, docs, and GitHub workflows in the same change.
+- Prefer `gh` for GitHub operations when repository metadata or PR state needs to change.

@@ -1,13 +1,11 @@
 import { defineConfig } from 'vitepress';
-import llmstxt from 'vitepress-plugin-llms';
 
-// Dynamic base path for GitHub Pages
 const base = process.env.GITHUB_PAGES ? '/webgpu-sorting/' : '/';
 
 export default defineConfig({
   base,
   title: 'WebGPU Sorting',
-  description: 'GPU-Accelerated Sorting Algorithms - Technical Whitepaper',
+  description: 'WebGPU sorting library, demo, and reference documentation.',
 
   head: [
     // Security headers
@@ -29,7 +27,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#00d4aa' }],
     ['meta', { name: 'author', content: 'AICL-Lab' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'WebGPU Sorting - Technical Whitepaper' }],
+    ['meta', { property: 'og:title', content: 'WebGPU Sorting' }],
     [
       'meta',
       {
@@ -39,23 +37,17 @@ export default defineConfig({
     ],
   ],
 
-  // Markdown extensions for technical whitepaper
   markdown: {
     math: true,
   },
 
-  // Clean URLs
   cleanUrls: true,
-
-  // Last updated for documentation freshness
   lastUpdated: true,
 
   themeConfig: {
-    // Technical whitepaper aesthetic
     logo: '/icons/icon-192.png',
     siteTitle: 'WebGPU Sorting',
 
-    // Navigation - Architecture Showcase focused
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Demo', link: '/demo/' },
@@ -64,7 +56,6 @@ export default defineConfig({
       { text: 'Performance', link: '/performance' },
     ],
 
-    // Sidebar - Technical documentation hierarchy
     sidebar: {
       '/': [
         {
@@ -92,10 +83,8 @@ export default defineConfig({
       ],
     },
 
-    // Social links
     socialLinks: [{ icon: 'github', link: 'https://github.com/AICL-Lab/webgpu-sorting' }],
 
-    // Built-in local search
     search: {
       provider: 'local',
       options: {
@@ -110,28 +99,23 @@ export default defineConfig({
       },
     },
 
-    // Edit link for contributions
     editLink: {
       pattern: 'https://github.com/AICL-Lab/webgpu-sorting/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
 
-    // Footer
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present lessup',
+      copyright: 'Copyright © AICL-Lab contributors',
     },
 
-    // Outline for long technical docs
     outline: {
       level: [2, 4],
       label: 'On this page',
     },
   },
 
-  // Vite configuration
   vite: {
-    plugins: [llmstxt()],
     build: {
       minify: 'esbuild',
       target: 'esnext',

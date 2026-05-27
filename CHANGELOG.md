@@ -6,9 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- Aligned README, contributor docs, and Pages docs with the files and commands that actually exist in the repository
+- Removed the `/demo/` route collision by publishing the standalone demo bundle under `docs/public/playground/` and embedding it from the docs page
+- Made release and Pages workflows build the same full project output used locally
+
 ### Changed
 
-- Ongoing repository normalization for OpenSpec alignment, workflow cleanup, and public project positioning
+- Simplified repository maintenance around direct code, test, docs, and changelog updates instead of repo-local AI workflow scaffolding
+- Changed `npm run build` to produce the standalone demo bundle and the VitePress site in one command
+- Rewrote the docs home and performance pages to prefer verifiable guidance over fixed benchmark claims
+
+### Removed
+
+- OpenSpec specs/changes/archive scaffolding, `.claude` command and skill packs, and duplicated agent-specific instruction files
+- The `vitepress-plugin-llms` dependency and its generated docs integration
 
 ## [1.0.2] - 2026-04-27
 
@@ -35,7 +48,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Removed
 
-- Empty directories: docs/assets, site/docs/en, site/docs/zh, site/templates
+- Empty legacy docs and site draft directories
 
 ## [1.0.1] - 2026-04-16
 

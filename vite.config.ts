@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
 
-// Demo builds go to docs/public/demo/ for VitePress
-// Use relative path for better portability
+// Build the standalone demo into VitePress public assets without colliding
+// with the /demo docs page route.
 const base = process.env.VITE_BASE_PATH || './';
 
 export default defineConfig(async ({ mode }) => {
@@ -28,7 +28,7 @@ export default defineConfig(async ({ mode }) => {
     base,
     build: {
       target: 'esnext',
-      outDir: 'docs/public/demo',
+      outDir: 'docs/public/playground',
       emptyOutDir: true,
       rollupOptions: {
         plugins,
