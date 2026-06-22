@@ -47,13 +47,3 @@ export async function withTimeout<T>(
     }
   }
 }
-
-/**
- * Creates a timeout wrapper with default options
- * @param defaultOptions - Default timeout options
- * @returns A function that wraps operations with timeout
- */
-export function createTimeoutWrapper(defaultOptions: TimeoutOptions) {
-  return <T>(operation: Promise<T>, options?: TimeoutOptions) =>
-    withTimeout(operation, { ...defaultOptions, ...options });
-}

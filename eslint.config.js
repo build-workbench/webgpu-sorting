@@ -44,11 +44,5 @@ export default ts.config(
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
-  },
-  {
-    files: ['examples/**/*.ts'],
-    rules: {
-      'no-console': 'off',
-    },
   }
 );

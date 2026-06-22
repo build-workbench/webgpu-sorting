@@ -13,7 +13,7 @@ hero:
   actions:
     - theme: brand
       text: Interactive Demo
-      link: /demo/
+      link: /demo
     - theme: alt
       text: Architecture
       link: /architecture
@@ -114,7 +114,7 @@ GPU sorting becomes advantageous when:
 - **Real-time applications** - Low-latency sorting for visualizations, simulations
 - **Integer-heavy workloads** - Radix sort excels on Uint32Array data
 
-Use the [interactive demo](/demo/) to measure the crossover point on your own hardware instead of relying on fixed benchmark claims.
+Use the [interactive demo](/demo) to measure the crossover point on your own hardware instead of relying on fixed benchmark claims.
 
 ## Architecture Overview
 

@@ -1,11 +1,10 @@
 // Core exports
 export { GPUContext } from './core/GPUContext';
-export type { DeviceLossCallback } from './core/GPUContext';
 export { browserGPURuntime } from './core/runtime/browserGPURuntime';
 export type { GPURuntime } from './core/runtime/GPURuntime';
 export { BufferManager } from './core/BufferManager';
 export { Validator } from './core/Validator';
-export { withTimeout, createTimeoutWrapper } from './core/timeout';
+export { withTimeout } from './core/timeout';
 export type { TimeoutOptions } from './core/timeout';
 export * from './core/errors';
 

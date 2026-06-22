@@ -37,8 +37,6 @@ fn blelloch_scan(
 
   // Calculate the range this workgroup handles
   let block_start = block_id * block_size;
-  let block_end = min(block_start + block_size, n);
-  let local_n = block_end - block_start;
 
   // Load data into shared memory (coalesced reads)
   // Each thread loads 2 elements
@@ -62,7 +60,10 @@ fn blelloch_scan(
 
   // ========================================================================
   // Phase 1: Up-sweep (Reduce)
-  // Build a binary tree of partial sums from leaves to root
+  // Build a binary tree of partial sums from leaves to root.
+  // Operate on the full block_size array; positions beyond the data are
+  // padded with 0 and therefore do not affect the sums, but skipping them
+  // would break the tree structure and produce wrong prefix sums.
   // ========================================================================
   var offset = 1u;
   var d = block_size / 2u;
@@ -73,10 +74,7 @@ fn blelloch_scan(
       let ai = offset * (2u * tid + 1u) - 1u;
       let bi = offset * (2u * tid + 2u) - 1u;
 
-      // Only process if within our data range
-      if (bi < local_n) {
-        scan_shared[bi] = scan_shared[ai] + scan_shared[bi];
-      }
+      scan_shared[bi] = scan_shared[ai] + scan_shared[bi];
     }
 
     offset *= 2u;
@@ -108,11 +106,9 @@ fn blelloch_scan(
       let ai = offset * (2u * tid + 1u) - 1u;
       let bi = offset * (2u * tid + 2u) - 1u;
 
-      if (bi < local_n) {
-        let t = scan_shared[ai];
-        scan_shared[ai] = scan_shared[bi];
-        scan_shared[bi] = t + scan_shared[bi];
-      }
+      let t = scan_shared[ai];
+      scan_shared[ai] = scan_shared[bi];
+      scan_shared[bi] = t + scan_shared[bi];
     }
 
     d *= 2u;
@@ -163,6 +159,8 @@ fn scan_block_sums(
 
   // ========================================================================
   // Phase 1: Up-sweep (Reduce)
+  // Operate on the full 512-element array; padding is 0 so it does not
+  // affect the sum, but skipping padded positions would break the tree.
   // ========================================================================
   var offset = 1u;
   var d = 256u;  // SCAN_WORKGROUP_SIZE
@@ -173,9 +171,7 @@ fn scan_block_sums(
       let ai = offset * (2u * tid + 1u) - 1u;
       let bi = offset * (2u * tid + 2u) - 1u;
 
-      if (bi < n) {
-        block_scan_shared[bi] = block_scan_shared[ai] + block_scan_shared[bi];
-      }
+      block_scan_shared[bi] = block_scan_shared[ai] + block_scan_shared[bi];
     }
 
     offset *= 2u;
@@ -202,11 +198,9 @@ fn scan_block_sums(
       let ai = offset * (2u * tid + 1u) - 1u;
       let bi = offset * (2u * tid + 2u) - 1u;
 
-      if (bi < n) {
-        let t = block_scan_shared[ai];
-        block_scan_shared[ai] = block_scan_shared[bi];
-        block_scan_shared[bi] = t + block_scan_shared[bi];
-      }
+      let t = block_scan_shared[ai];
+      block_scan_shared[ai] = block_scan_shared[bi];
+      block_scan_shared[bi] = t + block_scan_shared[bi];
     }
 
     d *= 2u;

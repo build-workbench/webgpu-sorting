@@ -41,13 +41,3 @@ export interface ValidationResult {
   hasAllElements: boolean;
   errors: string[];
 }
-
-/**
- * Information about GPU device limits
- */
-export interface GPULimitsInfo {
-  maxStorageBufferBindingSize: number;
-  maxComputeInvocationsPerWorkgroup: number;
-  maxComputeWorkgroupSizeX: number;
-  maxBufferSize: number;
-}

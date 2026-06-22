@@ -50,7 +50,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Demo', link: '/demo/' },
+      { text: 'Demo', link: '/demo' },
       { text: 'Architecture', link: '/architecture' },
       { text: 'API', link: '/api' },
       { text: 'Performance', link: '/performance' },

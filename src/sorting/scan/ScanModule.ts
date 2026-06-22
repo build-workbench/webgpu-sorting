@@ -276,28 +276,6 @@ export class ScanModule {
   }
 
   /**
-   * Get the scan bind group layout for external use
-   */
-  getBindGroupLayout(): GPUBindGroupLayout | null {
-    return this.scanBindGroupLayout;
-  }
-
-  /**
-   * Get the scan pipelines for external use
-   */
-  getPipelines(): {
-    blellochScan: GPUComputePipeline | null;
-    scanBlockSums: GPUComputePipeline | null;
-    addBlockPrefixes: GPUComputePipeline | null;
-  } {
-    return {
-      blellochScan: this.blellochScanPipeline,
-      scanBlockSums: this.scanBlockSumsPipeline,
-      addBlockPrefixes: this.addBlockPrefixesPipeline,
-    };
-  }
-
-  /**
    * Get constants for external use
    */
   static getConstants(): {

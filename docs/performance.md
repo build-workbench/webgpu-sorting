@@ -4,7 +4,7 @@ This project does not treat any single benchmark table as universal truth. WebGP
 
 ## How to evaluate performance
 
-Use the [interactive demo](/demo/) to test the current build on your own machine. Compare:
+Use the [interactive demo](/demo) to test the current build on your own machine. Compare:
 
 1. **GPU time** - compute work only
 2. **Total time** - upload, compute, and readback together
@@ -22,11 +22,11 @@ Repeated sorts get better when you reuse the same `GPUContext` and keep buffers 
 
 ### Algorithm choice
 
-| Use case | Better starting point | Why |
-| --- | --- | --- |
-| General reference implementation | `BitonicSorter` | Predictable structure and simpler reasoning |
-| Large `Uint32Array` workloads | `RadixSorter` | Fewer wasted comparisons on integer-heavy data |
-| Small or one-off arrays | CPU sort | Lower setup cost |
+| Use case                         | Better starting point | Why                                            |
+| -------------------------------- | --------------------- | ---------------------------------------------- |
+| General reference implementation | `BitonicSorter`       | Predictable structure and simpler reasoning    |
+| Large `Uint32Array` workloads    | `RadixSorter`         | Fewer wasted comparisons on integer-heavy data |
+| Small or one-off arrays          | CPU sort              | Lower setup cost                               |
 
 ## Benchmark workflow
 
@@ -67,4 +67,4 @@ Enable validation while developing, then disable it when you only want raw throu
 
 ## Run your own benchmark
 
-The repository ships a maintained browser playground specifically for this purpose. Open the [interactive demo](/demo/), choose your workload size, and compare Bitonic, Radix, and CPU timings on the target machine.
+The repository ships a maintained browser playground specifically for this purpose. Open the [interactive demo](/demo), choose your workload size, and compare Bitonic, Radix, and CPU timings on the target machine.

@@ -165,4 +165,4 @@ try {
 - [Architecture](/architecture) - Understand the system design
 - [API Reference](/api) - Detailed API documentation
 - [Performance](/performance) - Benchmark results
-- [Interactive Demo](/demo/) - Try it in your browser
+- [Interactive Demo](/demo) - Try it in your browser

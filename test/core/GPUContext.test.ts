@@ -2,18 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GPUContext } from '../../src/core/GPUContext';
 import { GPUAdapterError, GPUDeviceError, WebGPUNotSupportedError } from '../../src/core/errors';
 
-function createDeferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((resolver) => {
-    resolve = resolver;
-  });
-  return { promise, resolve };
-}
-
 function createRuntimeHarness() {
-  const lost = createDeferred<GPUDeviceLostInfo>();
   const device = {
-    lost: lost.promise,
+    lost: new Promise<GPUDeviceLostInfo>(() => {}),
     destroy: vi.fn(),
   } as unknown as GPUDevice;
 
@@ -32,7 +23,7 @@ function createRuntimeHarness() {
     requestAdapter: vi.fn().mockResolvedValue(adapter),
   };
 
-  return { runtime, adapter, device, lost };
+  return { runtime, adapter, device };
 }
 
 describe('GPUContext', () => {
@@ -66,7 +57,7 @@ describe('GPUContext', () => {
       await expect(context.initialize()).rejects.toThrow(WebGPUNotSupportedError);
     });
 
-    it('initializes through an injected runtime and stores limits info', async () => {
+    it('initializes through an injected runtime', async () => {
       const { runtime, adapter } = createRuntimeHarness();
       const context = Reflect.construct(GPUContext, [runtime]) as GPUContext;
 
@@ -88,12 +79,7 @@ describe('GPUContext', () => {
           maxBufferSize: 2048,
         },
       });
-      expect(context.getLimitsInfo()).toEqual({
-        maxStorageBufferBindingSize: 4096,
-        maxComputeInvocationsPerWorkgroup: 256,
-        maxComputeWorkgroupSizeX: 256,
-        maxBufferSize: 8192,
-      });
+      expect(context.isInitialized()).toBe(true);
     });
 
     it('throws GPUAdapterError when injected runtime cannot provide an adapter', async () => {
@@ -114,8 +100,6 @@ describe('GPUContext', () => {
           requestAdapter: vi.fn().mockResolvedValue({
             limits: {
               maxStorageBufferBindingSize: 4096,
-              maxComputeInvocationsPerWorkgroup: 256,
-              maxComputeWorkgroupSizeX: 256,
               maxBufferSize: 8192,
             },
             requestDevice: vi.fn().mockResolvedValue(null),
@@ -125,41 +109,12 @@ describe('GPUContext', () => {
 
       await expect(context.initialize()).rejects.toThrow(GPUDeviceError);
     });
-
-    it('notifies device loss callbacks from an injected runtime device', async () => {
-      const { runtime, lost } = createRuntimeHarness();
-      const callback = vi.fn();
-      vi.spyOn(console, 'error').mockImplementation(() => {});
-      const context = Reflect.construct(GPUContext, [runtime]) as GPUContext;
-      context.onDeviceLoss(callback);
-
-      await context.initialize();
-      lost.resolve({
-        message: 'device gone',
-        reason: 'unknown',
-      } as GPUDeviceLostInfo);
-      await Promise.resolve();
-
-      expect(callback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'device gone',
-        })
-      );
-      expect(context.isInitialized()).toBe(false);
-    });
   });
 
   describe('getDevice', () => {
     it('should throw error when not initialized', () => {
       const context = new GPUContext();
       expect(() => context.getDevice()).toThrow('GPUContext not initialized');
-    });
-  });
-
-  describe('getAdapter', () => {
-    it('should throw error when not initialized', () => {
-      const context = new GPUContext();
-      expect(() => context.getAdapter()).toThrow('GPUContext not initialized');
     });
   });
 

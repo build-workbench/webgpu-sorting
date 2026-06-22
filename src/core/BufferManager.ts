@@ -131,13 +131,6 @@ export class BufferManager {
   }
 
   /**
-   * Write data to an existing buffer
-   */
-  writeBuffer(buffer: GPUBuffer, data: Uint32Array, offset = 0): void {
-    this.device.queue.writeBuffer(buffer, offset, data.buffer, data.byteOffset, data.byteLength);
-  }
-
-  /**
    * Release a specific buffer
    */
   releaseBuffer(buffer: GPUBuffer): void {
@@ -155,12 +148,5 @@ export class BufferManager {
       buffer.destroy();
     }
     this.buffers.clear();
-  }
-
-  /**
-   * Get the number of managed buffers
-   */
-  getBufferCount(): number {
-    return this.buffers.size;
   }
 }

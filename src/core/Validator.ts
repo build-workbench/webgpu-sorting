@@ -81,41 +81,4 @@ export class Validator {
       errors,
     };
   }
-
-  /**
-   * Compare GPU result against JavaScript native sort
-   */
-  static compareWithNativeSort(input: Uint32Array, gpuOutput: Uint32Array): ValidationResult {
-    // Create a copy and sort with native JS
-    const nativeSorted = new Uint32Array(input);
-    nativeSorted.sort();
-
-    const errors: string[] = [];
-
-    // Check if GPU output matches native sort
-    let matches = true;
-    if (gpuOutput.length !== nativeSorted.length) {
-      matches = false;
-      errors.push(`Length mismatch: GPU=${gpuOutput.length}, Native=${nativeSorted.length}`);
-    } else {
-      for (let i = 0; i < gpuOutput.length; i++) {
-        if (gpuOutput[i] !== nativeSorted[i]) {
-          matches = false;
-          errors.push(`Mismatch at index ${i}: GPU=${gpuOutput[i]}, Native=${nativeSorted[i]}`);
-          // Only report first few mismatches
-          if (errors.length >= 5) {
-            errors.push('... (more mismatches not shown)');
-            break;
-          }
-        }
-      }
-    }
-
-    return {
-      isValid: matches,
-      isSorted: Validator.isSorted(gpuOutput),
-      hasAllElements: Validator.hasSameElements(input, gpuOutput),
-      errors,
-    };
-  }
 }
