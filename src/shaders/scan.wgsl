@@ -216,23 +216,28 @@ fn scan_block_sums(
 
 // Add block prefixes to each block's local scan results
 // This is the third step of two-level scan
+// Each thread handles 2 elements (matching blelloch_scan's 512 elements per workgroup)
 @compute @workgroup_size(SCAN_WORKGROUP_SIZE)
 fn add_block_prefixes(
-  @builtin(global_invocation_id) global_id: vec3<u32>,
   @builtin(local_invocation_id) local_id: vec3<u32>,
   @builtin(workgroup_id) workgroup_id: vec3<u32>
 ) {
   let tid = local_id.x;
-  let gid = global_id.x;
   let block_id = workgroup_id.x;
   let n = scan_uniforms.data_size;
 
   // Get the prefix for this block (sum of all previous blocks)
   let block_prefix = block_sums[block_id];
 
-  // Add block prefix to each element in this block
-  let idx = gid;
-  if (idx < n) {
-    scan_output[idx] = scan_output[idx] + block_prefix;
+  // Add block prefix to each element in this block (2 elements per thread)
+  let block_start = block_id * (SCAN_WORKGROUP_SIZE * 2u);
+  let idx0 = block_start + tid;
+  let idx1 = block_start + tid + SCAN_WORKGROUP_SIZE;
+
+  if (idx0 < n) {
+    scan_output[idx0] = scan_output[idx0] + block_prefix;
+  }
+  if (idx1 < n) {
+    scan_output[idx1] = scan_output[idx1] + block_prefix;
   }
 }

@@ -278,12 +278,14 @@ export class RadixSorter {
 
       const gpuStartTime = performance.now();
 
+      // Reusable zero buffer for histogram clearing (avoids per-pass allocation)
+      const zeroHistogram = new Uint32Array(histogramSize);
+
       // Perform 8 passes (4 bits each)
       for (let pass = 0; pass < NUM_PASSES; pass++) {
         const bitOffset = pass * BITS_PER_PASS;
 
         // Clear histogram
-        const zeroHistogram = new Uint32Array(histogramSize);
         this.device.queue.writeBuffer(histogramBuffer, 0, zeroHistogram);
 
         // Update uniforms

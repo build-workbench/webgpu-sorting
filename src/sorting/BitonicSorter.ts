@@ -244,48 +244,60 @@ export class BitonicSorter {
       const numWorkgroups = Math.ceil(paddedSize / WORKGROUP_SIZE);
       // Safe integer log2 - paddedSize is guaranteed to be power of 2
       const numStages = Math.trunc(Math.log2(paddedSize));
+      // Safe integer log2 - WORKGROUP_SIZE is guaranteed to be power of 2
+      const localStages = Math.trunc(Math.log2(WORKGROUP_SIZE));
 
-      // First, do local sort within each workgroup
-      {
-        const localPipeline = this.localPipeline;
-        if (!localPipeline) {
-          throw new ShaderCompilationError('Local pipeline not initialized');
+      const localPipeline = this.localPipeline;
+      const globalPipeline = this.globalPipeline;
+      if (!localPipeline || !globalPipeline) {
+        throw new ShaderCompilationError('Sort pipelines not initialized');
+      }
+
+      // Pre-compute all uniform values (local pass + all global passes) into a
+      // single buffer, then batch every dispatch into one command encoder with
+      // copyBufferToBuffer updating the uniform between passes. This eliminates
+      // per-pass queue submissions (can be 100+ for large arrays).
+      const passes: Array<{ stage: number; passNum: number; isLocal: boolean }> = [
+        { stage: 0, passNum: 0, isLocal: true },
+      ];
+      for (let stage = localStages; stage < numStages; stage++) {
+        for (let passNum = stage; passNum >= 0; passNum--) {
+          passes.push({ stage, passNum, isLocal: false });
         }
+      }
 
-        const uniformData = new Uint32Array([0, 0, paddedSize, 0]);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+      const uniformData = new Uint32Array(passes.length * 4);
+      for (let i = 0; i < passes.length; i++) {
+        const p = passes[i];
+        uniformData[i * 4] = p.stage;
+        uniformData[i * 4 + 1] = p.passNum;
+        uniformData[i * 4 + 2] = paddedSize;
+        uniformData[i * 4 + 3] = 0;
+      }
 
-        const commandEncoder = this.device.createCommandEncoder();
+      const uniformDataBuffer = bufferScope.track(
+        this.device.createBuffer({
+          label: 'bitonic-uniform-data',
+          size: BufferManager.alignSize(uniformData.byteLength, 4),
+          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        })
+      );
+      this.device.queue.writeBuffer(uniformDataBuffer, 0, uniformData);
+
+      // Single command encoder for all passes — compute passes within an
+      // encoder are ordered and each sees the writes of previous passes.
+      const commandEncoder = this.device.createCommandEncoder();
+      for (let i = 0; i < passes.length; i++) {
+        // Update uniform for this pass via encoder-level copy (ordered)
+        commandEncoder.copyBufferToBuffer(uniformDataBuffer, i * 16, uniformBuffer, 0, 16);
+
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(localPipeline);
+        passEncoder.setPipeline(passes[i].isLocal ? localPipeline : globalPipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.dispatchWorkgroups(numWorkgroups);
         passEncoder.end();
-        this.device.queue.submit([commandEncoder.finish()]);
       }
-
-      // Then do global merge stages
-      // Safe integer log2 - WORKGROUP_SIZE is guaranteed to be power of 2
-      const localStages = Math.trunc(Math.log2(WORKGROUP_SIZE));
-      const globalPipeline = this.globalPipeline;
-      if (!globalPipeline) {
-        throw new ShaderCompilationError('Global pipeline not initialized');
-      }
-
-      for (let stage = localStages; stage < numStages; stage++) {
-        for (let passNum = stage; passNum >= 0; passNum--) {
-          const uniformData = new Uint32Array([stage, passNum, paddedSize, 0]);
-          this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
-
-          const commandEncoder = this.device.createCommandEncoder();
-          const passEncoder = commandEncoder.beginComputePass();
-          passEncoder.setPipeline(globalPipeline);
-          passEncoder.setBindGroup(0, bindGroup);
-          passEncoder.dispatchWorkgroups(numWorkgroups);
-          passEncoder.end();
-          this.device.queue.submit([commandEncoder.finish()]);
-        }
-      }
+      this.device.queue.submit([commandEncoder.finish()]);
 
       // Wait for GPU to finish
       await this.device.queue.onSubmittedWorkDone();

@@ -62,24 +62,31 @@ export class Benchmark {
     const times: number[] = [];
     const gpuTimes: number[] = [];
 
+    // Preallocate GPU buffers for the target size so iterations measure
+    // steady-state sort performance (buffer reuse) rather than allocation.
+    let sorter: BitonicSorter | RadixSorter | null = null;
+    if (algorithm === 'bitonic') {
+      if (!this.bitonicSorter) {
+        this.bitonicSorter = new BitonicSorter(this.context);
+      }
+      sorter = this.bitonicSorter;
+      this.bitonicSorter.preallocate(size);
+    } else if (algorithm === 'radix') {
+      if (!this.radixSorter) {
+        this.radixSorter = new RadixSorter(this.context);
+      }
+      sorter = this.radixSorter;
+      this.radixSorter.preallocate(size);
+    }
+
     for (let i = 0; i < iterations; i++) {
       const data = Benchmark.generateRandomData(size);
 
       if (algorithm === 'js-native') {
         const time = this.runNativeSort(data);
         times.push(time);
-      } else if (algorithm === 'bitonic') {
-        if (!this.bitonicSorter) {
-          this.bitonicSorter = new BitonicSorter(this.context);
-        }
-        const result = await this.bitonicSorter.sort(data);
-        times.push(result.totalTimeMs);
-        gpuTimes.push(result.gpuTimeMs);
-      } else if (algorithm === 'radix') {
-        if (!this.radixSorter) {
-          this.radixSorter = new RadixSorter(this.context);
-        }
-        const result = await this.radixSorter.sort(data);
+      } else if (sorter) {
+        const result = await sorter.sort(data);
         times.push(result.totalTimeMs);
         gpuTimes.push(result.gpuTimeMs);
       }

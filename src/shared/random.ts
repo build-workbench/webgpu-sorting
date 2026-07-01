@@ -10,9 +10,10 @@ export function fillRandomUint32Array(data: Uint32Array): Uint32Array {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     for (let offset = 0; offset < data.length; offset += MAX_CRYPTO_FILL_U32) {
       const chunkLength = Math.min(MAX_CRYPTO_FILL_U32, data.length - offset);
-      const chunk = new Uint32Array(chunkLength);
-      crypto.getRandomValues(chunk);
-      data.set(chunk, offset);
+      // Fill in-place via subarray view — avoids per-chunk allocation + copy
+      crypto.getRandomValues(
+        data.subarray(offset, offset + chunkLength) as Uint32Array<ArrayBuffer>
+      );
     }
     return data;
   }
