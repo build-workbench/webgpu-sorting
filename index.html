@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Interactive benchmark for WebGPU Sorting" />
+    <meta name="description" content="WebGPU 排序交互式基准测试" />
     <meta name="theme-color" content="#00d4aa" />
-    <title>WebGPU Sorting Demo</title>
+    <title>WebGPU 排序 Demo</title>
     <style>
       * {
         margin: 0;
@@ -241,14 +241,14 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>⚡ WebGPU Sorting Demo</h1>
-        <p>Compare GPU and CPU sorting performance on your hardware</p>
+        <h1>⚡ WebGPU 排序 Demo</h1>
+        <p>在你的硬件上对比 GPU 与 CPU 排序性能</p>
       </div>
 
       <div id="unsupported" class="card unsupported" style="display: none">
-        <h2>⚠️ WebGPU Not Supported</h2>
-        <p>Your browser doesn't support WebGPU.</p>
-        <p>Please use Chrome 113+, Edge 113+, Firefox Nightly, or Safari 18+.</p>
+        <h2>⚠️ 不支持 WebGPU</h2>
+        <p>当前浏览器不支持 WebGPU。</p>
+        <p>请使用 Chrome 113+、Edge 113+、Firefox Nightly 或 Safari 18+。</p>
         <div class="tech-badges">
           <span class="badge">Chrome 113+</span>
           <span class="badge">Edge 113+</span>
@@ -259,18 +259,18 @@
 
       <div id="app">
         <div class="card">
-          <h2>🎛️ Configuration</h2>
+          <h2>🎛️ 配置</h2>
           <div class="controls">
             <div class="control-group">
-              <label for="algorithm">Algorithm</label>
+              <label for="algorithm">算法</label>
               <select id="algorithm">
                 <option value="bitonic">Bitonic Sort</option>
                 <option value="radix">Radix Sort</option>
-                <option value="both">Both (Compare)</option>
+                <option value="both">两者（对比）</option>
               </select>
             </div>
             <div class="control-group">
-              <label for="arraySize">Array Size</label>
+              <label for="arraySize">数组大小</label>
               <select id="arraySize">
                 <option value="1024">1K (1,024)</option>
                 <option value="10240">10K (10,240)</option>
@@ -279,7 +279,7 @@
               </select>
             </div>
             <div class="control-group">
-              <label for="iterations">Iterations</label>
+              <label for="iterations">迭代次数</label>
               <select id="iterations">
                 <option value="1">1</option>
                 <option value="3">3</option>
@@ -289,14 +289,14 @@
             </div>
           </div>
           <div class="button-group">
-            <button id="runBtn" class="btn btn-primary">▶️ Run Benchmark</button>
-            <button id="runAllBtn" class="btn btn-secondary">📊 Run Full Suite</button>
+            <button id="runBtn" class="btn btn-primary">▶️ 运行基准测试</button>
+            <button id="runAllBtn" class="btn btn-secondary">📊 运行完整套件</button>
           </div>
         </div>
 
         <div id="status" class="card status-card">
           <div class="status-header">
-            <span id="statusText">Ready</span>
+            <span id="statusText">就绪</span>
             <span class="status-icon">⏳</span>
           </div>
           <div class="progress-bar">
@@ -305,16 +305,16 @@
         </div>
 
         <div class="card results-card" id="resultsCard" style="display: none">
-          <h2>📈 Results</h2>
+          <h2>📈 结果</h2>
           <div class="table-container">
             <table class="results-table">
               <thead>
                 <tr>
-                  <th>Algorithm</th>
-                  <th>Array Size</th>
-                  <th>Total Time</th>
-                  <th>GPU Time</th>
-                  <th>Speedup vs JS</th>
+                  <th>算法</th>
+                  <th>数组大小</th>
+                  <th>总耗时</th>
+                  <th>GPU 耗时</th>
+                  <th>相对 JS 加速</th>
                 </tr>
               </thead>
               <tbody id="resultsBody"></tbody>
@@ -323,7 +323,7 @@
         </div>
 
         <div class="card">
-          <h2>ℹ️ What you're measuring</h2>
+          <h2>ℹ️ 你在测量什么</h2>
           <div class="tech-badges">
             <span class="badge">WebGPU</span>
             <span class="badge">WGSL</span>

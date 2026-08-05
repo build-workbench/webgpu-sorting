@@ -1,46 +1,46 @@
-# Architecture
+# 架构
 
-System design and data flow for GPU-accelerated sorting.
+GPU 加速排序的系统设计与数据流。
 
-## Overview
+## 概览
 
-WebGPU Sorting implements two GPU-accelerated sorting algorithms using WebGPU compute shaders written in WGSL (WebGPU Shading Language).
+WebGPU Sorting 使用 WGSL（WebGPU Shading Language）编写的 WebGPU 计算着色器实现了两种 GPU 加速排序算法。
 
 ```mermaid
 graph TB
-    subgraph CPU["CPU Side (JavaScript)"]
-        A[Input Uint32Array] --> B[GPUContext.initialize]
-        B --> C[Create Storage Buffer]
-        C --> D[Write Data to GPU]
+    subgraph CPU["CPU 侧 (JavaScript)"]
+        A[输入 Uint32Array] --> B[GPUContext.initialize]
+        B --> C[创建存储缓冲区]
+        C --> D[写入数据到 GPU]
     end
 
-    subgraph GPU["GPU Side (WGSL Compute Shaders)"]
+    subgraph GPU["GPU 侧 (WGSL 计算着色器)"]
         D --> E[Bitonic Sort / Radix Sort]
-        E --> F[Multiple Compute Passes]
+        E --> F[多个计算 Pass]
         F --> G[workgroupBarrier Sync]
-        G --> H[Write Sorted Buffer]
+        G --> H[写入已排序缓冲区]
     end
 
-    subgraph Readback["Result Readback"]
-        H --> I[Map Buffer Async]
-        I --> J[Copy to CPU Array]
-        J --> K[Return Sorted Data]
+    subgraph Readback["结果回读"]
+        H --> I[异步映射缓冲区]
+        I --> J[复制到 CPU 数组]
+        J --> K[返回已排序数据]
     end
 ```
 
-## System Architecture
+## 系统架构
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      User Interface                         │
+│                          用户界面                            │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │ Controls    │  │ Progress    │  │ Results Display     │ │
+│  │ 控件        │  │ 进度        │  │ 结果显示            │ │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Sorting API Layer                        │
+│                         排序 API 层                         │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
 │  │ BitonicSorter   │  │ RadixSorter     │  │ Benchmark   │ │
 │  └─────────────────┘  └─────────────────┘  └─────────────┘ │
@@ -48,7 +48,7 @@ graph TB
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   WebGPU Core Layer                         │
+│                        WebGPU 核心层                         │
 │  ┌─────────────────┐  ┌─────────────────┐                  │
 │  │ GPUContext      │  │ BufferManager   │                  │
 │  └─────────────────┘  └─────────────────┘                  │
@@ -56,18 +56,18 @@ graph TB
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    WGSL Compute Shaders                     │
+│                       WGSL 计算着色器                        │
 │  ┌─────────────────┐  ┌─────────────────┐                  │
 │  │ bitonic.wgsl    │  │ radix.wgsl      │                  │
 │  └─────────────────┘  └─────────────────┘                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Core Components
+## 核心组件
 
 ### GPUContext
 
-Manages WebGPU device lifecycle and provides a unified interface for GPU operations.
+管理 WebGPU 设备生命周期，为 GPU 操作提供统一接口。
 
 ```typescript
 class GPUContext {
@@ -97,7 +97,7 @@ class GPUContext {
 
 ### BufferManager
 
-Handles GPU memory allocation and data transfer between CPU and GPU.
+处理 GPU 内存分配以及 CPU 与 GPU 之间的数据传输。
 
 ```typescript
 class BufferManager {
@@ -118,59 +118,59 @@ class BufferManager {
 }
 ```
 
-## Data Flow
+## 数据流
 
-### Memory Model
+### 内存模型
 
 ```mermaid
 graph LR
     subgraph WebGPU Memory
-        A[Storage Buffer<br/>Read-Write] --> B[Workgroup Memory<br/>Shared Local]
-        B --> C[Atomic Operations]
+        A[存储缓冲区<br/>读写] --> B[Workgroup 内存<br/>共享本地]
+        B --> C[原子操作]
     end
 
-    D[Host Memory<br/>JavaScript ArrayBuffer] --> A
+    D[主机内存<br/>JavaScript ArrayBuffer] --> A
 ```
 
-### Sorting Pipeline
+### 排序流水线
 
-| Phase | Operation | Memory      | Time               |
-| ----- | --------- | ----------- | ------------------ |
-| 1     | Upload    | CPU → GPU   | O(n)               |
-| 2     | Sort      | GPU Compute | O(log²n) or O(n×k) |
-| 3     | Readback  | GPU → CPU   | O(n)               |
+| 阶段 | 操作 | 内存        | 时间               |
+| ---- | ---- | ----------- | ------------------ |
+| 1    | 上传 | CPU → GPU   | O(n)               |
+| 2    | 排序 | GPU Compute | O(log²n) or O(n×k) |
+| 3    | 回读 | GPU → CPU   | O(n)               |
 
-## Algorithm Comparison
+## 算法对比
 
-| Feature        | Bitonic Sort     | Radix Sort     |
-| -------------- | ---------------- | -------------- |
-| **Complexity** | O(n log²n)       | O(n × k)       |
-| **Type**       | Comparison-based | Non-comparison |
-| **Data Type**  | Any comparable   | Uint32 only    |
-| **Stability**  | Not stable       | Stable         |
-| **Best For**   | General purpose  | Large integers |
-| **GPU Passes** | log²n            | k × 3          |
+| 特性            | Bitonic Sort   | Radix Sort |
+| --------------- | -------------- | ---------- |
+| **复杂度**      | O(n log²n)     | O(n × k)   |
+| **类型**        | 基于比较       | 非比较     |
+| **数据类型**    | 任意可比较类型 | 仅 Uint32  |
+| **稳定性**      | 不稳定         | 稳定       |
+| **适用场景**    | 通用           | 大整数     |
+| **GPU Pass 数** | log²n          | k × 3      |
 
-## Performance Considerations
+## 性能考量
 
-### When GPU Sorting Wins
+### 何时 GPU 排序占优
 
-GPU sorting becomes advantageous when:
+GPU 排序在以下情况下更具优势：
 
-1. **Array size > 65,536** - Buffer transfer overhead is amortized
-2. **Repeated sorting** - GPU context can be reused
-3. **Batch processing** - Multiple sorts share setup cost
+1. **数组大小 > 65,536** —— 缓冲区传输开销被摊薄
+2. **重复排序** —— GPU 上下文可复用
+3. **批处理** —— 多次排序共享启动成本
 
-### Optimization Techniques
+### 优化技术
 
-1. **Shared Memory (Workgroup Memory)**
+1. **共享内存（Workgroup 内存）**
 
    ```wgsl
    var<workgroup> shared_data: array<u32, 256>;
    // Much faster than global memory access
    ```
 
-2. **Coalesced Memory Access**
+2. **合并内存访问**
 
    ```wgsl
    // ✅ Good: Consecutive access
@@ -180,13 +180,13 @@ GPU sorting becomes advantageous when:
    let value = data[global_id.x * stride];
    ```
 
-3. **Minimize Synchronization**
+3. **最小化同步**
    ```wgsl
    // Only barrier when data is shared between threads
    workgroupBarrier();
    ```
 
-## Error Handling
+## 错误处理
 
 ```typescript
 try {
@@ -202,8 +202,8 @@ try {
 }
 ```
 
-## Next Steps
+## 后续阅读
 
-- [Bitonic Sort Algorithm](/algorithm-bitonic) - Detailed implementation
-- [Radix Sort Algorithm](/algorithm-radix) - Detailed implementation
-- [Performance Benchmarks](/performance) - Real-world measurements
+- [Bitonic Sort 算法](/algorithm-bitonic) - 详细实现
+- [Radix Sort 算法](/algorithm-radix) - 详细实现
+- [性能基准](/performance) - 实际测量

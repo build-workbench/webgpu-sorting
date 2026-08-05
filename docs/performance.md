@@ -1,49 +1,49 @@
-# Performance Benchmarks
+# 性能基准测试
 
-This project does not treat any single benchmark table as universal truth. WebGPU performance depends heavily on browser version, driver quality, GPU architecture, array size, and whether you can reuse buffers across runs.
+本项目不会将任何单一基准测试表视为普遍真理。WebGPU 性能在很大程度上取决于浏览器版本、驱动质量、GPU 架构、数组大小，以及你是否能在多次运行之间复用缓冲区。
 
-## How to evaluate performance
+## 如何评估性能
 
-Use the [interactive demo](/demo) to test the current build on your own machine. Compare:
+使用[交互式 Demo](/demo)在你自己的机器上测试当前构建。比较以下指标：
 
-1. **GPU time** - compute work only
-2. **Total time** - upload, compute, and readback together
-3. **CPU time** - `TypedArray.sort()` as a local baseline
+1. **GPU 时间** - 仅计算工作
+2. **总时间** - 上传、计算和回读合计
+3. **CPU 时间** - `TypedArray.sort()` 作为本地基准
 
-## What usually matters most
+## 通常最重要的因素
 
-### Input size
+### 输入大小
 
-Small arrays often stay CPU-favorable because buffer transfer overhead dominates. Larger arrays are where GPU sorting becomes interesting.
+小数组通常更倾向于 CPU，因为缓冲区传输开销占主导地位。更大的数组才是 GPU 排序发挥作用的场景。
 
-### Reuse
+### 复用
 
-Repeated sorts get better when you reuse the same `GPUContext` and keep buffers alive between runs.
+当你复用同一个 `GPUContext` 并在多次运行之间保持缓冲区存活时，重复排序的性能会更好。
 
-### Algorithm choice
+### 算法选择
 
-| Use case                         | Better starting point | Why                                            |
-| -------------------------------- | --------------------- | ---------------------------------------------- |
-| General reference implementation | `BitonicSorter`       | Predictable structure and simpler reasoning    |
-| Large `Uint32Array` workloads    | `RadixSorter`         | Fewer wasted comparisons on integer-heavy data |
-| Small or one-off arrays          | CPU sort              | Lower setup cost                               |
+| 使用场景                    | 更好的起点      | 原因                           |
+| --------------------------- | --------------- | ------------------------------ |
+| 通用参考实现                | `BitonicSorter` | 结构可预测，推理更简单         |
+| 大型 `Uint32Array` 工作负载 | `RadixSorter`   | 对整数密集型数据的浪费比较更少 |
+| 小型或一次性数组            | CPU 排序        | 设置成本更低                   |
 
-## Benchmark workflow
+## 基准测试工作流
 
-1. Start with a small array and confirm correctness.
-2. Increase array size until transfer overhead stops dominating.
-3. Compare GPU-only time with total time; both matter.
-4. Repeat the same run several times to smooth out shader compilation and warm-up effects.
+1. 从小数组开始并确认正确性。
+2. 增加数组大小，直到传输开销不再占主导地位。
+3. 比较 GPU 专用时间与总时间；两者都很重要。
+4. 重复相同的运行数次，以平滑着色器编译和预热效果。
 
-## Interpreting results
+## 解读结果
 
-- **GPU time faster, total time slower** usually means the shader work is fine but transfer/setup cost dominates.
-- **Both GPU and total time faster** indicates a good browser/GPU fit for that workload.
-- **Radix slower than Bitonic** can happen on smaller arrays where extra passes do not amortize well.
+- **GPU 时间更快，总时间更慢** 通常意味着着色器工作没问题，但传输/设置开销占主导地位。
+- **GPU 时间和总时间都更快** 表明浏览器/GPU 非常适合该工作负载。
+- **Radix 比 Bitonic 慢** 可能发生在较小的数组上，额外的趟次无法很好地摊销。
 
-## Practical tips
+## 实用技巧
 
-### Reuse the same context
+### 复用同一个上下文
 
 ```ts
 const gpu = new GPUContext();
@@ -54,17 +54,17 @@ await sorter.sort(batchA);
 await sorter.sort(batchB);
 ```
 
-### Preallocate when sizes are predictable
+### 当大小可预测时预分配
 
 ```ts
 const sorter = new RadixSorter(gpu);
 sorter.preallocate(1_000_000);
 ```
 
-### Measure both correctness and throughput
+### 同时衡量正确性和吞吐量
 
-Enable validation while developing, then disable it when you only want raw throughput measurements.
+在开发时启用验证，当你只需要原始吞吐量测量时再禁用它。
 
-## Run your own benchmark
+## 运行你自己的基准测试
 
-The repository ships a maintained browser playground specifically for this purpose. Open the [interactive demo](/demo), choose your workload size, and compare Bitonic, Radix, and CPU timings on the target machine.
+仓库附带了一个专门为此目的维护的浏览器测试场。打开[交互式 Demo](/demo)，选择你的工作负载大小，并在目标机器上比较 Bitonic、Radix 和 CPU 的耗时。

@@ -1,42 +1,41 @@
 # WebGPU Sorting
 
 <p align="center">
-  <strong>GPU-accelerated sorting for Uint32Array workloads using WebGPU compute shaders.</strong>
+  <strong>一个使用 WebGPU 计算着色器处理 Uint32Array 排序任务的 GPU 加速项目。</strong>
 </p>
 
 <p align="center">
-  <a href="https://aicl-lab.github.io/webgpu-sorting/">Home</a> •
-  <a href="https://aicl-lab.github.io/webgpu-sorting/demo/">Live Demo</a> •
-  <a href="./docs/index.md">Docs</a> •
-  <a href="./README.zh.md">中文</a>
+  <a href="https://aicl-lab.github.io/webgpu-sorting/">主页</a> •
+  <a href="https://aicl-lab.github.io/webgpu-sorting/demo/">在线 Demo</a> •
+  <a href="./docs/index.md">文档</a>
 </p>
 
-## What this project is
+## 项目定位
 
-WebGPU Sorting is a TypeScript library and demo project that explores high-throughput GPU sorting in the browser. It ships two compute-shader implementations:
+WebGPU Sorting 是一个 TypeScript 库 + 演示项目，用来展示浏览器中基于 WebGPU 的高性能排序。仓库当前包含两套核心实现：
 
-- **Bitonic Sort** for predictable sorting-network behavior
-- **Radix Sort** for large `Uint32Array` workloads
+- **Bitonic Sort**：适合并行排序网络示例与通用演示
+- **Radix Sort**：适合大规模 `Uint32Array` 整数排序
 
-The repository also includes benchmark utilities, an interactive demo, and a VitePress site built from the same `docs/` directory that holds the written documentation.
+仓库还提供性能基准工具、交互式 Demo，以及基于 `docs/` 构建的 VitePress 文档站点。
 
-## What you get
+## 你可以得到什么
 
-- A small TypeScript API around WebGPU setup and sorting execution
-- WGSL shader implementations for bitonic and radix sorting
-- Browser benchmark helpers for comparing GPU and JS sorting
-- A live demo site for trying the project quickly
-- A small contributor workflow built around code, tests, docs, and one root changelog
+- 面向 WebGPU 初始化与排序执行的简洁 TypeScript API
+- Bitonic / Radix 的 WGSL 着色器实现
+- GPU 与 JavaScript 排序的基准测试辅助工具
+- 一个可直接体验的在线 Demo
+- 一套围绕代码、测试与文档的轻量维护流程
 
-## Quick start
+## 快速开始
 
-### Install
+### 安装
 
 ```bash
 npm install webgpu-sorting
 ```
 
-### Use in code
+### 代码示例
 
 ```ts
 import { GPUContext, BitonicSorter } from 'webgpu-sorting';
@@ -54,38 +53,37 @@ sorter.destroy();
 context.destroy();
 ```
 
-## Choosing an algorithm
+## 如何选择算法
 
-| Use case                                    | Recommended sorter    | Why                                                          |
-| ------------------------------------------- | --------------------- | ------------------------------------------------------------ |
-| General browser demo or medium-sized arrays | `BitonicSorter`       | Simple parallel sorting network and stable project reference |
-| Large integer arrays (`Uint32Array`)        | `RadixSorter`         | Better scaling for fixed-width integer data                  |
-| Small arrays                                | Native `Array.sort()` | GPU setup and transfer overhead can dominate                 |
+| 场景                            | 推荐算法            | 原因                               |
+| ------------------------------- | ------------------- | ---------------------------------- |
+| 通用浏览器演示或中等规模数组    | `BitonicSorter`     | 排序网络清晰，适合作为项目参考实现 |
+| 大规模整数数组（`Uint32Array`） | `RadixSorter`       | 对固定宽度整数数据扩展性更好       |
+| 小数组                          | 原生 `Array.sort()` | GPU 初始化与传输开销可能更高       |
 
-## Browser support
+## 浏览器支持
 
-| Browser            | Support                             |
-| ------------------ | ----------------------------------- |
-| Chrome / Edge 113+ | Recommended                         |
-| Firefox Nightly    | Experimental (`dom.webgpu.enabled`) |
-| Safari 18+         | Partial; requires recent macOS      |
+| 浏览器             | 支持情况                              |
+| ------------------ | ------------------------------------- |
+| Chrome / Edge 113+ | 推荐                                  |
+| Firefox Nightly    | 实验性（需开启 `dom.webgpu.enabled`） |
+| Safari 18+         | 部分支持，需要较新的 macOS            |
 
-WebGPU requires cross-origin isolation when running in the browser. The dev server is configured with the required COOP/COEP headers in `vite.config.ts`.
+如果在浏览器中运行 WebGPU，需要启用跨域隔离。开发服务器已在 `vite.config.ts` 中配置 COOP/COEP 头。
 
-## Repository map
+## 仓库结构
 
 ```text
 webgpu-sorting/
-├── docs/                # VitePress docs, Pages source, and generated demo assets
-├── src/                 # Library and standalone demo source
-├── test/                # Vitest and browser tests
-├── examples/            # Usage examples
-├── .github/workflows/   # CI, Pages, and release automation
-├── PROJECT_OVERVIEW.md  # Concise architecture and repo map
-└── CHANGELOG.md         # Single changelog for the whole repository
+├── docs/                # VitePress 文档站点（GitHub Pages 源）
+├── src/                 # 库与独立 Demo 源码
+├── test/                # Vitest 单元测试与 Playwright 浏览器测试
+├── index.html           # Demo 入口
+├── .github/workflows/   # CI、Pages 部署与发布流程
+└── vite.config.ts       # Vite 构建配置（含 COOP/COEP 头）
 ```
 
-## Development commands
+## 常用命令
 
 ```bash
 npm run lint
@@ -94,7 +92,7 @@ npm run test
 npm run build
 ```
 
-Other useful commands:
+其他常用命令：
 
 ```bash
 npm run dev
@@ -103,21 +101,21 @@ npm run build:site
 npm run test:coverage
 ```
 
-## Documentation and specs
+## 文档
 
-| Surface             | Link                                                                                             |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| Docs hub        | [docs/index.md](./docs/index.md)                     |
-| Getting started | [docs/getting-started.md](./docs/getting-started.md) |
-| API reference   | [docs/api.md](./docs/api.md)                         |
-| Architecture    | [docs/architecture.md](./docs/architecture.md)       |
-| Performance     | [docs/performance.md](./docs/performance.md)         |
-| Demo page       | [docs/demo.md](./docs/demo.md)                       |
+| 内容      | 链接                                                 |
+| --------- | ---------------------------------------------------- |
+| 文档入口  | [docs/index.md](./docs/index.md)                     |
+| 入门指南  | [docs/getting-started.md](./docs/getting-started.md) |
+| API 参考  | [docs/api.md](./docs/api.md)                         |
+| 架构说明  | [docs/architecture.md](./docs/architecture.md)       |
+| 性能说明  | [docs/performance.md](./docs/performance.md)         |
+| Demo 页面 | [docs/demo.md](./docs/demo.md)                       |
 
-## Contributing
+## 贡献方式
 
-Keep changes small, update the matching docs when behavior or workflow changes, and run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` before merge. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
+保持改动范围清晰；如果行为或工作流发生变化，请在同一个变更中同步更新相关文档。合并前运行 `npm run lint`、`npm run typecheck`、`npm run test` 与 `npm run build`。
 
-## License
+## 许可证
 
 [MIT](./LICENSE)

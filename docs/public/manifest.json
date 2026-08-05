@@ -1,7 +1,7 @@
 {
   "name": "WebGPU Sorting",
-  "short_name": "GPU Sort",
-  "description": "GPU-accelerated sorting algorithms with WebGPU compute shaders",
+  "short_name": "GPU 排序",
+  "description": "使用 WebGPU 计算着色器实现的 GPU 加速排序算法",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0d1117",

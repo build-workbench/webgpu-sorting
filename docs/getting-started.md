@@ -1,25 +1,25 @@
-# Getting Started
+# 快速开始
 
-Quick start guide for WebGPU Sorting.
+WebGPU Sorting 快速入门指南。
 
-## Prerequisites
+## 前置条件
 
 - Node.js 20+
-- A WebGPU-compatible browser:
+- 兼容 WebGPU 的浏览器：
   - Chrome 113+
   - Edge 113+
-  - Firefox Nightly (with flag)
-  - Safari 18+ (macOS 14+)
+  - Firefox Nightly（需开启标志）
+  - Safari 18+（macOS 14+）
 
-## Installation
+## 安装
 
 ```bash
 npm install webgpu-sorting
 ```
 
-## Basic Usage
+## 基本用法
 
-### 1. Initialize WebGPU
+### 1. 初始化 WebGPU
 
 ```typescript
 import { GPUContext } from 'webgpu-sorting';
@@ -35,7 +35,7 @@ const gpu = new GPUContext();
 await gpu.initialize();
 ```
 
-### 2. Create a Sorter
+### 2. 创建排序器
 
 ```typescript
 import { BitonicSorter, RadixSorter } from 'webgpu-sorting';
@@ -47,7 +47,7 @@ const bitonicSorter = new BitonicSorter(gpu);
 const radixSorter = new RadixSorter(gpu);
 ```
 
-### 3. Sort Data
+### 3. 排序数据
 
 ```typescript
 // Create test data
@@ -61,14 +61,14 @@ console.log(`GPU time: ${result.gpuTimeMs}ms`);
 console.log(`Total time: ${result.totalTimeMs}ms`);
 ```
 
-### 4. Cleanup
+### 4. 清理
 
 ```typescript
 // When done, destroy the GPU context
 gpu.destroy();
 ```
 
-## Complete Example
+## 完整示例
 
 ```typescript
 import { GPUContext, BitonicSorter, RadixSorter } from 'webgpu-sorting';
@@ -113,9 +113,9 @@ async function demo() {
 demo().catch(console.error);
 ```
 
-## Configuration Options
+## 配置选项
 
-### GPUContext Options
+### GPUContext 选项
 
 ```typescript
 await gpu.initialize({
@@ -123,7 +123,7 @@ await gpu.initialize({
 });
 ```
 
-### Sorter Options
+### 排序器选项
 
 ```typescript
 const result = await sorter.sort(data, {
@@ -132,7 +132,7 @@ const result = await sorter.sort(data, {
 });
 ```
 
-## Error Handling
+## 错误处理
 
 ```typescript
 import { WebGPUNotSupportedError, GPUAdapterError, GPUDeviceError } from 'webgpu-sorting';
@@ -151,18 +151,18 @@ try {
 }
 ```
 
-## Choosing an Algorithm
+## 选择算法
 
-| Scenario                        | Recommended Algorithm |
-| ------------------------------- | --------------------- |
-| General purpose sorting         | Bitonic Sort          |
-| Large Uint32Array datasets      | Radix Sort            |
-| Unknown data characteristics    | Bitonic Sort          |
-| Maximum performance on integers | Radix Sort            |
+| 场景                    | 推荐算法     |
+| ----------------------- | ------------ |
+| 通用排序                | Bitonic Sort |
+| 大型 Uint32Array 数据集 | Radix Sort   |
+| 未知数据特征            | Bitonic Sort |
+| 整数性能最大化          | Radix Sort   |
 
-## Next Steps
+## 后续步骤
 
-- [Architecture](/architecture) - Understand the system design
-- [API Reference](/api) - Detailed API documentation
-- [Performance](/performance) - Benchmark results
-- [Interactive Demo](/demo) - Try it in your browser
+- [架构](/architecture) - 了解系统设计
+- [API 参考](/api) - 详细的 API 文档
+- [性能](/performance) - 基准测试结果
+- [交互式演示](/demo) - 在浏览器中试用

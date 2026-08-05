@@ -110,7 +110,7 @@ jobs:
       - name: Validate output
         run: |
           test -f docs/.vitepress/dist/index.html || { echo "Missing index.html"; exit 1; }
-          test -f docs/.vitepress/dist/demo/index.html || { echo "Missing demo/index.html"; exit 1; }
+          test -f docs/.vitepress/dist/demo.html || { echo "Missing demo.html"; exit 1; }
           test -f docs/.vitepress/dist/playground/index.html || { echo "Missing playground/index.html"; exit 1; }
           echo "✓ All critical files present"
 

@@ -1,22 +1,22 @@
-# API Reference
+# API 参考
 
-Complete API documentation for WebGPU Sorting.
+WebGPU Sorting 的完整 API 文档。
 
-## Core Classes
+## 核心类
 
 ### GPUContext
 
-Manages WebGPU device lifecycle.
+管理 WebGPU 设备生命周期。
 
 ```typescript
 import { GPUContext } from 'webgpu-sorting';
 ```
 
-#### Static Methods
+#### 静态方法
 
 ##### `isSupported(): boolean`
 
-Check if WebGPU is available in the current environment.
+检查当前环境是否支持 WebGPU。
 
 ```typescript
 if (GPUContext.isSupported()) {
@@ -24,21 +24,21 @@ if (GPUContext.isSupported()) {
 }
 ```
 
-#### Constructor
+#### 构造函数
 
 ##### `new GPUContext()`
 
-Create a new GPU context instance.
+创建一个新的 GPUContext 实例。
 
 ```typescript
 const gpu = new GPUContext();
 ```
 
-#### Methods
+#### 方法
 
 ##### `initialize(config?: GPUContextConfig): Promise<void>`
 
-Initialize the WebGPU device.
+初始化 WebGPU 设备。
 
 ```typescript
 interface GPUContextConfig {
@@ -52,7 +52,7 @@ await gpu.initialize({
 
 ##### `getDevice(): GPUDevice`
 
-Get the underlying WebGPU device.
+获取底层的 WebGPU 设备。
 
 ```typescript
 const device = gpu.getDevice();
@@ -60,7 +60,7 @@ const device = gpu.getDevice();
 
 ##### `destroy(): void`
 
-Release GPU resources.
+释放 GPU 资源。
 
 ```typescript
 gpu.destroy();
@@ -70,27 +70,27 @@ gpu.destroy();
 
 ### BitonicSorter
 
-GPU-accelerated Bitonic Sort implementation.
+GPU 加速的 Bitonic Sort 实现。
 
 ```typescript
 import { BitonicSorter } from 'webgpu-sorting';
 ```
 
-#### Constructor
+#### 构造函数
 
 ##### `new BitonicSorter(context: GPUContext)`
 
-Create a new Bitonic sorter.
+创建一个新的 BitonicSorter 排序器。
 
 ```typescript
 const sorter = new BitonicSorter(gpu);
 ```
 
-#### Methods
+#### 方法
 
 ##### `sort(data: Uint32Array, options?: SortOptions): Promise<SortResult>`
 
-Sort an array of unsigned 32-bit integers.
+对无符号 32 位整数数组进行排序。
 
 ```typescript
 interface SortOptions {
@@ -108,7 +108,7 @@ const result = await sorter.sort(data, { validate: true });
 
 ##### `destroy(): void`
 
-Release GPU resources used by the sorter.
+释放排序器使用的 GPU 资源。
 
 ```typescript
 sorter.destroy();
@@ -116,7 +116,7 @@ sorter.destroy();
 
 ##### `preallocate(maxSize: number): void`
 
-Preallocate GPU buffers for sorting arrays up to `maxSize`. Buffers are reused across multiple `sort()` calls for better performance in batch sorting scenarios.
+预分配 GPU 缓冲区，用于排序最多 `maxSize` 大小的数组。缓冲区在多次 `sort()` 调用之间复用，以提升批量排序场景下的性能。
 
 ```typescript
 sorter.preallocate(1_000_000); // Preallocate for up to 1M elements
@@ -129,7 +129,7 @@ for (const arr of arrays) {
 
 ##### `clearPreallocation(): void`
 
-Release preallocated buffers. Buffers will be allocated on-demand for subsequent sorts.
+释放预分配的缓冲区。后续排序将按需分配缓冲区。
 
 ```typescript
 sorter.clearPreallocation();
@@ -137,7 +137,7 @@ sorter.clearPreallocation();
 
 ##### `preallocatedSize: number` (readonly)
 
-Returns the current preallocation size, or 0 if not preallocated.
+返回当前预分配大小，未预分配时返回 0。
 
 ```typescript
 console.log(sorter.preallocatedSize); // 1000000 or 0
@@ -147,39 +147,39 @@ console.log(sorter.preallocatedSize); // 1000000 or 0
 
 ### RadixSorter
 
-GPU-accelerated Radix Sort implementation.
+GPU 加速的 Radix Sort 实现。
 
 ```typescript
 import { RadixSorter } from 'webgpu-sorting';
 ```
 
-#### Constructor
+#### 构造函数
 
 ##### `new RadixSorter(context: GPUContext)`
 
-Create a new Radix sorter.
+创建一个新的 RadixSorter 排序器。
 
 ```typescript
 const sorter = new RadixSorter(gpu);
 ```
 
-#### Methods
+#### 方法
 
 ##### `sort(data: Uint32Array, options?: SortOptions): Promise<SortResult>`
 
-Sort an array of unsigned 32-bit integers.
+对无符号 32 位整数数组进行排序。
 
 ```typescript
 const result = await sorter.sort(data);
 ```
 
-::: tip Best For
-Radix Sort is optimized for **Uint32Array** datasets. For other data types, use BitonicSorter.
+::: tip 适用场景
+Radix Sort 针对类型化数组 **Uint32Array** 数据集进行了优化。对于其他数据类型，请使用 BitonicSorter。
 :::
 
 ##### `destroy(): void`
 
-Release GPU resources used by the sorter.
+释放排序器使用的 GPU 资源。
 
 ```typescript
 sorter.destroy();
@@ -187,7 +187,7 @@ sorter.destroy();
 
 ##### `preallocate(maxSize: number): void`
 
-Preallocate GPU buffers for sorting arrays up to `maxSize`. Buffers are reused across multiple `sort()` calls for better performance in batch sorting scenarios.
+预分配 GPU 缓冲区，用于排序最多 `maxSize` 大小的数组。缓冲区在多次 `sort()` 调用之间复用，以提升批量排序场景下的性能。
 
 ```typescript
 sorter.preallocate(1_000_000); // Preallocate for up to 1M elements
@@ -200,7 +200,7 @@ for (const arr of arrays) {
 
 ##### `clearPreallocation(): void`
 
-Release preallocated buffers. Buffers will be allocated on-demand for subsequent sorts.
+释放预分配的缓冲区。后续排序将按需分配缓冲区。
 
 ```typescript
 sorter.clearPreallocation();
@@ -208,7 +208,7 @@ sorter.clearPreallocation();
 
 ##### `preallocatedSize: number` (readonly)
 
-Returns the current preallocation size, or 0 if not preallocated.
+返回当前预分配大小，未预分配时返回 0。
 
 ```typescript
 console.log(sorter.preallocatedSize); // 1000000 or 0
@@ -216,11 +216,11 @@ console.log(sorter.preallocatedSize); // 1000000 or 0
 
 ---
 
-## Error Classes
+## 错误类
 
 ### WebGPUNotSupportedError
 
-Thrown when WebGPU is not available in the browser.
+当浏览器不支持 WebGPU 时抛出。
 
 ```typescript
 import { WebGPUNotSupportedError } from 'webgpu-sorting';
@@ -236,7 +236,7 @@ try {
 
 ### GPUAdapterError
 
-Thrown when GPU adapter acquisition fails.
+当获取 GPU 适配器失败时抛出。
 
 ```typescript
 import { GPUAdapterError } from 'webgpu-sorting';
@@ -244,7 +244,7 @@ import { GPUAdapterError } from 'webgpu-sorting';
 
 ### GPUDeviceError
 
-Thrown when GPU device acquisition fails.
+当获取 GPU 设备失败时抛出。
 
 ```typescript
 import { GPUDeviceError } from 'webgpu-sorting';
@@ -252,7 +252,7 @@ import { GPUDeviceError } from 'webgpu-sorting';
 
 ### BufferAllocationError
 
-Thrown when GPU buffer allocation fails.
+当 GPU 缓冲区分配失败时抛出。
 
 ```typescript
 import { BufferAllocationError } from 'webgpu-sorting';
@@ -260,7 +260,7 @@ import { BufferAllocationError } from 'webgpu-sorting';
 
 ### ShaderCompilationError
 
-Thrown when WGSL shader compilation fails.
+当 WGSL 着色器编译失败时抛出。
 
 ```typescript
 import { ShaderCompilationError } from 'webgpu-sorting';
@@ -268,7 +268,7 @@ import { ShaderCompilationError } from 'webgpu-sorting';
 
 ---
 
-## Types
+## 类型
 
 ### SortOptions
 
@@ -318,11 +318,11 @@ interface GPUContextConfig {
 
 ---
 
-## Constants
+## 常量
 
 ### WORKGROUP_SIZE
 
-Default workgroup size for compute shaders.
+计算着色器的默认工作组大小。
 
 ```typescript
 import { WORKGROUP_SIZE } from 'webgpu-sorting';
@@ -331,7 +331,7 @@ import { WORKGROUP_SIZE } from 'webgpu-sorting';
 
 ### MAX_BUFFER_SIZE
 
-Maximum buffer size supported.
+支持的最大缓冲区大小。
 
 ```typescript
 import { MAX_BUFFER_SIZE } from 'webgpu-sorting';
@@ -340,9 +340,9 @@ import { MAX_BUFFER_SIZE } from 'webgpu-sorting';
 
 ---
 
-## Usage Examples
+## 使用示例
 
-### Basic Sorting
+### 基本排序
 
 ```typescript
 const gpu = new GPUContext();
@@ -355,7 +355,7 @@ const { sortedData } = await sorter.sort(data);
 gpu.destroy();
 ```
 
-### Multiple Sorts
+### 多次排序
 
 ```typescript
 const gpu = new GPUContext();
@@ -377,7 +377,7 @@ for (const arr of arrays) {
 gpu.destroy();
 ```
 
-### Error Handling
+### 错误处理
 
 ```typescript
 async function safeSort(data: Uint32Array): Promise<Uint32Array> {
@@ -399,7 +399,7 @@ async function safeSort(data: Uint32Array): Promise<Uint32Array> {
 }
 ```
 
-### Performance Comparison
+### 性能对比
 
 ```typescript
 async function compareSorters(size: number) {

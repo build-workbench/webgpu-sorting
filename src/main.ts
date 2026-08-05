@@ -6,7 +6,7 @@ import { Validator } from './core/Validator';
 import { BenchmarkResult } from './shared/types';
 import { DEFAULT_BENCHMARK_SIZES, MAX_VALIDATION_SIZE } from './shared/constants';
 
-// DOM Elements
+// DOM 元素
 const unsupportedEl = document.getElementById('unsupported') as HTMLDivElement;
 const appEl = document.getElementById('app') as HTMLDivElement;
 const algorithmSelect = document.getElementById('algorithm') as HTMLSelectElement;
@@ -23,7 +23,7 @@ const resultsBody = document.getElementById('resultsBody') as HTMLTableSectionEl
 let gpuContext: GPUContext | null = null;
 let benchmark: Benchmark | null = null;
 
-// Initialize
+// 初始化
 async function init() {
   if (!GPUContext.isSupported()) {
     showUnsupported();
@@ -36,10 +36,10 @@ async function init() {
     benchmark = new Benchmark(gpuContext);
 
     setupEventListeners();
-    showStatus('Ready to run benchmarks', 'success');
+    showStatus('就绪，可以运行基准测试', 'success');
   } catch (error) {
     showUnsupported();
-    console.error('Failed to initialize WebGPU:', error);
+    console.error('WebGPU 初始化失败：', error);
   }
 }
 
@@ -117,20 +117,20 @@ async function runSingleBenchmark() {
   setProgress(0);
 
   try {
-    // Run JS native first for comparison
-    showStatus(`Running JavaScript native sort (${formatSize(arraySize)} elements)...`);
+    // 先运行 JS 原生排序作为对比基准
+    showStatus(`正在运行 JavaScript 原生排序（${formatSize(arraySize)} 个元素）...`);
     setProgress(10);
     const jsResult = await benchmark.runSingle('js-native', arraySize, iterations);
     addResult(jsResult);
     setProgress(30);
 
     if (algorithm === 'bitonic' || algorithm === 'both') {
-      showStatus(`Running Bitonic Sort (${formatSize(arraySize)} elements)...`);
+      showStatus(`正在运行 Bitonic Sort（${formatSize(arraySize)} 个元素）...`);
       const bitonicResult = await benchmark.runSingle('bitonic', arraySize, iterations);
       addResult(bitonicResult, jsResult.totalTimeMs);
       setProgress(algorithm === 'both' ? 60 : 90);
 
-      // Validate result
+      // 校验结果
       const testData = Benchmark.generateRandomData(Math.min(arraySize, MAX_VALIDATION_SIZE));
       const sorter = new BitonicSorter(gpuContext);
       const sortResult = await sorter.sort(testData);
@@ -138,17 +138,17 @@ async function runSingleBenchmark() {
       sorter.destroy();
 
       if (!validation.isValid) {
-        console.warn('Bitonic sort validation failed:', validation.errors);
+        console.warn('Bitonic 排序校验失败：', validation.errors);
       }
     }
 
     if (algorithm === 'radix' || algorithm === 'both') {
-      showStatus(`Running Radix Sort (${formatSize(arraySize)} elements)...`);
+      showStatus(`正在运行 Radix Sort（${formatSize(arraySize)} 个元素）...`);
       const radixResult = await benchmark.runSingle('radix', arraySize, iterations);
       addResult(radixResult, jsResult.totalTimeMs);
       setProgress(90);
 
-      // Validate result
+      // 校验结果
       const testData = Benchmark.generateRandomData(Math.min(arraySize, MAX_VALIDATION_SIZE));
       const sorter = new RadixSorter(gpuContext);
       const sortResult = await sorter.sort(testData);
@@ -156,15 +156,15 @@ async function runSingleBenchmark() {
       sorter.destroy();
 
       if (!validation.isValid) {
-        console.warn('Radix sort validation failed:', validation.errors);
+        console.warn('Radix 排序校验失败：', validation.errors);
       }
     }
 
     setProgress(100);
-    showStatus('Benchmark complete!', 'success');
+    showStatus('基准测试完成！', 'success');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    showStatus(`Error: ${message}`, 'error');
+    showStatus(`错误：${message}`, 'error');
     console.error(error);
   } finally {
     setButtonsEnabled(true);
@@ -182,36 +182,36 @@ async function runFullSuite() {
   setProgress(0);
 
   try {
-    const totalSteps = sizes.length * 3; // JS + Bitonic + Radix for each size
+    const totalSteps = sizes.length * 3; // 每个尺寸：JS + Bitonic + Radix
     let currentStep = 0;
 
     for (const size of sizes) {
-      // JS Native
-      showStatus(`Running JS sort (${formatSize(size)} elements)...`);
+      // JS 原生
+      showStatus(`正在运行 JS 排序（${formatSize(size)} 个元素）...`);
       const jsResult = await benchmark.runSingle('js-native', size, iterations);
       addResult(jsResult);
       currentStep++;
       setProgress((currentStep / totalSteps) * 100);
 
       // Bitonic
-      showStatus(`Running Bitonic Sort (${formatSize(size)} elements)...`);
+      showStatus(`正在运行 Bitonic Sort（${formatSize(size)} 个元素）...`);
       const bitonicResult = await benchmark.runSingle('bitonic', size, iterations);
       addResult(bitonicResult, jsResult.totalTimeMs);
       currentStep++;
       setProgress((currentStep / totalSteps) * 100);
 
       // Radix
-      showStatus(`Running Radix Sort (${formatSize(size)} elements)...`);
+      showStatus(`正在运行 Radix Sort（${formatSize(size)} 个元素）...`);
       const radixResult = await benchmark.runSingle('radix', size, iterations);
       addResult(radixResult, jsResult.totalTimeMs);
       currentStep++;
       setProgress((currentStep / totalSteps) * 100);
     }
 
-    showStatus('Full benchmark suite complete!', 'success');
+    showStatus('完整基准测试套件运行完成！', 'success');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    showStatus(`Error: ${message}`, 'error');
+    showStatus(`错误：${message}`, 'error');
     console.error(error);
   } finally {
     setButtonsEnabled(true);
@@ -223,5 +223,5 @@ function setupEventListeners() {
   runAllBtn.addEventListener('click', runFullSuite);
 }
 
-// Start
+// 启动
 init();

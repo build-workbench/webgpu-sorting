@@ -5,7 +5,7 @@ const base = process.env.GITHUB_PAGES ? '/webgpu-sorting/' : '/';
 export default defineConfig({
   base,
   title: 'WebGPU Sorting',
-  description: 'WebGPU sorting library, demo, and reference documentation.',
+  description: 'WebGPU 排序库、Demo 与参考文档。',
 
   head: [
     // Security headers
@@ -32,7 +32,7 @@ export default defineConfig({
       'meta',
       {
         property: 'og:description',
-        content: 'GPU-accelerated sorting with WebGPU compute shaders',
+        content: '使用 WebGPU 计算着色器实现 GPU 加速排序',
       },
     ],
   ],
@@ -45,39 +45,39 @@ export default defineConfig({
   lastUpdated: true,
 
   themeConfig: {
-    logo: '/icons/icon-192.png',
+    logo: '/icons/icon-192.svg',
     siteTitle: 'WebGPU Sorting',
 
     nav: [
-      { text: 'Home', link: '/' },
+      { text: '主页', link: '/' },
       { text: 'Demo', link: '/demo' },
-      { text: 'Architecture', link: '/architecture' },
+      { text: '架构', link: '/architecture' },
       { text: 'API', link: '/api' },
-      { text: 'Performance', link: '/performance' },
+      { text: '性能', link: '/performance' },
     ],
 
     sidebar: {
       '/': [
         {
-          text: 'Getting Started',
+          text: '入门',
           items: [
-            { text: 'Introduction', link: '/' },
-            { text: 'Quick Start', link: '/getting-started' },
+            { text: '项目简介', link: '/' },
+            { text: '快速开始', link: '/getting-started' },
           ],
         },
         {
-          text: 'Architecture',
+          text: '架构',
           items: [
-            { text: 'System Design', link: '/architecture' },
+            { text: '系统设计', link: '/architecture' },
             { text: 'Bitonic Sort', link: '/algorithm-bitonic' },
             { text: 'Radix Sort', link: '/algorithm-radix' },
           ],
         },
         {
-          text: 'Reference',
+          text: '参考',
           items: [
-            { text: 'API Documentation', link: '/api' },
-            { text: 'Performance Benchmarks', link: '/performance' },
+            { text: 'API 文档', link: '/api' },
+            { text: '性能基准', link: '/performance' },
           ],
         },
       ],
@@ -101,17 +101,17 @@ export default defineConfig({
 
     editLink: {
       pattern: 'https://github.com/AICL-Lab/webgpu-sorting/edit/main/docs/:path',
-      text: 'Edit this page on GitHub',
+      text: '在 GitHub 上编辑本页',
     },
 
     footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Copyright © AICL-Lab contributors',
+      message: '基于 MIT 协议发布。',
+      copyright: 'Copyright © AICL-Lab 贡献者',
     },
 
     outline: {
       level: [2, 4],
-      label: 'On this page',
+      label: '本页内容',
     },
   },
 

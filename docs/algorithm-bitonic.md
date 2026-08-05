@@ -1,53 +1,53 @@
-# Bitonic Sort Algorithm
+# Bitonic Sort 算法
 
-Detailed implementation of the GPU-accelerated Bitonic Sort.
+GPU 加速的 Bitonic Sort 的详细实现。
 
-## Algorithm Overview
+## 算法概述
 
-Bitonic sort is a parallel comparison-based sorting algorithm. A **bitonic sequence** is a sequence that first monotonically increases and then monotonically decreases (or vice versa).
+Bitonic sort 是一种基于比较的并行排序算法。**bitonic 序列**是指先单调递增然后单调递减（或反之）的序列。
 
-### Complexity
+### 复杂度
 
-- **Time**: O(n log²n)
-- **Space**: O(1) - in-place sorting
-- **Parallelism**: Highly parallelizable
+- **时间**：O(n log²n)
+- **空间**：O(1) - 原地排序
+- **并行性**：高度可并行
 
-### Algorithm Stages
+### 算法阶段
 
 ```
-Stage 1: Create bitonic sequences of length 2
-Stage 2: Create bitonic sequences of length 4
-Stage 3: Create bitonic sequences of length 8
+阶段 1：创建长度为 2 的 bitonic 序列
+阶段 2：创建长度为 4 的 bitonic 序列
+阶段 3：创建长度为 8 的 bitonic 序列
 ...
-Stage log₂(n): Final sorted sequence
+阶段 log₂(n)：最终排序序列
 ```
 
-## Visual Explanation
+## 可视化解释
 
 ```mermaid
 graph TB
-    subgraph Stage1["Stage 1"]
+    subgraph Stage1["阶段 1"]
         A1[5,2] --> B1[2,5]
         A2[8,1] --> B2[1,8]
         A3[9,3] --> B3[3,9]
         A4[7,4] --> B4[4,7]
     end
 
-    subgraph Stage2["Stage 2"]
+    subgraph Stage2["阶段 2"]
         C1[2,5,1,8] --> D1[1,2,5,8]
         C2[3,9,4,7] --> D2[3,4,7,9]
     end
 
-    subgraph Stage3["Stage 3"]
+    subgraph Stage3["阶段 3"]
         E1[1,2,5,8,3,4,7,9] --> F1[1,2,3,4,5,7,8,9]
     end
 
     Stage1 --> Stage2 --> Stage3
 ```
 
-## WGSL Implementation
+## WGSL 实现
 
-### Compare and Swap
+### 比较与交换
 
 ```wgsl
 // Compare and swap operation
@@ -62,7 +62,7 @@ fn compare_and_swap(i: u32, j: u32, ascending: bool) {
 }
 ```
 
-### Local Sort (Within Workgroup)
+### 局部排序（workgroup 内）
 
 ```wgsl
 @compute @workgroup_size(256)
@@ -111,7 +111,7 @@ fn bitonic_sort_local(
 }
 ```
 
-### Global Sort (Across Workgroups)
+### 全局排序（跨 workgroup）
 
 ```wgsl
 @compute @workgroup_size(256)
@@ -139,7 +139,7 @@ fn bitonic_sort_global(
 }
 ```
 
-## TypeScript Implementation
+## TypeScript 实现
 
 ```typescript
 export class BitonicSorter {
@@ -188,20 +188,20 @@ export class BitonicSorter {
 }
 ```
 
-## Performance Characteristics
+## 性能特征
 
-| Array Size | GPU Passes | Memory Accesses |
-| ---------- | ---------- | --------------- |
-| 256        | 64         | 16,384          |
-| 1,024      | 100        | 102,400         |
-| 65,536     | 256        | 16,777,216      |
-| 1,048,576  | 400        | 419,430,400     |
+| 数组大小  | GPU 通道数 | 内存访问次数 |
+| --------- | ---------- | ------------ |
+| 256       | 64         | 16,384       |
+| 1,024     | 100        | 102,400      |
+| 65,536    | 256        | 16,777,216   |
+| 1,048,576 | 400        | 419,430,400  |
 
-## Best Practices
+## 最佳实践
 
-### 1. Power-of-Two Sizes
+### 1. 2 的幂次大小
 
-Bitonic sort works most efficiently with power-of-2 sized arrays:
+Bitonic sort 在 2 的幂次大小的数组上工作效率最高：
 
 ```typescript
 // Good: Power of 2
@@ -212,9 +212,9 @@ const data = new Uint32Array(100000);
 // Library automatically pads to 131072
 ```
 
-### 2. Reuse GPU Context
+### 2. 复用 GPU 上下文
 
-Create the context once and reuse it:
+创建一次上下文并复用它：
 
 ```typescript
 // ✅ Good: Reuse context
@@ -238,9 +238,9 @@ for (const data of datasets) {
 }
 ```
 
-### 3. Batch Processing
+### 3. 批处理
 
-Sort multiple arrays in sequence:
+依次排序多个数组：
 
 ```typescript
 const results = [];
@@ -249,14 +249,14 @@ for (const data of dataArray) {
 }
 ```
 
-## Limitations
+## 局限性
 
-1. **Power-of-2 padding**: Non-power-of-2 arrays require padding
-2. **Not stable**: Equal elements may be reordered
-3. **Memory overhead**: Requires GPU buffer allocation
+1. **2 的幂次填充**：非 2 的幂次的数组需要填充
+2. **不稳定**：相等的元素可能被重排
+3. **内存开销**：需要分配 GPU 缓冲区
 
-## See Also
+## 另请参阅
 
-- [Radix Sort Algorithm](/algorithm-radix)
-- [Architecture](/architecture)
-- [Performance Benchmarks](/performance)
+- [Radix Sort 算法](/algorithm-radix)
+- [架构](/architecture)
+- [性能基准](/performance)

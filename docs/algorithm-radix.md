@@ -1,59 +1,59 @@
-# Radix Sort Algorithm
+# Radix Sort 算法
 
-Detailed implementation of the GPU-accelerated Radix Sort.
+GPU 加速的 Radix Sort 的详细实现。
 
-## Algorithm Overview
+## 算法概述
 
-Radix sort is a non-comparison sorting algorithm that processes integers digit by digit (or bit by bit).
+Radix sort 是一种非比较排序算法，它逐位（或逐比特）处理整数。
 
-### Complexity
+### 复杂度
 
-- **Time**: O(n × k), where k = number of digit positions
-- **Space**: O(n) - requires auxiliary array
-- **Stability**: Stable sort
+- **时间**：O(n × k)，其中 k = 数字位数
+- **空间**：O(n) - 需要辅助数组
+- **稳定性**：稳定排序
 
-### Our Implementation
+### 我们的实现
 
-- **Radix**: 16 (2⁴ = 16 buckets)
-- **Bits per pass**: 4
-- **Total passes**: 8 (for 32-bit integers)
+- **基数**：16（2⁴ = 16 个桶）
+- **每趟位数**：4
+- **总趟数**：8（针对 32 位整数）
 
-## Algorithm Phases
+## 算法阶段
 
 ```mermaid
 graph LR
-    A[Input Array] --> B[Pass 1: Bits 0-3]
-    B --> C[Pass 2: Bits 4-7]
-    C --> D[Pass 3: Bits 8-11]
+    A[输入数组] --> B[第 1 趟：位 0-3]
+    B --> C[第 2 趟：位 4-7]
+    C --> D[第 3 趟：位 8-11]
     D --> E[...]
-    E --> F[Pass 8: Bits 28-31]
-    F --> G[Sorted Array]
+    E --> F[第 8 趟：位 28-31]
+    F --> G[已排序数组]
 ```
 
-## Phase Details
+## 各阶段详情
 
-Each pass consists of three operations:
+每一趟由三个操作组成：
 
 ```mermaid
 graph TB
-    subgraph Phase1["Phase 1: Histogram"]
-        A[Count elements<br/>in each bucket]
+    subgraph Phase1["阶段 1：直方图"]
+        A[统计每个桶中<br/>的元素数量]
     end
 
-    subgraph Phase2["Phase 2: Prefix Sum"]
-        B[Calculate output<br/>positions]
+    subgraph Phase2["阶段 2：前缀和"]
+        B[计算输出<br/>位置]
     end
 
-    subgraph Phase3["Phase 3: Scatter"]
-        C[Place elements<br/>in sorted positions]
+    subgraph Phase3["阶段 3：散布"]
+        C[将元素放置到<br/>已排序位置]
     end
 
     A --> B --> C
 ```
 
-### 1. Histogram Phase
+### 1. 直方图阶段
 
-Count how many elements fall into each bucket:
+统计落入每个桶的元素数量：
 
 ```wgsl
 const RADIX: u32 = 16u;
@@ -87,9 +87,9 @@ fn compute_histogram(
 }
 ```
 
-### 2. Prefix Sum Phase
+### 2. 前缀和阶段
 
-Calculate the starting position for each bucket:
+计算每个桶的起始位置：
 
 ```typescript
 function prefixSum(histogram: Uint32Array): Uint32Array {
@@ -109,9 +109,9 @@ function prefixSum(histogram: Uint32Array): Uint32Array {
 // prefixSum: [0, 2, 5, 6, 6, ...]
 ```
 
-### 3. Scatter Phase
+### 3. 散布阶段
 
-Place elements in their sorted positions:
+将元素放置到其已排序位置：
 
 ```wgsl
 @compute @workgroup_size(256)
@@ -141,9 +141,9 @@ fn scatter(
 }
 ```
 
-## Digit Extraction
+## 数位提取
 
-Extract 4 bits at the given offset:
+在给定偏移处提取 4 个比特：
 
 ```wgsl
 fn get_digit(value: u32, bit_offset: u32) -> u32 {
@@ -151,30 +151,30 @@ fn get_digit(value: u32, bit_offset: u32) -> u32 {
 }
 ```
 
-| Bit Offset | Bits  | Example Value | Digit    |
-| ---------- | ----- | ------------- | -------- |
-| 0          | 0-3   | 0xABCD        | 0xD (13) |
-| 4          | 4-7   | 0xABCD        | 0xC (12) |
-| 8          | 8-11  | 0xABCD        | 0xB (11) |
-| 12         | 12-15 | 0xABCD        | 0xA (10) |
+| 比特偏移 | 位    | 示例值 | 数位     |
+| -------- | ----- | ------ | -------- |
+| 0        | 0-3   | 0xABCD | 0xD (13) |
+| 4        | 4-7   | 0xABCD | 0xC (12) |
+| 8        | 8-11  | 0xABCD | 0xB (11) |
+| 12       | 12-15 | 0xABCD | 0xA (10) |
 
-## Memory Layout
+## 内存布局
 
 ```
-For 32-bit integers with 4-bit radix:
+对于 4 位基数的 32 位整数：
 ┌─────────────────┬─────────────────┬─────────────────┐
 │   Input Array   │   Histogram     │  Prefix Sums    │
 │   (n elements)  │  (16 integers)  │  (16 integers)  │
 └─────────────────┴─────────────────┴─────────────────┘
 
-Per-pass memory:
+每趟内存：
 - Input buffer: n × 4 bytes
 - Output buffer: n × 4 bytes
 - Histogram: 16 × 4 bytes
 - Prefix sums: 16 × 4 bytes
 ```
 
-## TypeScript Implementation
+## TypeScript 实现
 
 ```typescript
 export class RadixSorter {
@@ -236,42 +236,42 @@ export class RadixSorter {
 }
 ```
 
-## Performance Comparison
+## 性能对比
 
-| Array Size | Radix Sort | Bitonic Sort | Winner  |
-| ---------- | ---------- | ------------ | ------- |
-| 65,536     | 0.31ms     | 0.28ms       | Bitonic |
-| 262,144    | 0.89ms     | 0.94ms       | Radix   |
-| 1,048,576  | 2.8ms      | 3.2ms        | Radix   |
-| 4,194,304  | 10.5ms     | 12.1ms       | Radix   |
+| 数组大小  | Radix Sort | Bitonic Sort | 胜者    |
+| --------- | ---------- | ------------ | ------- |
+| 65,536    | 0.31ms     | 0.28ms       | Bitonic |
+| 262,144   | 0.89ms     | 0.94ms       | Radix   |
+| 1,048,576 | 2.8ms      | 3.2ms        | Radix   |
+| 4,194,304 | 10.5ms     | 12.1ms       | Radix   |
 
-::: tip When to Use Radix Sort
-Radix sort excels on **large integer arrays** (≥ 250K elements). For smaller arrays or non-integer data, Bitonic sort may be more appropriate.
+::: tip 何时使用 Radix Sort
+Radix sort 擅长处理**大型整数数组**（≥ 250K 个元素）。对于较小的数组或非整数数据，Bitonic sort 可能更合适。
 :::
 
-## Optimization: GPU Prefix Sum
+## 优化：GPU Prefix Sum
 
-The current implementation uses **GPU-based Blelloch scan** for computing prefix sums, eliminating CPU↔GPU data transfers during sorting.
+当前实现使用**基于 GPU 的 Blelloch scan**来计算 prefix sum，从而消除排序过程中 CPU↔GPU 的数据传输。
 
-### Blelloch Scan Algorithm
+### Blelloch Scan 算法
 
-Blelloch scan is a work-efficient parallel prefix sum algorithm with O(n) total work:
+Blelloch scan 是一种工作高效的并行 prefix sum 算法，总工作量为 O(n)：
 
 ```
-Input: [3, 1, 7, 0, 4, 1, 6, 3]
-Output (exclusive): [0, 3, 4, 11, 11, 15, 16, 22]
+输入：[3, 1, 7, 0, 4, 1, 6, 3]
+输出（exclusive）：[0, 3, 4, 11, 11, 15, 16, 22]
 
-Phase 1: Up-sweep (Reduce)
+阶段 1：上扫（Reduce）
   [3, 1, 7, 0, 4, 1, 6, 3]
-         ↓ pairwise sum
+         ↓ 两两求和
   [3, 4, 7, 7, 4, 5, 6, 9]
          ↓ stride = 4
   [3, 4, 7, 11, 4, 5, 6, 14]
          ↓ stride = 8
-  [3, 4, 7, 11, 4, 5, 6, 25]  ← total sum
+  [3, 4, 7, 11, 4, 5, 6, 25]  ← 总和
 
-Phase 2: Down-sweep (Distribute)
-  [3, 4, 7, 11, 4, 5, 6, 0]   ← clear last
+阶段 2：下扫（Distribute）
+  [3, 4, 7, 11, 4, 5, 6, 0]   ← 清空最后一个
          ↓ stride = 4
   [3, 4, 7, 4, 4, 5, 11, 14]
          ↓ stride = 2
@@ -280,7 +280,7 @@ Phase 2: Down-sweep (Distribute)
   [0, 3, 4, 11, 11, 15, 16, 22]  ← exclusive scan
 ```
 
-### WGSL Implementation
+### WGSL 实现
 
 ```wgsl
 @compute @workgroup_size(256)
@@ -296,32 +296,32 @@ fn blelloch_scan(
 }
 ```
 
-### Two-Level Scan for Large Histograms
+### 针对大型直方图的两级 Scan
 
-For histograms larger than a single workgroup can handle (512 elements per workgroup):
+对于单个 workgroup 无法处理的大型直方图（每个 workgroup 512 个元素）：
 
 ```
-Level 1: Local scans within each workgroup
-Level 2: Scan of block sums
-Level 3: Add block prefix to each workgroup's results
+级别 1：每个 workgroup 内的局部 scan
+级别 2：对块求和结果进行 scan
+级别 3：将块前缀加到每个 workgroup 的结果上
 ```
 
-### Performance Impact
+### 性能影响
 
-| Array Size | CPU Prefix Sum | GPU Prefix Sum | Improvement |
-| ---------- | -------------- | -------------- | ----------- |
-| 65K        | 0.5ms/pass     | 0.05ms/pass    | 10x faster  |
-| 1M         | 2ms/pass       | 0.1ms/pass     | 20x faster  |
-| 16M        | 30ms/pass      | 0.5ms/pass     | 60x faster  |
+| 数组大小 | CPU Prefix Sum | GPU Prefix Sum | 提升     |
+| -------- | -------------- | -------------- | -------- |
+| 65K      | 0.5ms/pass     | 0.05ms/pass    | 快 10 倍 |
+| 1M       | 2ms/pass       | 0.1ms/pass     | 快 20 倍 |
+| 16M      | 30ms/pass      | 0.5ms/pass     | 快 60 倍 |
 
-## Limitations
+## 局限性
 
-1. **Uint32Array only**: Specialized for unsigned 32-bit integers
-2. **Memory overhead**: Requires input and output buffers
-3. **Not comparison-based**: Cannot sort arbitrary data types
+1. **仅支持 Uint32Array**：专用于无符号 32 位整数
+2. **内存开销**：需要输入和输出缓冲区
+3. **非基于比较**：无法排序任意数据类型
 
-## See Also
+## 另请参阅
 
-- [Bitonic Sort Algorithm](/algorithm-bitonic)
-- [Architecture](/architecture)
-- [Performance Benchmarks](/performance)
+- [Bitonic Sort 算法](/algorithm-bitonic)
+- [架构](/architecture)
+- [性能基准测试](/performance)
