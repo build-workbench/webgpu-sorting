@@ -35,10 +35,11 @@
   },
   "scripts": {
     "dev": "vitepress dev docs",
-    "build": "npm run build:demo && npm run build:site",
+    "build": "npm run build:demo && npm run build:site && npm run build:lib",
     "build:site": "vitepress build docs",
     "build:demo": "tsc && vite build",
     "build:analyze": "tsc && vite build --mode analyze",
+    "build:lib": "tsc -p tsconfig.lib.json && vite build --mode lib",
     "preview": "vitepress preview docs",
     "test": "vitest run",
     "test:watch": "vitest",

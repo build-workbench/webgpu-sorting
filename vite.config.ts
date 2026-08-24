@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
+import { resolve } from 'node:path';
 
 // Build the standalone demo into VitePress public assets without colliding
 // with the /demo docs page route.
@@ -24,8 +25,31 @@ export default defineConfig(async ({ mode }) => {
     }
   }
 
+  if (mode === 'lib') {
+    return {
+      base,
+      plugins,
+      build: {
+        target: 'esnext',
+        outDir: 'dist',
+        emptyOutDir: false,
+        lib: {
+          entry: resolve(__dirname, 'src/index.ts'),
+          formats: ['es'],
+          fileName: () => 'index.js',
+        },
+        rollupOptions: {
+          output: {
+            exports: 'named',
+          },
+        },
+      },
+    };
+  }
+
   return {
     base,
+    plugins,
     build: {
       target: 'esnext',
       outDir: 'docs/public/playground',

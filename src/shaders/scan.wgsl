@@ -151,7 +151,8 @@ fn scan_block_sums(
   // Pad with zeros
   if (tid + SCAN_WORKGROUP_SIZE < n) {
     block_scan_shared[tid + SCAN_WORKGROUP_SIZE] = block_sums[tid + SCAN_WORKGROUP_SIZE];
-  } else if (tid + SCAN_WORKGROUP_SIZE < 512u) {
+  }
+  if (tid + SCAN_WORKGROUP_SIZE >= n) {
     block_scan_shared[tid + SCAN_WORKGROUP_SIZE] = 0u;
   }
 
@@ -208,9 +209,13 @@ fn scan_block_sums(
 
   workgroupBarrier();
 
-  // Write scanned block sums back
+  // Write scanned block sums back (both halves — each thread owns 2 elements)
   if (tid < n) {
     block_sums[tid] = block_scan_shared[tid];
+  }
+  let upper = tid + SCAN_WORKGROUP_SIZE;
+  if (upper < n) {
+    block_sums[upper] = block_scan_shared[upper];
   }
 }
 
