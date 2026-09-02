@@ -25,7 +25,7 @@ export default defineConfig({
       },
     ],
     ['meta', { name: 'theme-color', content: '#00d4aa' }],
-    ['meta', { name: 'author', content: 'AICL-Lab' }],
+    ['meta', { name: 'author', content: 'build-workbench' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'WebGPU Sorting' }],
     [
@@ -83,7 +83,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/AICL-Lab/webgpu-sorting' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/build-workbench/webgpu-sorting' }],
 
     search: {
       provider: 'local',
@@ -100,13 +100,13 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/AICL-Lab/webgpu-sorting/edit/main/docs/:path',
+      pattern: 'https://github.com/build-workbench/webgpu-sorting/edit/main/docs/:path',
       text: '在 GitHub 上编辑本页',
     },
 
     footer: {
       message: '基于 MIT 协议发布。',
-      copyright: 'Copyright © AICL-Lab 贡献者',
+      copyright: 'Copyright © build-workbench 贡献者',
     },
 
     outline: {

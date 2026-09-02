@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://aicl-lab.github.io/webgpu-sorting/">主页</a> •
-  <a href="https://aicl-lab.github.io/webgpu-sorting/demo/">在线 Demo</a> •
+  <a href="https://build-workbench.github.io/webgpu-sorting/">主页</a> •
+  <a href="https://build-workbench.github.io/webgpu-sorting/demo/">在线 Demo</a> •
   <a href="./docs/index.md">文档</a>
 </p>
 

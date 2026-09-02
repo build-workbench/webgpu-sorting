@@ -24,12 +24,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AICL-Lab/webgpu-sorting.git"
+    "url": "git+https://github.com/build-workbench/webgpu-sorting.git"
   },
   "bugs": {
-    "url": "https://github.com/AICL-Lab/webgpu-sorting/issues"
+    "url": "https://github.com/build-workbench/webgpu-sorting/issues"
   },
-  "homepage": "https://aicl-lab.github.io/webgpu-sorting/",
+  "homepage": "https://build-workbench.github.io/webgpu-sorting/",
   "engines": {
     "node": ">=20.0.0"
   },
