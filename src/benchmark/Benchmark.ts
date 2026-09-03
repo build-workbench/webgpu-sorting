@@ -57,7 +57,8 @@ export class Benchmark {
   async runSingle(
     algorithm: 'bitonic' | 'radix' | 'js-native',
     size: number,
-    iterations: number = 5
+    iterations: number = 5,
+    customGenerator?: (size: number) => Uint32Array
   ): Promise<BenchmarkResult> {
     const times: number[] = [];
     const gpuTimes: number[] = [];
@@ -80,7 +81,7 @@ export class Benchmark {
     }
 
     for (let i = 0; i < iterations; i++) {
-      const data = Benchmark.generateRandomData(size);
+      const data = customGenerator ? customGenerator(size) : Benchmark.generateRandomData(size);
 
       if (algorithm === 'js-native') {
         const time = this.runNativeSort(data);

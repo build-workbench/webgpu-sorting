@@ -3,10 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="WebGPU 排序交互式基准测试" />
+    <meta name="description" content="WebGPU + WGSL 并行排序工作台：双调排序、基数排序与 CPU 性能深度对比及动态演练" />
     <meta name="theme-color" content="#00d4aa" />
-    <title>WebGPU 排序 Demo</title>
+    <title>WebGPU 智能并行排序工作台</title>
     <style>
+      :root {
+        --bg-main: #0a0d14;
+        --bg-card: #121722;
+        --bg-card-hover: #171e2c;
+        --bg-input: #0e121a;
+        --border-subtle: #1f293d;
+        --border-active: #00d4aa;
+        --text-main: #f0f6fc;
+        --text-muted: #8b949e;
+        --text-dim: #626b77;
+        --accent-gpu: #00d4aa;
+        --accent-gpu-glow: rgba(0, 212, 170, 0.2);
+        --accent-bitonic: #a855f7;
+        --accent-bitonic-glow: rgba(168, 85, 247, 0.2);
+        --accent-cpu: #f59e0b;
+        --accent-error: #f85149;
+        --font-mono: 'JetBrains Mono', 'Fira Code', SFMono-Regular, Consolas, monospace;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -14,116 +33,321 @@
       }
 
       body {
-        font-family:
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          sans-serif;
-        background: #0d1117;
-        color: #e6edf3;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg-main);
+        color: var(--text-main);
         min-height: 100vh;
-        padding: 2rem;
+        padding: 1.5rem;
+        line-height: 1.5;
+        overflow-x: hidden;
       }
 
       .container {
-        max-width: 1200px;
+        max-width: 1280px;
         margin: 0 auto;
       }
 
-      .header {
-        text-align: center;
-        margin-bottom: 2rem;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .header p {
-        color: #8b949e;
-      }
-
-      .card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 1.5rem;
+      /* 顶部导航与硬件栏 */
+      .header-card {
+        background: linear-gradient(135deg, rgba(18, 23, 34, 0.95) 0%, rgba(14, 25, 36, 0.9) 100%);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 1.5rem 2rem;
         margin-bottom: 1.5rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        position: relative;
+        overflow: hidden;
       }
 
-      .card h2 {
-        font-size: 1.25rem;
+      .header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #00d4aa 0%, #38bdf8 50%, #a855f7 100%);
+      }
+
+      .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
         margin-bottom: 1rem;
       }
 
+      .header-titles h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #ffffff 30%, #00d4aa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .header-titles p {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        margin-top: 0.25rem;
+      }
+
+      /* 硬件状态徽章组 */
+      .hardware-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        background: rgba(14, 18, 26, 0.7);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+      }
+
+      .hw-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .hw-pill.active {
+        color: var(--accent-gpu);
+        border-color: rgba(0, 212, 170, 0.3);
+        background: var(--accent-gpu-glow);
+        font-weight: 600;
+      }
+
+      .hw-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-gpu);
+        box-shadow: 0 0 8px var(--accent-gpu);
+      }
+
+      /* 标签页导航 */
+      .tabs-nav {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.25rem;
+      }
+
+      .tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.65rem 1.25rem;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+      }
+
+      .tab-btn:hover {
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .tab-btn.active {
+        color: #00d4aa;
+        background: rgba(0, 212, 170, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(0, 212, 170, 0.3);
+      }
+
+      /* 通用卡片 */
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        transition: border-color 0.2s ease;
+      }
+
+      .card:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+
+      .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .card h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .card-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: -0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      /* 控制网格 */
       .controls {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
       }
 
       .control-group label {
-        display: block;
-        font-size: 0.875rem;
-        color: #8b949e;
-        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
 
-      .control-group select {
+      .control-group select,
+      .control-group input[type='text'],
+      .control-group input[type='number'] {
         width: 100%;
-        padding: 0.75rem;
-        background: #0d1117;
-        border: 1px solid #30363d;
+        padding: 0.65rem 0.85rem;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
         border-radius: 8px;
-        color: #e6edf3;
-        font-size: 1rem;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        font-family: inherit;
+        outline: none;
+        transition: all 0.15s ease;
       }
 
+      .control-group select:focus,
+      .control-group input:focus {
+        border-color: var(--accent-gpu);
+        box-shadow: 0 0 0 2px var(--accent-gpu-glow);
+      }
+
+      .checkbox-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.6rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        user-select: none;
+      }
+
+      .checkbox-control input {
+        accent-color: var(--accent-gpu);
+        width: 16px;
+        height: 16px;
+      }
+
+      /* 按钮组 */
       .button-group {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
+        align-items: center;
       }
 
       .btn {
-        padding: 0.75rem 1.5rem;
+        padding: 0.65rem 1.25rem;
         border: none;
         border-radius: 8px;
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 600;
         cursor: pointer;
-        transition:
-          transform 0.1s,
-          opacity 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        transition: all 0.15s ease;
+        text-decoration: none;
       }
 
       .btn:hover {
         transform: translateY(-1px);
       }
 
+      .btn:active {
+        transform: translateY(0);
+      }
+
       .btn:disabled {
-        opacity: 0.5;
+        opacity: 0.4;
         cursor: not-allowed;
-        transform: none;
+        transform: none !important;
       }
 
       .btn-primary {
-        background: #00d4aa;
-        color: #0d1117;
+        background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+        color: #0a0d14;
+        font-weight: 700;
+        box-shadow: 0 2px 10px rgba(0, 212, 170, 0.3);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 4px 16px rgba(0, 212, 170, 0.5);
       }
 
       .btn-secondary {
-        background: #21262d;
-        color: #e6edf3;
-        border: 1px solid #30363d;
+        background: #1c2433;
+        color: var(--text-main);
+        border: 1px solid var(--border-subtle);
       }
 
+      .btn-secondary:hover {
+        background: #242e42;
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border-subtle);
+        font-size: 0.85rem;
+        padding: 0.55rem 0.95rem;
+      }
+
+      .btn-outline:hover {
+        color: var(--text-main);
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      /* 状态与进度条卡片 */
       .status-card {
         display: none;
+        background: rgba(18, 23, 34, 0.95);
+        border-left: 4px solid var(--accent-gpu);
       }
 
       .status-card.visible {
@@ -134,202 +358,682 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.65rem;
+        font-size: 0.9rem;
+      }
+
+      .status-card.error {
+        border-left-color: var(--accent-error);
       }
 
       .status-card.error .status-header {
-        color: #f85149;
+        color: var(--accent-error);
       }
 
       .status-card.success .status-header {
-        color: #00d4aa;
+        color: var(--accent-gpu);
       }
 
       .progress-bar {
-        height: 4px;
-        background: #21262d;
-        border-radius: 2px;
+        height: 6px;
+        background: #1c2433;
+        border-radius: 3px;
         overflow: hidden;
       }
 
       .progress-bar-fill {
         height: 100%;
-        background: #00d4aa;
+        background: linear-gradient(90deg, #00d4aa, #38bdf8);
         width: 0;
-        transition: width 0.3s;
+        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .results-card {
-        display: none;
+      /* 概览统计指标四宫格 */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
       }
 
-      .results-card.visible {
-        display: block;
+      .stat-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.1rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-box::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--border-subtle);
+      }
+
+      .stat-box.highlight::after {
+        background: var(--accent-gpu);
+      }
+
+      .stat-box-title {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+      }
+
+      .stat-box-value {
+        font-size: 1.7rem;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--text-main);
+      }
+
+      .stat-box-value.glow {
+        color: var(--accent-gpu);
+      }
+
+      .stat-box-sub {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+        margin-top: 0.25rem;
+      }
+
+      /* 图表容器 */
+      .chart-container {
+        position: relative;
+        width: 100%;
+        min-height: 280px;
+        margin-bottom: 1rem;
+      }
+
+      .chart-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .chart-mode-btn {
+        background: #1c2433;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .chart-mode-btn.active {
+        background: var(--accent-gpu-glow);
+        color: var(--accent-gpu);
+        border-color: rgba(0, 212, 170, 0.3);
+        font-weight: 600;
+      }
+
+      /* 表格 */
+      .table-container {
+        overflow-x: auto;
       }
 
       .results-table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 0.88rem;
       }
 
       .results-table th,
       .results-table td {
-        padding: 0.75rem;
+        padding: 0.75rem 0.9rem;
         text-align: left;
-        border-bottom: 1px solid #30363d;
+        border-bottom: 1px solid var(--border-subtle);
       }
 
       .results-table th {
-        background: #21262d;
+        background: rgba(28, 36, 51, 0.5);
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .results-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .alg-pill {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-family: var(--font-mono);
         font-weight: 600;
       }
 
-      .results-table .speedup.fast {
-        color: #00d4aa;
-        font-weight: 600;
+      .alg-pill.radix {
+        background: rgba(0, 212, 170, 0.15);
+        color: var(--accent-gpu);
+        border: 1px solid rgba(0, 212, 170, 0.3);
       }
 
-      .results-table .speedup.slow {
-        color: #f85149;
+      .alg-pill.bitonic {
+        background: rgba(168, 85, 247, 0.15);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.3);
       }
 
-      .unsupported {
-        text-align: center;
-        padding: 3rem;
+      .alg-pill.js-native {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
       }
 
-      .unsupported h2 {
-        color: #f85149;
+      .speedup-badge {
+        font-weight: 700;
+        font-family: var(--font-mono);
+      }
+
+      .speedup-badge.fast {
+        color: var(--accent-gpu);
+      }
+
+      .speedup-badge.slow {
+        color: var(--accent-error);
+      }
+
+      /* 可视化面板专属样式 */
+      .visualizer-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .vis-canvas-card {
+        background: #0d121c;
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .vis-step-info {
+        background: rgba(14, 18, 26, 0.8);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .vis-step-info h4 {
+        color: var(--text-main);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .vis-step-info p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .vis-slider-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+
+      .vis-slider-row input[type='range'] {
+        flex: 1;
+        accent-color: var(--accent-gpu);
+      }
+
+      /* 原理展示专属样式 */
+      .architecture-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .arch-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 1.5rem;
+      }
+
+      .arch-card h3 {
+        font-size: 1.15rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .arch-badge-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
         margin-bottom: 1rem;
       }
 
-      .tech-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
-        margin-top: 1rem;
+      .arch-badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+        background: #1c2433;
+        border-radius: 4px;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
       }
 
-      .badge {
-        background: #21262d;
-        color: #8b949e;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-size: 0.875rem;
+      .code-snippet {
+        background: #0a0d14;
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 0.85rem;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: #93c5fd;
+        overflow-x: auto;
+        line-height: 1.6;
+        margin: 0.75rem 0;
+      }
+
+      /* 不支持提示卡片 */
+      .unsupported {
+        text-align: center;
+        padding: 3.5rem 2rem;
+        background: rgba(248, 81, 73, 0.05);
+        border: 1px solid rgba(248, 81, 73, 0.3);
+      }
+
+      .unsupported h2 {
+        color: var(--accent-error);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .browser-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .browser-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 1rem;
       }
 
       @media (max-width: 768px) {
         body {
-          padding: 1rem;
+          padding: 0.75rem;
         }
-
+        .header-card {
+          padding: 1.25rem 1rem;
+        }
         .controls {
           grid-template-columns: 1fr;
         }
-
         .button-group {
           flex-direction: column;
         }
-
         .btn {
           width: 100%;
+          justify-content: center;
         }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="header">
-        <h1>⚡ WebGPU 排序 Demo</h1>
-        <p>在你的硬件上对比 GPU 与 CPU 排序性能</p>
+      <!-- 顶部 Header 与硬件感知栏 -->
+      <div class="header-card">
+        <div class="header-top">
+          <div class="header-titles">
+            <h1>⚡ WebGPU 并行排序工作台</h1>
+            <p>基于 WGSL Compute Shaders 的百万级并行排序演练与高性能基准测试</p>
+          </div>
+          <!-- 硬件规格感知栏 -->
+          <div class="hardware-bar" id="hardwareBar">
+            <span class="hw-pill active" id="gpuStatusPill">
+              <span class="hw-dot"></span> WebGPU 加速就绪
+            </span>
+            <span class="hw-pill" id="gpuAdapterPill">GPU: 检测中...</span>
+            <span class="hw-pill" id="gpuArchPill">Arch: WGSL</span>
+            <span class="hw-pill" id="gpuLimitsPill">WG: 256 线程</span>
+          </div>
+        </div>
+
+        <!-- 功能选项卡导航 -->
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="tabBenchmarkBtn" data-tab="tabBenchmark">
+            📊 性能基准测试 (Benchmark)
+          </button>
+          <button class="tab-btn" id="tabVisualizerBtn" data-tab="tabVisualizer">
+            🎬 算法步骤演练 (Visualizer)
+          </button>
+          <button class="tab-btn" id="tabArchitectureBtn" data-tab="tabArchitecture">
+            🔬 原理与流水线 (Architecture)
+          </button>
+        </div>
       </div>
 
+      <!-- 不支持 WebGPU 时的错误回退 -->
       <div id="unsupported" class="card unsupported" style="display: none">
-        <h2>⚠️ 不支持 WebGPU</h2>
-        <p>当前浏览器不支持 WebGPU。</p>
-        <p>请使用 Chrome 113+、Edge 113+、Firefox Nightly 或 Safari 18+。</p>
-        <div class="tech-badges">
-          <span class="badge">Chrome 113+</span>
-          <span class="badge">Edge 113+</span>
-          <span class="badge">Firefox Nightly</span>
-          <span class="badge">Safari 18+</span>
+        <h2>⚠️ 当前环境不支持 WebGPU</h2>
+        <p>浏览器未开启或不支持 WebGPU 硬件图形加速接口。</p>
+        <p>推荐使用最新版 Chrome 113+、Edge 113+、Safari 18+ 或 Firefox Nightly。</p>
+        <div class="browser-grid">
+          <div class="browser-item">🌐 Chrome 113+ (推荐)</div>
+          <div class="browser-item">🌊 Edge 113+ (推荐)</div>
+          <div class="browser-item">🧭 Safari 18+ (macOS 14+)</div>
+          <div class="browser-item">🦊 Firefox Nightly (需开启 flags)</div>
         </div>
       </div>
 
+      <!-- 主应用区域 -->
       <div id="app">
-        <div class="card">
-          <h2>🎛️ 配置</h2>
-          <div class="controls">
-            <div class="control-group">
-              <label for="algorithm">算法</label>
-              <select id="algorithm">
-                <option value="bitonic">Bitonic Sort</option>
-                <option value="radix">Radix Sort</option>
-                <option value="both">两者（对比）</option>
-              </select>
+        <!-- ================= TAB 1: 性能基准测试 ================= -->
+        <div id="tabBenchmarkContent" class="tab-content">
+          <!-- 配置控制面板 -->
+          <div class="card">
+            <div class="card-header-row">
+              <h2>🎛️ 基准测试参数配置</h2>
+              <div class="button-group">
+                <button id="clearBtn" class="btn btn-outline">🗑️ 清空结果</button>
+                <button id="exportMdBtn" class="btn btn-outline">📋 复制 Markdown</button>
+                <button id="exportCsvBtn" class="btn btn-outline">💾 导出 CSV</button>
+              </div>
             </div>
-            <div class="control-group">
-              <label for="arraySize">数组大小</label>
-              <select id="arraySize">
-                <option value="1024">1K (1,024)</option>
-                <option value="10240">10K (10,240)</option>
-                <option value="102400" selected>100K (102,400)</option>
-                <option value="1048576">1M (1,048,576)</option>
-              </select>
+            <div class="controls">
+              <div class="control-group">
+                <label for="algorithm">算法模式</label>
+                <select id="algorithm">
+                  <option value="radix">Radix Sort (GPU 基数排序 - 推荐)</option>
+                  <option value="bitonic">Bitonic Sort (GPU 双调排序)</option>
+                  <option value="both" selected>两者对比 (Bitonic vs Radix vs CPU)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="arraySize">数据规模</label>
+                <select id="arraySize">
+                  <option value="1024">1K (1,024 元素)</option>
+                  <option value="10240">10K (10,240 元素)</option>
+                  <option value="65536">64K (65,536 元素)</option>
+                  <option value="102400" selected>100K (102,400 元素)</option>
+                  <option value="262144">256K (262,144 元素)</option>
+                  <option value="1048576">1M (1,048,576 元素)</option>
+                  <option value="2097152">2M (2,097,152 元素)</option>
+                  <option value="4194304">4M (4,194,304 元素)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="dataDistribution">输入数据分布</label>
+                <select id="dataDistribution">
+                  <option value="uniform" selected>🎲 均匀随机 (Uniform Random)</option>
+                  <option value="reversed">📉 完全逆序 (Strictly Reversed)</option>
+                  <option value="nearly-sorted">📈 接近有序 (95% Sorted)</option>
+                  <option value="few-unique">🔁 大量重复 (16 Unique Keys)</option>
+                  <option value="sawtooth">🪚 锯齿分布 (Sawtooth Periodic)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="iterations">评测迭代次数</label>
+                <select id="iterations">
+                  <option value="1">1 次 (快速预热)</option>
+                  <option value="3">3 次 (平衡推荐)</option>
+                  <option value="5" selected>5 次 (标准均值)</option>
+                  <option value="10">10 次 (高精度平滑)</option>
+                </select>
+              </div>
+              <div class="checkbox-control">
+                <label>
+                  <input type="checkbox" id="validateCheck" checked />
+                  开启严格排序验证
+                </label>
+              </div>
             </div>
-            <div class="control-group">
-              <label for="iterations">迭代次数</label>
-              <select id="iterations">
-                <option value="1">1</option>
-                <option value="3">3</option>
-                <option value="5" selected>5</option>
-                <option value="10">10</option>
-              </select>
+
+            <div class="button-group">
+              <button id="runBtn" class="btn btn-primary">▶️ 运行选定基准测试</button>
+              <button id="runAllBtn" class="btn btn-secondary">📊 运行全套规模评测 (1K ~ 1M)</button>
             </div>
           </div>
-          <div class="button-group">
-            <button id="runBtn" class="btn btn-primary">▶️ 运行基准测试</button>
-            <button id="runAllBtn" class="btn btn-secondary">📊 运行完整套件</button>
+
+          <!-- 实时进度状态条 -->
+          <div id="status" class="card status-card">
+            <div class="status-header">
+              <span id="statusText">就绪</span>
+              <span class="status-icon">⏳</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+          </div>
+
+          <!-- 统计指标概览看板 -->
+          <div class="metrics-grid" id="metricsOverview" style="display: none">
+            <div class="stat-box highlight">
+              <div class="stat-box-title">🏆 最佳排序算法</div>
+              <div class="stat-box-value glow" id="bestAlgorithm">-</div>
+              <div class="stat-box-sub" id="bestAlgorithmSub">极速吞吐</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-title">⚡ 峰值加速比</div>
+              <div class="stat-box-value" id="peakSpeedup">-</div>
+              <div class="stat-box-sub">相对 CPU JavaScript 原生</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-title">🚀 峰值吞吐速率</div>
+              <div class="stat-box-value" id="peakThroughput">-</div>
+              <div class="stat-box-sub">百万元素 / 秒 (M ops/s)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-box-title">⏱️ 最低 GPU 核心耗时</div>
+              <div class="stat-box-value" id="minGpuTime">-</div>
+              <div class="stat-box-sub">纯 Compute Shader 周期</div>
+            </div>
+          </div>
+
+          <!-- 交互式可视化对比图表 -->
+          <div class="card" id="chartCard" style="display: none">
+            <div class="card-header-row">
+              <h2>📈 算法性能对比图表</h2>
+              <div class="chart-actions">
+                <button class="chart-mode-btn active" id="chartModeTime">总耗时 (ms)</button>
+                <button class="chart-mode-btn" id="chartModeThroughput">吞吐量 (M/s)</button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="benchmarkChart" style="width: 100%; height: 300px"></canvas>
+            </div>
+          </div>
+
+          <!-- 详细测试数据表格 -->
+          <div class="card results-card" id="resultsCard" style="display: none">
+            <div class="card-header-row">
+              <h2>📋 详细性能指标数据表</h2>
+            </div>
+            <div class="table-container">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th>算法</th>
+                    <th>规模</th>
+                    <th>分布</th>
+                    <th>总耗时</th>
+                    <th>GPU 核心耗时</th>
+                    <th>显存/调度开销</th>
+                    <th>吞吐量</th>
+                    <th>显存带宽</th>
+                    <th>相对加速比</th>
+                    <th>校验</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div id="status" class="card status-card">
-          <div class="status-header">
-            <span id="statusText">就绪</span>
-            <span class="status-icon">⏳</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-bar-fill" id="progressBar"></div>
+        <!-- ================= TAB 2: 算法步骤动态演练 ================= -->
+        <div id="tabVisualizerContent" class="tab-content" style="display: none">
+          <div class="card">
+            <h2>🎬 算法步骤与动态可视化</h2>
+            <p class="card-desc">
+              实时观察 GPU 并行排序管线的内部执行过程：探索双调合并网络与基数多轮直方图散列。
+            </p>
+
+            <!-- 可视化配置工具栏 -->
+            <div class="controls">
+              <div class="control-group">
+                <label for="visAlgorithm">演练算法</label>
+                <select id="visAlgorithm">
+                  <option value="bitonic" selected>Bitonic Sort (双调排序网络)</option>
+                  <option value="radix">Radix Sort (4-Bit 8轮基数散列)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="visSize">元素规模</label>
+                <select id="visSize">
+                  <option value="64">64 元素</option>
+                  <option value="128" selected>128 元素</option>
+                  <option value="256">256 元素</option>
+                  <option value="512">512 元素</option>
+                  <option value="1024">1024 元素</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="visDistribution">初始分布</label>
+                <select id="visDistribution">
+                  <option value="uniform" selected>🎲 随机分布</option>
+                  <option value="reversed">📉 完全逆序</option>
+                  <option value="sawtooth">🪚 锯齿波形</option>
+                  <option value="few-unique">🔁 大量重复值</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="visStyle">渲染样式</label>
+                <select id="visStyle">
+                  <option value="rainbow" selected>🌈 彩虹柱状图 (Rainbow)</option>
+                  <option value="heatmap">🔥 热力条带 (Heatmap)</option>
+                  <option value="scatter">✨ 散点分布 (Scatter)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label for="visSpeed">播放速率</label>
+                <select id="visSpeed">
+                  <option value="500">慢速 (500ms/步)</option>
+                  <option value="120" selected>标准 (120ms/步)</option>
+                  <option value="40">快速 (40ms/步)</option>
+                  <option value="10">极速 (10ms/步)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 演练控制按钮组 -->
+            <div class="button-group" style="margin-bottom: 1rem">
+              <button id="visPlayBtn" class="btn btn-primary">▶ 播放演练</button>
+              <button id="visStepBackBtn" class="btn btn-secondary">⏮ 上一步</button>
+              <button id="visStepForwardBtn" class="btn btn-secondary">⏭ 下一步</button>
+              <button id="visResetBtn" class="btn btn-secondary">🔄 重置到初始</button>
+              <button id="visNewDataBtn" class="btn btn-secondary">🎲 换一组数据</button>
+            </div>
+
+            <!-- 当前步骤解说与滑块 -->
+            <div class="vis-wrapper">
+              <div class="vis-step-info">
+                <div>
+                  <h4 id="visStepTitle">准备就绪</h4>
+                  <p id="visStepDesc">点击「播放演练」或「下一步」观察数据排序演变</p>
+                </div>
+                <div class="hw-pill active" id="visStepCounter">步骤 1 / 1</div>
+              </div>
+
+              <div class="vis-slider-row">
+                <input type="range" id="visStepSlider" min="0" max="0" value="0" />
+              </div>
+            </div>
+
+            <!-- 可视化 Canvas 画布 -->
+            <div class="vis-canvas-card" style="margin-top: 1rem">
+              <canvas id="visualizerCanvas" style="width: 100%; height: 380px"></canvas>
+            </div>
           </div>
         </div>
 
-        <div class="card results-card" id="resultsCard" style="display: none">
-          <h2>📈 结果</h2>
-          <div class="table-container">
-            <table class="results-table">
-              <thead>
-                <tr>
-                  <th>算法</th>
-                  <th>数组大小</th>
-                  <th>总耗时</th>
-                  <th>GPU 耗时</th>
-                  <th>相对 JS 加速</th>
-                </tr>
-              </thead>
-              <tbody id="resultsBody"></tbody>
-            </table>
-          </div>
-        </div>
+        <!-- ================= TAB 3: 算法原理与管线 ================= -->
+        <div id="tabArchitectureContent" class="tab-content" style="display: none">
+          <div class="architecture-grid">
+            <!-- Bitonic 架构说明 -->
+            <div class="arch-card">
+              <h3>⚡ 双调排序 (Bitonic Sort)</h3>
+              <div class="arch-badge-row">
+                <span class="arch-badge">复杂度: O(n log²n)</span>
+                <span class="arch-badge">特性: 数据无关 (Data-Oblivious)</span>
+                <span class="arch-badge">适用: 中小规模与规整块</span>
+              </div>
+              <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6">
+                双调排序基于经典的排序网络（Sorting Network），每个 stage 包含多次跨步比较。每个线程在 GPU
+                核心中执行固定的比较交换逻辑，<strong>无分支发散</strong>，极其适合 GPU SIMD 架构与 Workgroup
+                局部共享内存。
+              </p>
+              <div class="code-snippet">
+// WGSL 局部双调排序核心比较逻辑
+let partner = local_idx ^ pair_distance;
+if (partner > local_idx) {
+  let ascending = ((local_idx / block_size) % 2u) == 0u;
+  if ((data[local_idx] > data[partner]) == ascending) {
+    // 比较并交换 (无需锁与分支预测)
+    swap(local_idx, partner);
+  }
+}
+workgroupBarrier(); // 同步共享显存
+              </div>
+            </div>
 
-        <div class="card">
-          <h2>ℹ️ 你在测量什么</h2>
-          <div class="tech-badges">
-            <span class="badge">WebGPU</span>
-            <span class="badge">WGSL</span>
-            <span class="badge">Compute Shaders</span>
-            <span class="badge">workgroupBarrier()</span>
-            <span class="badge">Shared Memory</span>
+            <!-- Radix 架构说明 -->
+            <div class="arch-card">
+              <h3>🚀 基数排序 (Radix Sort)</h3>
+              <div class="arch-badge-row">
+                <span class="arch-badge">复杂度: O(n × k)</span>
+                <span class="arch-badge">特性: 4-Bit 8轮流水线</span>
+                <span class="arch-badge">适用: 百万级大规模 32位整数</span>
+              </div>
+              <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6">
+                针对 32 位无符号整数，划分为 8 轮（每轮 4 bits，对应 16 个直方图桶）。每一轮通过 3 个 Compute
+                Pass 流水化执行：
+              </p>
+              <ol style="color: var(--text-muted); font-size: 0.85rem; margin-left: 1.25rem; line-height: 1.7">
+                <li><strong>直方图计算</strong>：256 线程工作组统计各自 16 桶计数。</li>
+                <li><strong>GPU 并行前缀和</strong>：利用 Blelloch Scan 快速算出全局偏移量。</li>
+                <li><strong>稳定散射重排 (Scatter)</strong>：将元素无冲突写入乒乓缓冲区。</li>
+              </ol>
+              <div class="code-snippet">
+// Radix 3阶段流水线
+passEncoder.setPipeline(histogramPipeline);
+passEncoder.dispatchWorkgroups(numWorkgroups);
+
+// Blelloch 前缀和流水线
+scanModule.computePrefixSumGPU(histogramBuffer, ...);
+
+// 稳定分散
+passEncoder.setPipeline(scatterPipeline);
+passEncoder.dispatchWorkgroups(numWorkgroups);
+              </div>
+            </div>
           </div>
         </div>
       </div>

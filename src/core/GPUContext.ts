@@ -88,6 +88,13 @@ export class GPUContext {
   }
 
   /**
+   * Get the GPU adapter (or null if not initialized)
+   */
+  getAdapter(): GPUAdapter | null {
+    return this.adapter;
+  }
+
+  /**
    * Check if context is initialized
    */
   isInitialized(): boolean {
