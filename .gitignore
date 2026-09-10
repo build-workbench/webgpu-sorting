@@ -68,3 +68,10 @@ CLAUDE.local.md
 
 # oh-my-claudecode
 .omc/
+
+# AI tools (local only)
+.commandcode/
+.claude/
+.codex/
+.agents/
+.superpowers/
