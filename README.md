@@ -1,3 +1,7 @@
+**English** | [中文](#chinese)
+
+<a id="top"></a>
+
 # WebGPU Sorting
 
 <p align="center">
@@ -123,6 +127,8 @@ Keep the scope of changes clear; if behavior or workflows change, update the rel
 ---
 
 <a id="chinese"></a>
+[English](#top) | **中文**
+
 # WebGPU Sorting
 
 <p align="center">
