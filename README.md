@@ -59,19 +59,19 @@ context.destroy();
 
 ## How to Choose an Algorithm
 
-| Scenario                       | Recommended Algorithm | Reason                                             |
-| ------------------------------ | --------------------- | -------------------------------------------------- |
-| General browser demos or medium-sized arrays | `BitonicSorter`     | The sorting network is clear, making it a good reference implementation for the project |
-| Large integer arrays (`Uint32Array`) | `RadixSorter`       | Scales better on fixed-width integer data          |
-| Small arrays                   | Native `Array.sort()` | GPU initialization and transfer overhead may be higher |
+| Scenario                                     | Recommended Algorithm | Reason                                                                                  |
+| -------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------- |
+| General browser demos or medium-sized arrays | `BitonicSorter`       | The sorting network is clear, making it a good reference implementation for the project |
+| Large integer arrays (`Uint32Array`)         | `RadixSorter`         | Scales better on fixed-width integer data                                               |
+| Small arrays                                 | Native `Array.sort()` | GPU initialization and transfer overhead may be higher                                  |
 
 ## Browser Support
 
-| Browser            | Support                               |
-| ------------------ | ------------------------------------- |
-| Chrome / Edge 113+ | Recommended                           |
+| Browser            | Support                                               |
+| ------------------ | ----------------------------------------------------- |
+| Chrome / Edge 113+ | Recommended                                           |
 | Firefox Nightly    | Experimental (requires enabling `dom.webgpu.enabled`) |
-| Safari 18+         | Partial support, requires a newer macOS |
+| Safari 18+         | Partial support, requires a newer macOS               |
 
 Running WebGPU in a browser requires cross-origin isolation. The dev server is already configured with COOP/COEP headers in `vite.config.ts`.
 
@@ -107,14 +107,14 @@ npm run test:coverage
 
 ## Documentation
 
-| Content   | Link                                                 |
-| --------- | ---------------------------------------------------- |
-| Docs entry | [docs/index.md](./docs/index.md)                     |
+| Content         | Link                                                 |
+| --------------- | ---------------------------------------------------- |
+| Docs entry      | [docs/index.md](./docs/index.md)                     |
 | Getting started | [docs/getting-started.md](./docs/getting-started.md) |
-| API reference | [docs/api.md](./docs/api.md)                         |
-| Architecture | [docs/architecture.md](./docs/architecture.md)       |
-| Performance | [docs/performance.md](./docs/performance.md)         |
-| Demo page | [docs/demo.md](./docs/demo.md)                       |
+| API reference   | [docs/api.md](./docs/api.md)                         |
+| Architecture    | [docs/architecture.md](./docs/architecture.md)       |
+| Performance     | [docs/performance.md](./docs/performance.md)         |
+| Demo page       | [docs/demo.md](./docs/demo.md)                       |
 
 ## Contributing
 
