@@ -25,6 +25,7 @@ WebGPU Sorting —— 使用 WebGPU 计算着色器处理 Uint32Array 排序的 
 - 修复 Blelloch scan 的截断 bug。
 - 修复 scan 前缀和的绑定隐患与 `scan_block_sums` 上半部回写问题,并优化 GPU dispatch。
 - 修复安全配置问题,并同步 `package-lock.json` 与 `package.json`。
+- 格式化 README,修复 CI 中 Prettier 检查失败。
 
 ### 移除
 
