@@ -16,7 +16,7 @@
 
 ## Project Positioning
 
-WebGPU Sorting is a TypeScript library + demo project that showcases high-performance in-browser sorting based on WebGPU. The repository currently contains two core implementations:
+WebGPU Sorting is a TypeScript library + demo project that demonstrates high-performance in-browser sorting based on WebGPU. The repository currently contains two core implementations:
 
 - **Bitonic Sort**: suited for parallel sorting network examples and general demos
 - **Radix Sort**: suited for large-scale `Uint32Array` integer sorting
