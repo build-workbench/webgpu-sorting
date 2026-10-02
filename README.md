@@ -27,6 +27,7 @@ The repository also provides a performance benchmarking tool, an interactive Dem
 
 - A concise TypeScript API for WebGPU initialization and sort execution
 - WGSL shader implementations of Bitonic / Radix
+- A correctness-hardened tiled Blelloch scan (full padded-block sweep) with regression tests covering non-power-of-two sizes
 - Benchmarking helpers for GPU vs. JavaScript sorting
 - A live Demo you can try right away
 - A lightweight maintenance workflow around code, tests, and docs
@@ -154,6 +155,7 @@ WebGPU Sorting 是一个 TypeScript 库 + 演示项目，用来展示浏览器�
 
 - 面向 WebGPU 初始化与排序执行的简洁 TypeScript API
 - Bitonic / Radix 的 WGSL 着色器实现
+- 经过正确性加固的分块 Blelloch 扫描（完整 padded block 扫描），回归测试覆盖非 2 幂长度
 - GPU 与 JavaScript 排序的基准测试辅助工具
 - 一个可直接体验的在线 Demo
 - 一套围绕代码、测试与文档的轻量维护流程
